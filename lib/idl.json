@@ -1,5 +1,5 @@
 {
-    "version": "3.7.13",
+    "version": "3.7.20",
     "name": "ore",
     "instructions": [
         {
@@ -145,7 +145,7 @@
                 "value": 4
             },
             "docs": [
-                "Claims QUEST token rewards from the treasury vault."
+                "Claims ORE token rewards from the treasury vault."
             ],
             "accounts": [
                 {
@@ -162,7 +162,7 @@
                     "name": "mint",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"
+                    "address": "QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s"
                 },
                 {
                     "name": "recipient",
@@ -255,6 +255,7 @@
             "docs": [
                 "Deploys SOL to selected squares for the current round.",
                 "Automation PDA seeds: [\"automation\", authority].",
+                "Config PDA seeds: [\"config\"].",
                 "Miner PDA seeds: [\"miner\", authority].",
                 "Round PDA seeds: [\"round\", board.round_id]."
             ],
@@ -280,6 +281,11 @@
                     "isSigner": false
                 },
                 {
+                    "name": "config",
+                    "isMut": true,
+                    "isSigner": false
+                },
+                {
                     "name": "miner",
                     "isMut": true,
                     "isSigner": false
@@ -296,6 +302,12 @@
                     "address": "11111111111111111111111111111111"
                 },
                 {
+                    "name": "oreProgram",
+                    "isMut": false,
+                    "isSigner": false,
+                    "address": "CQMzH6PeaLsNqJdMcT935SJAsfiD2mwdH33PE9PZ3fLr"
+                },
+                {
                     "name": "entropyVar",
                     "isMut": true,
                     "isSigner": false
@@ -304,7 +316,7 @@
                     "name": "entropyProgram",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "3jSkUuYBoJzQPMEzTvkDFXCZUBksPamrVhrnHR9igu2X"
+                    "address": "CQrnd9EcS7jSUTs2HCHL31kFhGWGuAqzdcQfAo1tn6Ft"
                 }
             ],
             "args": [
@@ -374,7 +386,7 @@
                     "name": "mint",
                     "isMut": true,
                     "isSigner": false,
-                    "address": "oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"
+                    "address": "QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s"
                 },
                 {
                     "name": "round",
@@ -417,7 +429,7 @@
                     "name": "oreProgram",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv"
+                    "address": "CQMzH6PeaLsNqJdMcT935SJAsfiD2mwdH33PE9PZ3fLr"
                 },
                 {
                     "name": "slotHashesSysvar",
@@ -434,7 +446,7 @@
                     "name": "entropyProgram",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "3jSkUuYBoJzQPMEzTvkDFXCZUBksPamrVhrnHR9igu2X"
+                    "address": "CQrnd9EcS7jSUTs2HCHL31kFhGWGuAqzdcQfAo1tn6Ft"
                 }
             ],
             "args": []
@@ -446,7 +458,7 @@
                 "value": 10
             },
             "docs": [
-                "Deposits QUEST into a staking account.",
+                "Deposits ORE into a staking account.",
                 "Stake PDA seeds: [\"stake\", signer]."
             ],
             "accounts": [
@@ -459,7 +471,7 @@
                     "name": "mint",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"
+                    "address": "QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s"
                 },
                 {
                     "name": "sender",
@@ -514,7 +526,7 @@
                 "value": 11
             },
             "docs": [
-                "Withdraws QUEST from a staking account.",
+                "Withdraws ORE from a staking account.",
                 "Stake PDA seeds: [\"stake\", signer]."
             ],
             "accounts": [
@@ -527,7 +539,7 @@
                     "name": "mint",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"
+                    "address": "QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s"
                 },
                 {
                     "name": "recipient",
@@ -596,7 +608,7 @@
                     "name": "mint",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"
+                    "address": "QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s"
                 },
                 {
                     "name": "recipient",
@@ -651,7 +663,7 @@
                 "value": 13
             },
             "docs": [
-                "Swaps vaulted SOL for QUEST via a CPI and burns the proceeds.",
+                "Swaps vaulted SOL for ORE via a CPI and burns the proceeds.",
                 "Treasury PDA seeds: [\"treasury\"].",
                 "Additional swap accounts are passed through as remaining accounts."
             ],
@@ -675,7 +687,7 @@
                     "name": "mint",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "oreoU2P8bN6jkk3jbaiVxYnG1dCXcYxwhwyK9jSybcp"
+                    "address": "QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s"
                 },
                 {
                     "name": "treasury",
@@ -702,7 +714,7 @@
                     "name": "oreProgram",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "oreV3EG1i9BEgiAJ8b177Z2S2rMarzak4NMv1kULvWv"
+                    "address": "CQMzH6PeaLsNqJdMcT935SJAsfiD2mwdH33PE9PZ3fLr"
                 }
             ],
             "args": []
@@ -860,7 +872,7 @@
                     "name": "entropyProgram",
                     "isMut": false,
                     "isSigner": false,
-                    "address": "3jSkUuYBoJzQPMEzTvkDFXCZUBksPamrVhrnHR9igu2X"
+                    "address": "CQrnd9EcS7jSUTs2HCHL31kFhGWGuAqzdcQfAo1tn6Ft"
                 }
             ],
             "args": [

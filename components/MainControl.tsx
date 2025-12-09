@@ -183,22 +183,31 @@ export function MainControl({ round, miner, selectedSquares, clearSelection }: M
 
                         <div className="bg-gray-900/50 p-3 md:p-4 rounded-lg border border-gray-700/50">
                             <div className="flex items-center justify-between">
-                                <span className="text-xs md:text-sm text-gray-300 font-medium">QUEST Rewards</span>
+                                <span className="text-xs md:text-sm text-gray-300 font-medium">Unrefined $QUEST</span>
                                 <span className="text-base md:text-lg font-bold text-orange-400">
                                     {miner?.rewardsOre ? (bigIntToNumber(miner.rewardsOre) / 1e9).toFixed(4) : '0.0000'}
+                                </span>
+                            </div>
+                        </div>
+
+                         <div className="bg-gray-900/50 p-3 md:p-4 rounded-lg border border-gray-700/50">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs md:text-sm text-gray-300 font-medium">Refined $QUEST</span>
+                                <span className="text-base md:text-lg font-bold text-orange-400">
+                                    {miner?.refinedOre ? (bigIntToNumber(miner.refinedOre) / 1e9).toFixed(4) : '0.0000'}
                                 </span>
                             </div>
                         </div>
                     </div>
 
                     {/* Claim Buttons */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
                         <button
                             onClick={handleClaimAll}
                             disabled={!publicKey || !miner || (bigIntToNumber(miner.rewardsSol) === 0 && bigIntToNumber(miner.rewardsOre) === 0)}
                             className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 text-xs md:text-sm"
                         >
-                            Claim All
+                            Claim
                         </button>
 
                         <button
@@ -209,13 +218,6 @@ export function MainControl({ round, miner, selectedSquares, clearSelection }: M
                             Claim SOL
                         </button>
 
-                        <button
-                            onClick={handleClaimOre}
-                            disabled={!publicKey || !miner || bigIntToNumber(miner.rewardsOre) === 0}
-                            className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 text-xs md:text-sm"
-                        >
-                            Claim QUEST
-                        </button>
                     </div>
                 </div>
             </div>

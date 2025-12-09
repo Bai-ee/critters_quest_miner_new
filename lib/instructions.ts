@@ -78,6 +78,18 @@ export function getTreasuryPDA(): PublicKey {
 }
 
 /**
+ * Get the Config PDA
+ * Seeds: ["config"]
+ */
+export function getConfigPDA(): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('config')],
+    new PublicKey(CONSTANTS.PROGRAM_ID)
+  );
+  return pda;
+}
+
+/**
  * Get the associated token account address for a given owner and mint
  */
 export function getAssociatedTokenAddress(
@@ -119,6 +131,7 @@ export function createDeployInstruction(
   const automationPDA = getAutomationPDA(authority);
   const minerPDA = getMinerPDA(authority);
   const boardPDA = getBoardPDA();
+  const configPDA = getConfigPDA();
   const roundPDA = getRoundPDA(roundId);
 
   // Serialize instruction data
@@ -145,9 +158,11 @@ export function createDeployInstruction(
       { pubkey: authority, isSigner: false, isWritable: true },
       { pubkey: automationPDA, isSigner: false, isWritable: true },
       { pubkey: boardPDA, isSigner: false, isWritable: true },
+      { pubkey: configPDA, isSigner: false, isWritable: true },
       { pubkey: minerPDA, isSigner: false, isWritable: true },
       { pubkey: roundPDA, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: PROGRAM_ADDRESSES.ORE_PROGRAM, isSigner: false, isWritable: false },
       { pubkey: entropyVar, isSigner: false, isWritable: true },
       { pubkey: PROGRAM_ADDRESSES.ENTROPY_PROGRAM, isSigner: false, isWritable: false },
     ],
