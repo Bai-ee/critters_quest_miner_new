@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { connection, getCurrentSlot } from '@/lib/solana';
-import { fetchBoard, fetchMiner, fetchRound, getBoardPDA, getMinerPDA, getRoundPDA } from '@/lib/accounts';
+import { fetchBoard, fetchMiner, fetchRound, getBoardPDA, getMinerPDA, getRoundPDA, gramsToOre, getTreasuryPDA, fetchTreasury } from '@/lib/accounts';
 import type { Board, Round, Miner } from '@/lib/types';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, AccountInfo } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 
 export function useRoundData() {
@@ -65,7 +65,22 @@ export function useRoundData() {
 
         // Fetch initial data
         const boardData = await fetchBoardData();
-        await fetchRoundData(boardData.roundId);
+        const roundData = await fetchRoundData(boardData.roundId);
+
+        // Fetch initial treasury/motherlode data
+        try {
+          const motherlode = await fetchTreasury(connection);
+          console.log('💰 Initial motherlode:', gramsToOre(motherlode).toFixed(4), 'ORE');
+          // Update round with correct motherlode
+          if (roundData) {
+            setRound({
+              ...roundData,
+              motherlode: motherlode,
+            });
+          }
+        } catch (err) {
+          console.error('Error fetching initial treasury:', err);
+        }
 
         // Get current slot
         const slot = await getCurrentSlot();
@@ -122,7 +137,21 @@ export function useRoundData() {
                 console.error('Error fetching previous round:', err);
               }
             }
-            await fetchRoundData(newBoard.roundId);
+            const newRoundData = await fetchRoundData(newBoard.roundId);
+
+            // Fetch Treasury's live motherlode for the new round
+            try {
+              const motherlode = await fetchTreasury(connection);
+              console.log('💰 Treasury motherlode for new round:', gramsToOre(motherlode).toFixed(4), 'ORE');
+              if (newRoundData) {
+                setRound({
+                  ...newRoundData,
+                  motherlode: motherlode,
+                });
+              }
+            } catch (err) {
+              console.error('Error fetching treasury for new round:', err);
+            }
           }
         } catch (err) {
           console.error('Error parsing Board update:', err);
@@ -175,7 +204,7 @@ export function useRoundData() {
 
           const expiresAt = data.readBigUInt64LE(offset);
           offset += 8;
-          const motherlode = data.readBigUInt64LE(offset);
+          // Skip the round's motherlode snapshot - we use Treasury's live value instead
           offset += 8;
 
           const rentPayerBytes = data.subarray(offset, offset + 32);
@@ -194,22 +223,21 @@ export function useRoundData() {
           offset += 8;
           const totalWinnings = data.readBigUInt64LE(offset);
 
-          const newRound: Round = {
+          // Update round but preserve the Treasury's motherlode value
+          setRound((currentRound) => ({
             id,
             deployed,
             slotHash,
             count,
             expiresAt,
-            motherlode,
+            motherlode: currentRound?.motherlode ?? 0n, // Keep Treasury's live motherlode
             rentPayer,
             topMiner,
             topMinerReward,
             totalDeployed,
             totalVaulted,
             totalWinnings,
-          };
-
-          setRound(newRound);
+          }));
           setLastUpdate(new Date());
         } catch (err) {
           console.error('Error parsing Round update:', err);
@@ -373,6 +401,64 @@ export function useRoundData() {
       connection.removeAccountChangeListener(subscriptionId);
     };
   }, [publicKey, fetchMinerData]);
+
+  // WebSocket subscription to Treasury PDA account to track motherlode
+  useEffect(() => {
+    const treasuryPDA = getTreasuryPDA();
+
+    console.log('📡 Subscribing to Treasury PDA account:', treasuryPDA.toString());
+
+    const subscriptionId = connection.onAccountChange(
+      treasuryPDA,
+      async (accountInfo) => {
+        console.log('🔔 Treasury PDA account changed!');
+
+        try {
+          // Parse Treasury account data
+          // Structure: discriminator(8) + balance(8) + buffer_a(8) + motherlode(8) + ...
+          const data = accountInfo.data;
+
+          if (data.length < 32) {
+            console.error('Invalid Treasury account data');
+            return;
+          }
+
+          // Skip discriminator (8 bytes)
+          let offset = 8;
+
+          // Skip balance: u64
+          offset += 8;
+
+          // Skip buffer_a: u64
+          offset += 8;
+
+          // Read motherlode: u64 (at offset 24)
+          const motherlode = data.readBigUInt64LE(offset);
+
+          console.log('💰 Motherlode updated:', motherlode.toString(), 'grams');
+          console.log('💰 Motherlode:', gramsToOre(motherlode).toFixed(4), 'ORE');
+
+          // Update the round's motherlode using callback form to get latest state
+          setRound((currentRound) => {
+            if (!currentRound) return currentRound;
+            return {
+              ...currentRound,
+              motherlode: motherlode,
+            };
+          });
+          setLastUpdate(new Date());
+        } catch (err) {
+          console.error('Error parsing Treasury PDA account update:', err);
+        }
+      },
+      'confirmed'
+    );
+
+    return () => {
+      console.log('🔌 Unsubscribing from Treasury PDA account');
+      connection.removeAccountChangeListener(subscriptionId);
+    };
+  }, []); // Empty dependency array - subscribe once on mount
 
   return {
     board,

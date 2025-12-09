@@ -1,7 +1,7 @@
 import { lamportsToSol, getWinningSquare } from '@/lib/accounts';
 import { Round } from '@/lib/types';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface GridProps {
   round: Round;
@@ -14,6 +14,7 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
   const [showWinner, setShowWinner] = useState(false);
   const [winnerSquareIndex, setWinnerSquareIndex] = useState<number | null>(null);
   const [persistedWinner, setPersistedWinner] = useState<number | null>(null);
+  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate winning square if round is finalized
   const winningSquare = getWinningSquare(round.slotHash);
@@ -22,7 +23,8 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
   useEffect(() => {
     console.log('🎲 Round ID:', round.id.toString(), 'slotHash:', round.slotHash);
     console.log('🏆 Winning square:', winningSquare);
-  }, [round.id, round.slotHash, winningSquare]);
+    console.log('👁️ State:', { showWinner, winnerSquareIndex, persistedWinner });
+  }, [round.id, round.slotHash, winningSquare, showWinner, winnerSquareIndex, persistedWinner]);
 
   // Persist the winner when it's first detected, and keep showing it even if round changes
   useEffect(() => {
@@ -33,18 +35,35 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
       setWinnerSquareIndex(winningSquare);
       console.log('👑 Winner animation displayed!');
 
+      // Clear any existing timer
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
+
       // Hide the winner animation after 15 seconds
-      const hideTimer = setTimeout(() => {
-        console.log('⏰ Hiding winner animation');
+      hideTimerRef.current = setTimeout(() => {
+        console.log('⏰ Hiding winner animation - timeout fired!');
         setShowWinner(false);
         setWinnerSquareIndex(null);
         setPersistedWinner(null);
+        hideTimerRef.current = null;
         console.log('🧹 Winner state cleared');
       }, 15000); // 15 seconds
-
-      return () => clearTimeout(hideTimer);
+      
+      console.log('⏱️ Timer set with ID:', hideTimerRef.current);
     }
   }, [winningSquare, persistedWinner]);
+
+  // Cleanup on unmount only
+  useEffect(() => {
+    return () => {
+      console.log('🧹 Component unmounting, clearing timer');
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // Find max deployed to scale colors
   const maxDeployed = Math.max(...round.deployed.map(d => Number(d)));

@@ -13,7 +13,8 @@ import {
   createClaimSolInstruction,
   createClaimOreInstruction,
 } from './instructions';
-import { fetchBoard } from './accounts';
+import { fetchBoard, fetchMiner } from './accounts';
+import { bigIntToNumber } from './formatters';
 
 /**
  * Example: Deploy SOL to squares
@@ -47,13 +48,14 @@ export function useDeployToSquares() {
 
     // Fetch current round ID from board
     const board = await fetchBoard(connection);
+    const miner = await fetchMiner(connection, publicKey);
     const roundId = board.roundId;
 
     const transaction = new Transaction();
 
     if (needCheckpoint) {
-      const targetRoundId = board.roundId - 1n;
-      const instruction0 = createCheckpointInstruction(publicKey, targetRoundId);
+      const targetRoundId = board?.roundId ;
+      const instruction0 = createCheckpointInstruction(publicKey, miner?.roundId ?? targetRoundId);
       transaction.add(instruction0);
     }
 

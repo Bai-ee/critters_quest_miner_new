@@ -205,6 +205,63 @@ export async function fetchRound(
 }
 
 /**
+ * Derive the Treasury PDA address
+ * Seeds: ["treasury"]
+ */
+export function getTreasuryPDA(): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [Buffer.from('treasury')],
+    new PublicKey(CONSTANTS.PROGRAM_ID)
+  );
+  return pda;
+}
+
+/**
+ * Fetch and deserialize the Treasury account
+ * The Treasury account stores the motherlode value
+ * Structure from IDL:
+ * - discriminator: [u8; 8]
+ * - balance: u64
+ * - buffer_a: u64
+ * - motherlode: u64
+ * - miner_rewards_factor: Numeric (16 bytes)
+ * - stake_rewards_factor: Numeric (16 bytes)
+ * - buffer_b: u64
+ * - total_refined: u64
+ *
+ * @param connection - Solana connection
+ * @returns The motherlode value in grams (base units)
+ */
+export async function fetchTreasury(connection: Connection): Promise<bigint> {
+  const treasuryPDA = getTreasuryPDA();
+  const accountInfo = await connection.getAccountInfo(treasuryPDA);
+
+  if (!accountInfo) {
+    throw new Error('Treasury account not found');
+  }
+
+  const data = accountInfo.data;
+
+  if (data.length < 32) {
+    throw new Error('Invalid Treasury account data');
+  }
+
+  // Skip discriminator (8 bytes)
+  let offset = 8;
+
+  // Skip balance: u64
+  offset += 8;
+
+  // Skip buffer_a: u64
+  offset += 8;
+
+  // Read motherlode: u64 (at offset 24)
+  const motherlode = data.readBigUInt64LE(offset);
+  
+  return motherlode;
+}
+
+/**
  * Utility: Convert lamports to SOL
  */
 export function lamportsToSol(lamports: bigint): number {
@@ -214,7 +271,7 @@ export function lamportsToSol(lamports: bigint): number {
 /**
  * Calculate the winning square from a round's slot hash
  * Matches: winning_square() in api/src/state/round.rs
- * 
+ *
  * @param slotHash - The 32-byte slot hash from the round
  * @returns The winning square index (0-24), or null if no hash available
  */
