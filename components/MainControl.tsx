@@ -11,9 +11,10 @@ interface MainControlProps {
     selectedSquares: Set<number>;
     selectAll: () => void;
     clearSelection: () => void;
+    solBalance: number;
 }
 
-export function MainControl({ round, miner, selectedSquares, selectAll, clearSelection }: MainControlProps) {
+export function MainControl({ round, miner, selectedSquares, selectAll, clearSelection, solBalance }: MainControlProps) {
     const { checkpoint } = useCheckpoint();
     const { deploy } = useDeployToSquares();
     const { claimSol } = useClaimSol();
@@ -27,6 +28,16 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
     const handleDeploy = async () => {
         if (selectedSquares.size === 0) {
             toast.error('Please select at least one square');
+            return;
+        }
+
+        // Check if user has enough SOL balance
+        const totalCost = amount * selectedSquares.size;
+        const estimatedFees = 0.01; // Estimate for transaction fees
+        const requiredBalance = totalCost + estimatedFees;
+        
+        if (solBalance < requiredBalance) {
+            toast.error(`Insufficient balance! Need ${requiredBalance.toFixed(4)} SOL (including fees), but you have ${solBalance.toFixed(4)} SOL`);
             return;
         }
 
@@ -149,11 +160,24 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                         </div>
                     </div>
 
+                    {/* Insufficient Balance Warning */}
+                    {publicKey && solBalance < (amount * selectedSquares.size + 0.01) && selectedSquares.size > 0 && (
+                        <div className="bg-red-900/30 border border-red-500/50 rounded-lg p-3">
+                            <div className="flex items-center gap-2 text-red-400 text-xs md:text-sm">
+                                <span>⚠️</span>
+                                <span className="font-semibold">Insufficient Balance</span>
+                            </div>
+                            <p className="text-xs text-red-300/80 mt-1">
+                                Need {(amount * selectedSquares.size + 0.01).toFixed(4)} SOL (including fees), but you have {solBalance.toFixed(4)} SOL
+                            </p>
+                        </div>
+                    )}
+
                     {/* Action Buttons */}
                     <div className="flex flex-col gap-3">
                         <button
                             onClick={handleDeploy}
-                            disabled={!publicKey || deploying || selectedSquares.size === 0}
+                            disabled={!publicKey || deploying || selectedSquares.size === 0 || solBalance < (amount * selectedSquares.size + 0.01)}
                             className="w-full px-4 md:px-6 py-2.5 md:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 text-sm md:text-base"
                         >
                             {deploying ? 'Deploying...' : `Deploy to ${selectedSquares.size} Square${selectedSquares.size !== 1 ? 's' : ''}`}

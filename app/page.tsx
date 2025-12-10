@@ -8,6 +8,7 @@ import { Stats } from '@/components/Stats';
 import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
 import { useRoundData } from '@/hooks/useRoundData';
+import { useSolBalance } from '@/hooks/useSolBalance';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState } from 'react';
 
@@ -15,6 +16,7 @@ import { useState } from 'react';
 export default function Home() {
   const { board, round, previousRound, currentSlot, loading, error, lastUpdate, miner } = useRoundData();
   const { connected, publicKey } = useWallet();
+  const { balance: solBalance } = useSolBalance();
 
   // Shared state for square selection
   const [selectedSquares, setSelectedSquares] = useState<Set<number>>(new Set());
@@ -114,9 +116,14 @@ export default function Home() {
         {/* Wallet Status & Live indicator */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 md:mb-6">
           {connected && publicKey && (
-            <div className="px-3 md:px-4 py-2 bg-blue-900/30 border border-blue-500 rounded-lg text-xs md:text-sm text-blue-300">
-              Connected as <span className="font-mono font-bold">{publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}</span>
-            </div>
+            <>
+              <div className="px-3 md:px-4 py-2 bg-blue-900/30 border border-blue-500 rounded-lg text-xs md:text-sm text-blue-300">
+                Connected as <span className="font-mono font-bold">{publicKey.toBase58().slice(0, 4)}...{publicKey.toBase58().slice(-4)}</span>
+              </div>
+              <div className="px-3 md:px-4 py-2 bg-purple-900/30 border border-purple-500 rounded-lg text-xs md:text-sm text-purple-300 font-semibold">
+                💰 Balance: <span className="font-mono font-bold text-purple-100">{solBalance.toFixed(4)} SOL</span>
+              </div>
+            </>
           )}
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1 bg-green-900/30 border border-green-500 rounded-full text-xs md:text-sm text-green-400">
@@ -188,6 +195,7 @@ export default function Home() {
                 selectedSquares={selectedSquares}
                 selectAll={selectAll}
                 clearSelection={clearSelection}
+                solBalance={solBalance}
               />
             </div>
           </div>
