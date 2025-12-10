@@ -70,12 +70,10 @@ export function useRoundData() {
         // Fetch initial treasury/motherlode data
         try {
           const motherlode = await fetchTreasury(connection);
-          console.log('💰 Initial motherlode:', gramsToOre(motherlode).toFixed(4), 'ORE');
           // Update round with correct motherlode
           if (roundData) {
             setRound({
               ...roundData,
-              motherlode: motherlode,
             });
           }
         } catch (err) {
@@ -142,11 +140,9 @@ export function useRoundData() {
             // Fetch Treasury's live motherlode for the new round
             try {
               const motherlode = await fetchTreasury(connection);
-              console.log('💰 Treasury motherlode for new round:', gramsToOre(motherlode).toFixed(4), 'ORE');
               if (newRoundData) {
                 setRound({
                   ...newRoundData,
-                  motherlode: motherlode,
                 });
               }
             } catch (err) {
@@ -224,20 +220,23 @@ export function useRoundData() {
           const totalWinnings = data.readBigUInt64LE(offset);
 
           // Update round but preserve the Treasury's motherlode value
-          setRound((currentRound) => ({
-            id,
-            deployed,
-            slotHash,
-            count,
-            expiresAt,
-            motherlode: currentRound?.motherlode ?? 0n, // Keep Treasury's live motherlode
-            rentPayer,
-            topMiner,
-            topMinerReward,
-            totalDeployed,
-            totalVaulted,
-            totalWinnings,
-          }));
+          setRound((currentRound) => {
+            if (!currentRound) return null;
+            return {
+              ...currentRound,
+              id,
+              deployed,
+              slotHash,
+              count,
+              expiresAt,
+              rentPayer,
+              topMiner,
+              topMinerReward,
+              totalDeployed,
+              totalVaulted,
+              totalWinnings,
+            };
+          });
           setLastUpdate(new Date());
         } catch (err) {
           console.error('Error parsing Round update:', err);
