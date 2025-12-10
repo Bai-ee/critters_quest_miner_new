@@ -1,4 +1,4 @@
-import { gramsToOre, lamportsToSol, fetchTreasury } from '@/lib/accounts';
+import { gramsToOre, lamportsToSol, fetchTreasury, getTreasuryPDA } from '@/lib/accounts';
 import { connection } from '@/lib/solana';
 import { useEffect, useState } from 'react';
 
@@ -75,7 +75,24 @@ export function Motherlode({ amount }: MotherlodeProps) {
       }
     };
 
+    // Load immediately
     loadTreasury();
+
+    // Subscribe to Treasury account changes via WebSocket
+    const treasuryPDA = getTreasuryPDA();
+    const subscriptionId = connection.onAccountChange(
+      treasuryPDA,
+      () => {
+        // Treasury account updated, reload data
+        loadTreasury();
+      },
+      'confirmed'
+    );
+
+    // Cleanup subscription on unmount
+    return () => {
+      connection.removeAccountChangeListener(subscriptionId);
+    };
   }, []);
 
   return (
