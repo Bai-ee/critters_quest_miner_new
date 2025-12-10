@@ -35,6 +35,7 @@ const SEEDS = {
  * Instruction discriminators from the IDL
  */
 const DISCRIMINATORS = {
+  AUTOMATE: 0,
   DEPLOY: 6,
   CHECKPOINT: 2,
   CLAIM_SOL: 3,
@@ -105,6 +106,97 @@ export function getAssociatedTokenAddress(
     PROGRAM_ADDRESSES.ASSOCIATED_TOKEN_PROGRAM
   );
   return address;
+}
+
+/**
+ * Automation strategy enum
+ */
+export enum AutomationStrategy {
+  Random = 0,
+  Preferred = 1,
+}
+
+/**
+ * Create an Automate instruction
+ *
+ * Sets up or updates automation for a user's account.
+ *
+ * @param signer - The transaction signer (user/authority)
+ * @param executor - The executor who will run automated deployments
+ * @param amount - Amount of SOL to deploy per square (in lamports)
+ * @param deposit - Initial SOL deposit to fund automation (in lamports)
+ * @param fee - Fee to pay executor per deployment (in lamports)
+ * @param strategy - Automation strategy (Random or Preferred)
+ * @param mask - Square selection mask (bitmask for Preferred, count for Random)
+ * @param reload - Whether to auto-reload winnings into automation balance
+ * @returns TransactionInstruction
+ */
+export function createAutomateInstruction(
+  signer: PublicKey,
+  executor: PublicKey,
+  amount: bigint,
+  deposit: bigint,
+  fee: bigint,
+  strategy: AutomationStrategy,
+  mask: bigint,
+  reload: boolean
+): TransactionInstruction {
+  const automationPDA = getAutomationPDA(signer);
+  const minerPDA = getMinerPDA(signer);
+
+  // Serialize instruction data
+  // Format: [discriminator: u8, amount: u64, deposit: u64, fee: u64, mask: u64, strategy: u8, reload: u64]
+  const data = Buffer.alloc(1 + 8 + 8 + 8 + 8 + 1 + 8);
+  let offset = 0;
+
+  // Discriminator
+  data.writeUInt8(DISCRIMINATORS.AUTOMATE, offset);
+  offset += 1;
+
+  // Amount (u64, little-endian)
+  const amountNum = Number(amount);
+  data.writeUInt32LE(amountNum & 0xffffffff, offset);
+  data.writeUInt32LE(Math.floor(amountNum / 0x100000000), offset + 4);
+  offset += 8;
+
+  // Deposit (u64, little-endian)
+  const depositNum = Number(deposit);
+  data.writeUInt32LE(depositNum & 0xffffffff, offset);
+  data.writeUInt32LE(Math.floor(depositNum / 0x100000000), offset + 4);
+  offset += 8;
+
+  // Fee (u64, little-endian)
+  const feeNum = Number(fee);
+  data.writeUInt32LE(feeNum & 0xffffffff, offset);
+  data.writeUInt32LE(Math.floor(feeNum / 0x100000000), offset + 4);
+  offset += 8;
+
+  // Mask (u64, little-endian)
+  const maskNum = Number(mask);
+  data.writeUInt32LE(maskNum & 0xffffffff, offset);
+  data.writeUInt32LE(Math.floor(maskNum / 0x100000000), offset + 4);
+  offset += 8;
+
+  // Strategy (u8)
+  data.writeUInt8(strategy, offset);
+  offset += 1;
+
+  // Reload (u64, little-endian)
+  const reloadNum = reload ? 1 : 0;
+  data.writeUInt32LE(reloadNum, offset);
+  data.writeUInt32LE(0, offset + 4);
+
+  return new TransactionInstruction({
+    keys: [
+      { pubkey: signer, isSigner: true, isWritable: true },
+      { pubkey: automationPDA, isSigner: false, isWritable: true },
+      { pubkey: executor, isSigner: false, isWritable: false },
+      { pubkey: minerPDA, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+    ],
+    programId: new PublicKey(CONSTANTS.PROGRAM_ID),
+    data,
+  });
 }
 
 /**

@@ -1,10 +1,11 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { Board, Round, Miner, Stake, Treasury, CONSTANTS } from './types';
+import { Board, Round, Miner, Stake, Treasury, Automation, CONSTANTS } from './types';
 
 /**
  * PDA seeds matching api/src/consts.rs
  */
 const SEEDS = {
+  AUTOMATION: Buffer.from('automation'),
   BOARD: Buffer.from('board'),
   ROUND: Buffer.from('round'),
   MINER: Buffer.from('miner'),
@@ -597,5 +598,96 @@ export async function fetchStake(
     rewardsFactor,
     rewards,
     lifetimeRewards,
+  };
+}
+
+/**
+ * Derive the Automation PDA address for a specific authority
+ * Matches: automation_pda(authority) in api/src/state/mod.rs
+ *
+ * @param authority - The wallet public key of the user
+ */
+export function getAutomationPDA(authority: PublicKey): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [SEEDS.AUTOMATION, authority.toBuffer()],
+    new PublicKey(CONSTANTS.PROGRAM_ID)
+  );
+  return pda;
+}
+
+/**
+ * Fetch and deserialize the Automation account for a given authority
+ * Structure matches: api/src/state/automation.rs
+ *
+ * @param connection - Solana connection
+ * @param authority - The wallet public key of the user
+ * @returns Deserialized Automation data, or null if account doesn't exist
+ */
+export async function fetchAutomation(
+  connection: Connection,
+  authority: PublicKey
+): Promise<Automation | null> {
+  const automationPDA = getAutomationPDA(authority);
+  const accountInfo = await connection.getAccountInfo(automationPDA);
+
+  if (!accountInfo) {
+    // Automation account doesn't exist yet
+    return null;
+  }
+
+  const data = accountInfo.data;
+
+  if (data.length < 8) {
+    throw new Error('Invalid Automation account data');
+  }
+
+  // Skip discriminator (first 8 bytes)
+  let offset = 8;
+
+  // Parse Automation struct fields in order:
+
+  // 1. amount: u64
+  const amount = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 2. authority: Pubkey (32 bytes)
+  const authorityBytes = data.subarray(offset, offset + 32);
+  const authorityPubkey = new PublicKey(authorityBytes).toString();
+  offset += 32;
+
+  // 3. balance: u64
+  const balance = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 4. executor: Pubkey (32 bytes)
+  const executorBytes = data.subarray(offset, offset + 32);
+  const executor = new PublicKey(executorBytes).toString();
+  offset += 32;
+
+  // 5. fee: u64
+  const fee = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 6. strategy: u64
+  const strategy = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 7. mask: u64
+  const mask = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 8. reload: u64
+  const reload = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  return {
+    amount,
+    authority: authorityPubkey,
+    balance,
+    executor,
+    fee,
+    strategy,
+    mask,
+    reload,
   };
 }

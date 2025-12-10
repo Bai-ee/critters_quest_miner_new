@@ -149,6 +149,30 @@ export interface Miner {
 }
 
 /**
+ * Automation account structure
+ * Tracks automation settings for a user
+ * Defined in: api/src/state/automation.rs
+ */
+export interface Automation {
+  /** The amount of SOL to deploy on each square per round (in lamports) */
+  amount: bigint;
+  /** The authority (owner) of this automation account */
+  authority: string;
+  /** The amount of SOL this automation has left (in lamports) */
+  balance: bigint;
+  /** The executor of this automation account */
+  executor: string;
+  /** The amount of SOL the executor should receive in fees (in lamports) */
+  fee: bigint;
+  /** The strategy this automation uses (0=Random, 1=Preferred) */
+  strategy: bigint;
+  /** The mask of squares (bitmask for Preferred, count for Random) */
+  mask: bigint;
+  /** Whether or not to auto-reload SOL winnings into the automation balance */
+  reload: bigint;
+}
+
+/**
  * Constants from api/src/consts.rs
  */
 export const CONSTANTS = {

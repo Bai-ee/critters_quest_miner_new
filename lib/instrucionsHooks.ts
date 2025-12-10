@@ -210,3 +210,120 @@ export function useClaimAll() {
 
   return { claimAll };
 }
+
+/**
+ * Example: Setup or update automation
+ */
+export function useAutomation() {
+  const { connection } = useConnection();
+  const { publicKey, sendTransaction } = useWallet();
+
+  const setupAutomation = async (
+    executorAddress: string, // Executor's public key
+    amountPerSquare: number, // SOL per square (e.g., 0.01)
+    depositAmount: number, // Initial deposit (e.g., 1 SOL)
+    executorFee: number, // Fee per deployment (e.g., 0.001 SOL)
+    strategy: 'random' | 'preferred',
+    squareSelection: number[] | number // Array of squares for preferred, or count for random
+  ) => {
+    if (!publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    // Import the instruction and enum
+    const { createAutomateInstruction, AutomationStrategy } = await import('./instructions');
+
+    // Convert to lamports
+    const amountLamports = BigInt(Math.floor(amountPerSquare * 1e9));
+    const depositLamports = BigInt(Math.floor(depositAmount * 1e9));
+    const feeLamports = BigInt(Math.floor(executorFee * 1e9));
+
+    // Determine strategy and mask
+    let strategyEnum: typeof AutomationStrategy.Random | typeof AutomationStrategy.Preferred;
+    let mask: bigint;
+
+    if (strategy === 'preferred') {
+      strategyEnum = AutomationStrategy.Preferred;
+      // Convert square indices to bitmask
+      if (!Array.isArray(squareSelection)) {
+        throw new Error('For preferred strategy, provide an array of square indices');
+      }
+      let bitmask = 0;
+      for (const index of squareSelection) {
+        if (index < 0 || index >= 25) {
+          throw new Error(`Invalid square index: ${index}. Must be 0-24.`);
+        }
+        bitmask |= (1 << index);
+      }
+      mask = BigInt(bitmask);
+    } else {
+      strategyEnum = AutomationStrategy.Random;
+      // For random, mask is the number of squares to deploy to
+      if (typeof squareSelection !== 'number') {
+        throw new Error('For random strategy, provide a number (count of squares)');
+      }
+      if (squareSelection < 1 || squareSelection > 25) {
+        throw new Error('Square count must be between 1 and 25');
+      }
+      mask = BigInt(squareSelection);
+    }
+
+    // Create the instruction
+    const instruction = createAutomateInstruction(
+      publicKey,
+      new PublicKey(executorAddress),
+      amountLamports,
+      depositLamports,
+      feeLamports,
+      strategyEnum,
+      mask,
+      false // reload - set to false by default, can be made configurable
+    );
+
+    // Create and send transaction
+    const transaction = new Transaction().add(instruction);
+    const signature = await sendTransaction(transaction, connection);
+
+    // Wait for confirmation
+    await connection.confirmTransaction(signature, 'confirmed');
+
+    console.log('Automation setup successful:', signature);
+    return signature;
+  };
+
+  const disableAutomation = async () => {
+    if (!publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    // Import the instruction
+    const { createAutomateInstruction, AutomationStrategy } = await import('./instructions');
+
+    // To disable automation, set executor to default pubkey (all zeros)
+    const defaultExecutor = PublicKey.default;
+
+    // Create the instruction with minimal values (they won't be used)
+    const instruction = createAutomateInstruction(
+      publicKey,
+      defaultExecutor,
+      BigInt(0),
+      BigInt(0),
+      BigInt(0),
+      AutomationStrategy.Random,
+      BigInt(0),
+      false
+    );
+
+    // Create and send transaction
+    const transaction = new Transaction().add(instruction);
+    const signature = await sendTransaction(transaction, connection);
+
+    // Wait for confirmation
+    await connection.confirmTransaction(signature, 'confirmed');
+
+    console.log('Automation disabled:', signature);
+    return signature;
+  };
+
+  return { setupAutomation, disableAutomation };
+}

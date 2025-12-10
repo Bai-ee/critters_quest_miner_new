@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { connection, getCurrentSlot } from '@/lib/solana';
-import { fetchBoard, fetchMiner, fetchRound, getBoardPDA, getMinerPDA, getRoundPDA, gramsToOre, getTreasuryPDA, fetchTreasury } from '@/lib/accounts';
-import type { Board, Round, Miner, Treasury } from '@/lib/types';
+import { fetchBoard, fetchMiner, fetchRound, getBoardPDA, getMinerPDA, getRoundPDA, gramsToOre, getTreasuryPDA, fetchTreasury, fetchAutomation, getAutomationPDA } from '@/lib/accounts';
+import type { Board, Round, Miner, Treasury, Automation } from '@/lib/types';
 import { PublicKey, AccountInfo } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 
@@ -18,6 +18,7 @@ export function useRoundData() {
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [miner, setMiner] = useState<Miner | null>(null);
   const [treasury, setTreasury] = useState<Treasury | null>(null);
+  const [automation, setAutomation] = useState<Automation | null>(null);
 
   // Fetch Board data (called initially and when Board account changes)
   const fetchBoardData = useCallback(async () => {
@@ -393,6 +394,97 @@ export function useRoundData() {
     };
   }, [publicKey, fetchMinerData]);
 
+  // WebSocket subscription to Automation account
+  useEffect(() => {
+    if (!publicKey) {
+      // Clear automation data when wallet disconnects
+      setAutomation(null);
+      return;
+    }
+
+    // Fetch initial automation data
+    const fetchAutomationData = async () => {
+      try {
+        const automationData = await fetchAutomation(connection, publicKey);
+        setAutomation(automationData);
+      } catch (err) {
+        console.error('Error fetching automation:', err);
+      }
+    };
+
+    fetchAutomationData();
+
+    const automationPDA = getAutomationPDA(publicKey);
+    console.log('📡 Subscribing to Automation account:', automationPDA.toString());
+
+    const subscriptionId = connection.onAccountChange(
+      automationPDA,
+      async (accountInfo) => {
+        console.log('🔔 Automation account changed!');
+
+        try {
+          // Parse the new automation data
+          const data = accountInfo.data;
+          let offset = 8; // Skip discriminator
+
+          // Parse Automation struct fields in order:
+          const amount = data.readBigUInt64LE(offset);
+          offset += 8;
+
+          const authorityBytes = data.subarray(offset, offset + 32);
+          const authority = new PublicKey(authorityBytes).toString();
+          offset += 32;
+
+          const balance = data.readBigUInt64LE(offset);
+          offset += 8;
+
+          const executorBytes = data.subarray(offset, offset + 32);
+          const executor = new PublicKey(executorBytes).toString();
+          offset += 32;
+
+          const fee = data.readBigUInt64LE(offset);
+          offset += 8;
+
+          const strategy = data.readBigUInt64LE(offset);
+          offset += 8;
+
+          const mask = data.readBigUInt64LE(offset);
+          offset += 8;
+
+          const reload = data.readBigUInt64LE(offset);
+          offset += 8;
+
+          const newAutomation: Automation = {
+            amount,
+            authority,
+            balance,
+            executor,
+            fee,
+            strategy,
+            mask,
+            reload,
+          };
+
+          setAutomation(newAutomation);
+          console.log('✅ Automation data updated:', {
+            balance: newAutomation.balance.toString(),
+            amount: newAutomation.amount.toString(),
+          });
+        } catch (err) {
+          console.error('Error parsing Automation update:', err);
+          // Account might have been closed
+          setAutomation(null);
+        }
+      },
+      'confirmed'
+    );
+
+    return () => {
+      console.log('🔌 Unsubscribing from Automation account');
+      connection.removeAccountChangeListener(subscriptionId);
+    };
+  }, [publicKey]);
+
   // WebSocket subscription to Treasury PDA account to track motherlode
   useEffect(() => {
     const treasuryPDA = getTreasuryPDA();
@@ -433,5 +525,6 @@ export function useRoundData() {
     lastUpdate,
     miner,
     treasury,
+    automation,
   };
 }

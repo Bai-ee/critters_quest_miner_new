@@ -14,7 +14,7 @@ import { useState } from 'react';
 
 
 export default function Home() {
-  const { board, round, previousRound, currentSlot, loading, error, lastUpdate, miner } = useRoundData();
+  const { board, round, currentSlot, loading, error, lastUpdate, miner, automation } = useRoundData();
   const { connected, publicKey } = useWallet();
   const { balance: solBalance } = useSolBalance();
 
@@ -38,6 +38,25 @@ export default function Home() {
   const clearSelection = () => {
     setSelectedSquares(new Set());
   };
+
+  const randomSelection = () => {
+    // Default to 5 random squares if no count specified
+    const numSquares = Math.floor(Math.random() * 25) + 1;
+    const maxSquares = Math.min(numSquares, 25);
+
+    // Create array of all square indices [0-24]
+    const allSquares = Array.from({ length: 25 }, (_, i) => i);
+
+    // Shuffle array using Fisher-Yates algorithm
+    for (let i = allSquares.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allSquares[i], allSquares[j]] = [allSquares[j], allSquares[i]];
+    }
+
+    // Take first N squares from shuffled array
+    const randomSquares = allSquares.slice(0, maxSquares);
+    setSelectedSquares(new Set(randomSquares));
+  }
 
   if (loading) {
     return (
@@ -122,7 +141,7 @@ export default function Home() {
               <span className="text-xs text-gray-500 hidden md:inline">• {formatUpdateTime(lastUpdate)}</span>
             </div>
 
-             {/* Balance */}
+            {/* Balance */}
             {connected && publicKey ? (
               <div className="px-3 py-1.5 bg-purple-900/40 border border-purple-500/50 rounded-lg">
                 <div className="flex items-center gap-1.5">
@@ -192,18 +211,17 @@ export default function Home() {
                 selectedSquares={selectedSquares}
                 selectAll={selectAll}
                 clearSelection={clearSelection}
+                randomSelection={randomSelection}
                 solBalance={solBalance}
+                automation={automation}
               />
             </div>
           </div>
 
-
-
         </div>
 
-              {/* Round Results*/}
-          <RoundResults round={round} miner={miner} />
-
+        {/* Round Results*/}
+        <RoundResults round={round} miner={miner} />
 
         {/* Footer Info */}
         <div className="text-center text-gray-500 text-sm space-y-1">
@@ -213,6 +231,7 @@ export default function Home() {
             Built with ❤️ using Solana Web3.js WebSockets
           </p>
         </div>
+
       </div>
     </main>
   );
