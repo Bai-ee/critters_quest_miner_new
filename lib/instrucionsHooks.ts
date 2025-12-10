@@ -241,6 +241,7 @@ export function useAutomation() {
     // Determine strategy and mask
     let strategyEnum: typeof AutomationStrategy.Random | typeof AutomationStrategy.Preferred;
     let mask: bigint;
+    let squaresBitmask = 0;
 
     if (strategy === 'preferred') {
       strategyEnum = AutomationStrategy.Preferred;
@@ -256,6 +257,7 @@ export function useAutomation() {
         bitmask |= (1 << index);
       }
       mask = BigInt(bitmask);
+      squaresBitmask = bitmask;
     } else {
       strategyEnum = AutomationStrategy.Random;
       // For random, mask is the number of squares to deploy to
@@ -268,7 +270,7 @@ export function useAutomation() {
       mask = BigInt(squareSelection);
     }
 
-    // Create the instruction
+    // Create the automation instruction
     const instruction = createAutomateInstruction(
       publicKey,
       new PublicKey(executorAddress),

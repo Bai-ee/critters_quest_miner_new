@@ -49,7 +49,7 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
         hideTimerRef.current = null;
         console.log('🧹 Winner state cleared');
       }, 15000); // 15 seconds
-      
+
       console.log('⏱️ Timer set with ID:', hideTimerRef.current);
     }
   }, [winningSquare, persistedWinner]);
@@ -133,7 +133,7 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
             {/* SOL amount */}
             <div className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-0.5 sm:mb-1 ${isWinner ? 'text-yellow-900' : isEmpty ? 'text-gray-500' : 'text-white'
               }`}>
-              {sol.toFixed(2)}
+              {sol.toFixed(4)}
             </div>
             <div className={`text-[10px] sm:text-xs mb-1 sm:mb-2 ${isWinner ? 'text-yellow-800 font-semibold' : 'text-gray-400'
               }`}>

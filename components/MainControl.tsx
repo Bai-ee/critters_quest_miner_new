@@ -58,10 +58,12 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
             setLoading(true);
 
             // Calculate deposit based on rounds
-            const squareCount = selectedSquares.size;
-            const costPerRound = (amount * squareCount) + executorFee;
+            // NOTE: Program closes automation when balance < (amount + fee)
+            // This is per-square cost, not total cost for all squares
+            const costPerRound = amount + executorFee;
             const depositAmount = costPerRound * rounds;
 
+            // Enable automation - executor will handle deployments
             const signature = await setupAutomation(
                 executorAddress,
                 amount,
@@ -72,6 +74,7 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
             );
 
             toast.success(`Automation enabled! ${signature.slice(0, 8)}...${signature.slice(-8)}`);
+            clearSelection(); // Clear selection after successful setup
         } catch (error) {
             console.error('Setup automation failed:', error);
             toast.error(`Setup failed: ${error}`);
@@ -99,8 +102,9 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
     };
 
     // Calculate total cost and remaining rounds
+    // NOTE: Cost per round is based on single square + fee (program's close condition)
     const squareCount = selectedSquares.size;
-    const costPerRound = (amount * squareCount) + executorFee;
+    const costPerRound = amount + executorFee;
     const totalCost = costPerRound * rounds;
     const remainingRounds = automation
         ? Math.floor(bigIntToNumber(automation.balance) / 1e9 / costPerRound)
@@ -296,23 +300,22 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                     {mode === 'auto' && (
                         <>
                             {/* Amount Input with Quick Buttons */}
+
                             <div className="space-y-2">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center gap-2 flex-1">
-                                        <span className="text-blue-400 text-lg">≈</span>
-                                        <span className="text-sm text-gray-300">SOL</span>
+                                    <label className="text-sm text-gray-400">Amount:</label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="number"
+                                            value={amount}
+                                            onChange={(e) => setAmount(Number(e.target.value))}
+                                            placeholder="0.001"
+                                            step="0.001"
+                                            min="0.001"
+                                            className="flex-1 px-3 md:px-4 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        />
                                     </div>
-                                    <input
-                                        type="number"
-                                        value={amount}
-                                        onChange={(e) => setAmount(Math.max(0.001, Number(e.target.value)))}
-                                        step="0.001"
-                                        min="0.001"
-                                        disabled={!!automation}
-                                        className="w-32 px-4 py-2 bg-gray-800 text-white text-right text-2xl font-bold border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    />
-                                </div>
                             </div>
+
 
                             {/* Square Selection */}
                             <div className="space-y-2">
