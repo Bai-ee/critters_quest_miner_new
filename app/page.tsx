@@ -3,6 +3,7 @@
 import { Grid } from '@/components/Grid';
 import { MainControl } from '@/components/MainControl';
 import { Motherlode } from '@/components/Motherlode';
+import { RoundResults } from '@/components/RoundResults';
 import { Stats } from '@/components/Stats';
 import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
@@ -133,69 +134,80 @@ export default function Home() {
         </div>
 
 
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 md:gap-6 mb-8">
-          {/* Mining Grid */}
-          <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-gray-700">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-              <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-                <span>⛏️</span>
-                Mining Grid
-              </h2>
-              <div className="text-xs text-gray-500 font-mono">
-                Real-time updates
+          {/* Left Column - Mining Grid and Results */}
+          <div className="flex flex-col gap-4 md:gap-6">
+            {/* Mining Grid */}
+            <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-gray-700">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                  <span>⛏️</span>
+                  Mining Grid
+                </h2>
+                <div className="text-xs text-gray-500 font-mono">
+                  Real-time updates
+                </div>
               </div>
+
+              {/* Controls Section */}
+              {/* Header with Selection Info */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 md:mb-6 pb-4 border-b border-gray-700/50">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                  <span className="text-base md:text-lg font-bold text-white">{selectedSquares.size}</span>
+                  <span className="text-xs md:text-sm text-gray-400">square{selectedSquares.size !== 1 ? 's' : ''} selected</span>
+                </div>
+
+                {/* Selection Buttons */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={selectAll}
+                    className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white text-xs md:text-sm rounded-lg transition-all duration-200 border border-gray-600/50 hover:border-gray-500"
+                  >
+                    Select All
+                  </button>
+                  <button
+                    onClick={clearSelection}
+                    className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white text-xs md:text-sm rounded-lg transition-all duration-200 border border-gray-600/50 hover:border-gray-500"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              <Grid
+                round={round}
+                selectedSquares={selectedSquares}
+                toggleSquare={toggleSquare}
+              />
             </div>
 
-            {/* Controls Section */}
-            {/* Header with Selection Info */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 md:mb-6 pb-4 border-b border-gray-700/50">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                <span className="text-base md:text-lg font-bold text-white">{selectedSquares.size}</span>
-                <span className="text-xs md:text-sm text-gray-400">square{selectedSquares.size !== 1 ? 's' : ''} selected</span>
-              </div>
-
-              {/* Selection Buttons */}
-              <div className="flex gap-2">
-                <button
-                  onClick={selectAll}
-                  className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white text-xs md:text-sm rounded-lg transition-all duration-200 border border-gray-600/50 hover:border-gray-500"
-                >
-                  Select All
-                </button>
-                <button
-                  onClick={clearSelection}
-                  className="px-3 md:px-4 py-1.5 md:py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white text-xs md:text-sm rounded-lg transition-all duration-200 border border-gray-600/50 hover:border-gray-500"
-                >
-                  Clear
-                </button>
-              </div>
-            </div>
-
-            <Grid
-              round={round}
-              selectedSquares={selectedSquares}
-              toggleSquare={toggleSquare}
-            />
+            {/* Round Results Preview */}
+            <RoundResults round={round} miner={miner} />
           </div>
 
-          <div className="p-4 md:p-6 bg-linear-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 backdrop-blur-sm">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
-              <Motherlode amount={round.motherlode} />
+          {/* Right Column - Motherlode, Timer/Stats, Actions */}
+          <div className="flex flex-col gap-4 md:gap-6">
+            {/* Row 1: Motherlode Tiers */}
+            <Motherlode />
+
+            {/* Row 2: Timer and Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Timer endSlot={board.endSlot} currentSlot={currentSlot} startSlot={board.startSlot} />
+              <Stats round={round} />
             </div>
 
-            <Stats round={round} />
-
-            <MainControl
-              round={round}
-              miner={miner}
-              selectedSquares={selectedSquares}
-              clearSelection={clearSelection}
-            />
-
+            {/* Row 3: Action Buttons */}
+            <div className="bg-linear-to-br from-gray-800/60 to-gray-900/60 rounded-xl p-4 md:p-6 border border-gray-700/50 backdrop-blur-sm">
+              <MainControl
+                round={round}
+                miner={miner}
+                selectedSquares={selectedSquares}
+                clearSelection={clearSelection}
+              />
+            </div>
           </div>
-
         </div>
 
 

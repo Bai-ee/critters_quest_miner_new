@@ -31,8 +31,10 @@ export interface Round {
   count: bigint[];
   /** The slot at which claims for this round account end */
   expiresAt: bigint;
-  /** The amount of QUEST in the motherlode (in "grams" - 1 QUEST = 10^11 grams) */
-  motherlode: bigint;
+  /** The amount of ORE payout for the motherlode (from lottery) */
+  oreMotherlodePayout: bigint;
+  /** The amount of SOL payout for the motherlode */
+  solMotherlodePayout: bigint;
   /** The account to which rent should be returned when this account is closed */
   rentPayer: string;
   /** The top miner of the round */
@@ -41,10 +43,72 @@ export interface Round {
   topMinerReward: bigint;
   /** The total amount of SOL deployed in the round */
   totalDeployed: bigint;
+  /** The total number of unique miners that played in the round */
+  totalMiners: bigint;
   /** The total amount of SOL put in the QUEST vault */
   totalVaulted: bigint;
   /** The total amount of SOL won by miners for the round */
   totalWinnings: bigint;
+  /** The lottery outcome for the 50% ORE pool (0=split, 1=single winner, 2=motherlode) */
+  lotteryOutcome: number;
+  /** The motherlode tier hit (0=none, 1=minor, 2=major, 3=grand) */
+  motherlodeTier: number;
+}
+
+/**
+ * Stake account structure
+ * Tracks a staker's ORE balance and rewards
+ * Defined in: api/src/state/stake.rs
+ */
+export interface Stake {
+  /** The authority (owner) of this stake account */
+  authority: string;
+  /** The balance of staked ORE (in grams) */
+  balance: bigint;
+  /** Timestamp of last claim */
+  lastClaimAt: bigint;
+  /** Timestamp of last deposit */
+  lastDepositAt: bigint;
+  /** Timestamp of last withdrawal */
+  lastWithdrawAt: bigint;
+  /** Rewards factor (fixed-point number, 16 bytes) */
+  rewardsFactor: Uint8Array;
+  /** Pending ORE rewards (in grams) */
+  rewards: bigint;
+  /** Lifetime total ORE rewards earned */
+  lifetimeRewards: bigint;
+}
+
+/**
+ * Treasury account structure
+ * Singleton account tracking protocol balances
+ * Defined in: api/src/state/treasury.rs
+ */
+export interface Treasury {
+  /** The amount of SOL collected for buy-bury operations */
+  balance: bigint;
+  /** The amount of ORE in the MINOR motherlode (20% of lottery motherlode, 1/125 odds) */
+  motherlodeOreMinor: bigint;
+  /** The amount of ORE in the MAJOR motherlode (50% of lottery motherlode, 1/625 odds) */
+  motherlodeOreMajor: bigint;
+  /** The amount of ORE in the GRAND motherlode (30% of lottery motherlode, 1/2500 odds) */
+  motherlodeOreGrand: bigint;
+  /** The amount of SOL in the MINOR motherlode (20% of SOL motherlode, 1/125 odds) */
+  motherlodeSolMinor: bigint;
+  /** The amount of SOL in the MAJOR motherlode (50% of SOL motherlode, 1/625 odds) */
+  motherlodeSolMajor: bigint;
+  /** The amount of SOL in the GRAND motherlode (30% of SOL motherlode, 1/2500 odds) */
+  motherlodeSolGrand: bigint;
+  /** The cumulative ORE distributed to miners */
+  minerRewardsFactor: Uint8Array;
+  /** The cumulative ORE distributed to stakers */
+  stakeRewardsFactor: Uint8Array;
+  /** The current total amount of refined ORE mining rewards */
+  totalRefined: bigint;
+  /** The current total amount of ORE staking deposits */
+  totalStaked: bigint;
+  /** The current total amount of unclaimed ORE mining rewards */
+  totalUnclaimed: bigint;
 }
 
 /**

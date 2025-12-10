@@ -1,0 +1,21 @@
+name: Deploy
+on:
+ push:
+  branches:
+   - main
+jobs:
+ deploy:
+  name: Deploy Project
+  runs-on: [self-hosted, linux, quest2]
+  steps:
+   - uses: actions/setup-node@v4
+     with:
+      node-version: 22.19.0
+   - name: Checkout Repository
+     run: |
+      cd /home/github/critters_quest_miner
+      git checkout main
+      git pull https://${{ secrets.PERSONAL_GITHUB_TOKEN }}:@github.com/nutdotmarket/critters_quest_miner.git main
+      /home/github/.nvm/versions/node/v22.19.0/bin/npm install
+      /home/github/.nvm/versions/node/v22.19.0/bin/npm build
+      /home/github/.nvm/versions/node/v22.19.0/bin/pm2 restart critters_quest_miner

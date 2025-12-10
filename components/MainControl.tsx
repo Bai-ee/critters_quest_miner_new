@@ -172,7 +172,7 @@ export function MainControl({ round, miner, selectedSquares, clearSelection }: M
                             </div>
                         )}
 
-                        <div className="bg-gray-900/50 p-3 md:p-4 rounded-lg border border-gray-700/50">
+                      <div className="bg-gray-900/50 p-3 md:p-4 rounded-lg border border-gray-700/50">
                             <div className="flex items-center justify-between">
                                 <span className="text-xs md:text-sm text-gray-300 font-medium">SOL Rewards</span>
                                 <span className="text-base md:text-lg font-bold text-yellow-400">

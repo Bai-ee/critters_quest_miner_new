@@ -1,5 +1,5 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { Board, Round, Miner, CONSTANTS } from './types';
+import { Board, Round, Miner, Stake, Treasury, CONSTANTS } from './types';
 
 /**
  * PDA seeds matching api/src/consts.rs
@@ -8,6 +8,7 @@ const SEEDS = {
   BOARD: Buffer.from('board'),
   ROUND: Buffer.from('round'),
   MINER: Buffer.from('miner'),
+  STAKE: Buffer.from('stake'),
 } as const;
 
 /**
@@ -158,35 +159,54 @@ export async function fetchRound(
   const expiresAt = data.readBigUInt64LE(offset);
   offset += 8;
 
-  // 6. motherlode: u64
-  const motherlode = data.readBigUInt64LE(offset);
+  // 6. ore_motherlode_payout: u64
+  const oreMotherlodePayout = data.readBigUInt64LE(offset);
   offset += 8;
 
-  // 7. rent_payer: Pubkey (32 bytes)
+  // 7. sol_motherlode_payout: u64
+  const solMotherlodePayout = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 8. rent_payer: Pubkey (32 bytes)
   const rentPayerBytes = data.subarray(offset, offset + 32);
   const rentPayer = new PublicKey(rentPayerBytes).toString();
   offset += 32;
 
-  // 8. top_miner: Pubkey (32 bytes)
+  // 9. top_miner: Pubkey (32 bytes)
   const topMinerBytes = data.subarray(offset, offset + 32);
   const topMiner = new PublicKey(topMinerBytes).toString();
   offset += 32;
 
-  // 9. top_miner_reward: u64
+  // 10. top_miner_reward: u64
   const topMinerReward = data.readBigUInt64LE(offset);
   offset += 8;
 
-  // 10. total_deployed: u64
+  // 11. total_deployed: u64
   const totalDeployed = data.readBigUInt64LE(offset);
   offset += 8;
 
-  // 11. total_vaulted: u64
+  // 12. total_miners: u64
+  const totalMiners = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 13. total_vaulted: u64
   const totalVaulted = data.readBigUInt64LE(offset);
   offset += 8;
 
-  // 12. total_winnings: u64
+  // 14. total_winnings: u64
   const totalWinnings = data.readBigUInt64LE(offset);
   offset += 8;
+
+  // 15. lottery_outcome: u8
+  const lotteryOutcome = data.readUInt8(offset);
+  offset += 1;
+
+  // 16. motherlode_tier: u8
+  const motherlodeTier = data.readUInt8(offset);
+  offset += 1;
+
+  // 17. padding: [u8; 6]
+  offset += 6;
 
   return {
     id,
@@ -194,13 +214,17 @@ export async function fetchRound(
     slotHash,
     count,
     expiresAt,
-    motherlode,
+    oreMotherlodePayout,
+    solMotherlodePayout,
     rentPayer,
     topMiner,
     topMinerReward,
     totalDeployed,
+    totalMiners,
     totalVaulted,
     totalWinnings,
+    lotteryOutcome,
+    motherlodeTier,
   };
 }
 
@@ -218,21 +242,12 @@ export function getTreasuryPDA(): PublicKey {
 
 /**
  * Fetch and deserialize the Treasury account
- * The Treasury account stores the motherlode value
- * Structure from IDL:
- * - discriminator: [u8; 8]
- * - balance: u64
- * - buffer_a: u64
- * - motherlode: u64
- * - miner_rewards_factor: Numeric (16 bytes)
- * - stake_rewards_factor: Numeric (16 bytes)
- * - buffer_b: u64
- * - total_refined: u64
+ * Structure matches: api/src/state/treasury.rs
  *
  * @param connection - Solana connection
- * @returns The motherlode value in grams (base units)
+ * @returns Deserialized Treasury data
  */
-export async function fetchTreasury(connection: Connection): Promise<bigint> {
+export async function fetchTreasury(connection: Connection): Promise<Treasury> {
   const treasuryPDA = getTreasuryPDA();
   const accountInfo = await connection.getAccountInfo(treasuryPDA);
 
@@ -242,23 +257,83 @@ export async function fetchTreasury(connection: Connection): Promise<bigint> {
 
   const data = accountInfo.data;
 
-  if (data.length < 32) {
+  if (data.length < 8) {
     throw new Error('Invalid Treasury account data');
   }
 
-  // Skip discriminator (8 bytes)
+  // Skip discriminator (first 8 bytes)
   let offset = 8;
 
-  // Skip balance: u64
+  // Parse Treasury struct fields in order:
+
+  // 1. balance: u64
+  const balance = data.readBigUInt64LE(offset);
   offset += 8;
 
-  // Skip buffer_a: u64
+  // 2. buffer_a: u64
   offset += 8;
 
-  // Read motherlode: u64 (at offset 24)
-  const motherlode = data.readBigUInt64LE(offset);
-  
-  return motherlode;
+  // 3. motherlode_ore_minor: u64
+  const motherlodeOreMinor = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 4. motherlode_ore_major: u64
+  const motherlodeOreMajor = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 5. motherlode_ore_grand: u64
+  const motherlodeOreGrand = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 6. motherlode_sol_minor: u64
+  const motherlodeSolMinor = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 7. motherlode_sol_major: u64
+  const motherlodeSolMajor = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 8. motherlode_sol_grand: u64
+  const motherlodeSolGrand = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 9. miner_rewards_factor: Numeric (16 bytes)
+  const minerRewardsFactor = data.subarray(offset, offset + 16);
+  offset += 16;
+
+  // 10. stake_rewards_factor: Numeric (16 bytes)
+  const stakeRewardsFactor = data.subarray(offset, offset + 16);
+  offset += 16;
+
+  // 11. buffer_b: u64
+  offset += 8;
+
+  // 12. total_refined: u64
+  const totalRefined = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 13. total_staked: u64
+  const totalStaked = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 14. total_unclaimed: u64
+  const totalUnclaimed = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  return {
+    balance,
+    motherlodeOreMinor,
+    motherlodeOreMajor,
+    motherlodeOreGrand,
+    motherlodeSolMinor,
+    motherlodeSolMajor,
+    motherlodeSolGrand,
+    minerRewardsFactor,
+    stakeRewardsFactor,
+    totalRefined,
+    totalStaked,
+    totalUnclaimed,
+  };
 }
 
 /**
@@ -429,3 +504,98 @@ export async function fetchMiner(
   };
 }
 
+/**
+ * Derive the Stake PDA address for a specific authority
+ * Matches: stake_pda(authority) in api/src/state/mod.rs
+ *
+ * @param authority - The wallet public key of the staker
+ */
+export function getStakePDA(authority: PublicKey): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [SEEDS.STAKE, authority.toBuffer()],
+    new PublicKey(CONSTANTS.PROGRAM_ID)
+  );
+  return pda;
+}
+
+/**
+ * Fetch and deserialize the Stake account for a given authority
+ * Structure matches: api/src/state/stake.rs
+ *
+ * @param connection - Solana connection
+ * @param authority - The wallet public key of the staker
+ * @returns Deserialized Stake data, or null if account doesn't exist
+ */
+export async function fetchStake(
+  connection: Connection,
+  authority: PublicKey
+): Promise<Stake | null> {
+  const stakePDA = getStakePDA(authority);
+  const accountInfo = await connection.getAccountInfo(stakePDA);
+
+  if (!accountInfo) {
+    // Stake account doesn't exist yet (user hasn't staked)
+    return null;
+  }
+
+  const data = accountInfo.data;
+
+  if (data.length < 8) {
+    throw new Error('Invalid Stake account data');
+  }
+
+  // Skip discriminator (first 8 bytes)
+  let offset = 8;
+
+  // Parse Stake struct fields in order:
+
+  // 1. authority: Pubkey (32 bytes)
+  const authorityBytes = data.subarray(offset, offset + 32);
+  const authorityPubkey = new PublicKey(authorityBytes).toString();
+  offset += 32;
+
+  // 2. balance: u64
+  const balance = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 3-7. buffer_a through buffer_e: u64 (5 * 8 = 40 bytes)
+  offset += 40;
+
+  // 8. last_claim_at: i64 (read as u64 then convert)
+  const lastClaimAt = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 9. last_deposit_at: i64 (read as u64 then convert)
+  const lastDepositAt = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 10. last_withdraw_at: i64 (read as u64 then convert)
+  const lastWithdrawAt = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 11. rewards_factor: Numeric (16 bytes)
+  const rewardsFactor = data.subarray(offset, offset + 16);
+  offset += 16;
+
+  // 12. rewards: u64
+  const rewards = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 13. lifetime_rewards: u64
+  const lifetimeRewards = data.readBigUInt64LE(offset);
+  offset += 8;
+
+  // 14. buffer_f: u64
+  offset += 8;
+
+  return {
+    authority: authorityPubkey,
+    balance,
+    lastClaimAt,
+    lastDepositAt,
+    lastWithdrawAt,
+    rewardsFactor,
+    rewards,
+    lifetimeRewards,
+  };
+}
