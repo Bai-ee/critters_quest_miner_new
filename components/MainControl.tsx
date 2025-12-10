@@ -9,10 +9,11 @@ interface MainControlProps {
     round: Round;
     miner: Miner | null;
     selectedSquares: Set<number>;
+    selectAll: () => void;
     clearSelection: () => void;
 }
 
-export function MainControl({ round, miner, selectedSquares, clearSelection }: MainControlProps) {
+export function MainControl({ round, miner, selectedSquares, selectAll, clearSelection }: MainControlProps) {
     const { checkpoint } = useCheckpoint();
     const { deploy } = useDeployToSquares();
     const { claimSol } = useClaimSol();
@@ -107,7 +108,7 @@ export function MainControl({ round, miner, selectedSquares, clearSelection }: M
     return (
         <>
             {/* Main Controls Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4 md:p-6 lg:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 p-4 ">
                 {/* Left Column - Deploy Controls */}
                 <div className="space-y-4">
                     <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">Deploy</h3>
@@ -127,6 +128,20 @@ export function MainControl({ round, miner, selectedSquares, clearSelection }: M
                                     className="flex-1 px-3 md:px-4 py-2 bg-gray-800 text-white border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                onClick={selectAll}
+                                className="w-full px-3 md:px-4 py-1.5 md:py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white text-xs md:text-sm rounded-lg transition-all duration-200 border border-gray-600/50 hover:border-gray-500"
+                            >
+                                Select All
+                            </button>
+                            <button
+                                onClick={clearSelection}
+                                className="w-full px-3 md:px-4 py-1.5 md:py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white text-xs md:text-sm rounded-lg transition-all duration-200 border border-gray-600/50 hover:border-gray-500"
+                            >
+                                Clear
+                            </button>
                         </div>
                         <div className="flex items-center justify-between text-xs md:text-sm font-semibold text-gray-300 bg-gray-800/50 px-3 py-2 rounded-lg border border-gray-600/50">
                             <span className="text-gray-400">Total Cost:</span>

@@ -200,8 +200,8 @@ export function useRoundData() {
 
           const expiresAt = data.readBigUInt64LE(offset);
           offset += 8;
-          // Skip the round's motherlode snapshot - we use Treasury's live value instead
-          offset += 8;
+          // Skip the round's motherlode payouts (ore_motherlode_payout + sol_motherlode_payout)
+          offset += 16;
 
           const rentPayerBytes = data.subarray(offset, offset + 32);
           const rentPayer = Buffer.from(rentPayerBytes).toString('hex');

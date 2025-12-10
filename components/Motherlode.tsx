@@ -74,12 +74,12 @@ export function Motherlode({ amount }: MotherlodeProps) {
         console.error('Error loading treasury:', err);
       }
     };
-    
+
     loadTreasury();
   }, []);
 
   return (
-    <div className="relative overflow-hidden bg-linear-to-br from-purple-900/40 via-indigo-900/40 to-purple-800/40 rounded-xl p-4 shadow-xl border border-purple-500/20">
+    <div className="relative overflow-hidden bg-linear-to-br from-purple-900/40 via-indigo-900/40 to-purple-800/40 rounded-xl p-4 shadow-xl border border-purple-500/20 my-4">
       {/* Animated background */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-0 left-0 w-full h-full bg-linear-to-br from-transparent via-white to-transparent animate-pulse" />
@@ -95,33 +95,33 @@ export function Motherlode({ amount }: MotherlodeProps) {
         </div>
 
         {/* Tiers */}
-        <div className="space-y-2">
+        <div className="grid grid-cols-3 gap-2">
           {tiers.map((tier) => (
             <div
               key={tier.name}
-              className={`bg-linear-to-r ${tier.gradient} rounded-lg p-3 border ${tier.borderColor} backdrop-blur-sm`}
+              className={`bg-linear-to-r ${tier.gradient} rounded-lg p-2.5 border ${tier.borderColor} backdrop-blur-sm`}
             >
-              <div className="flex items-center justify-between mb-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{tier.emoji}</span>
-                  <span className="text-sm font-bold text-white">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg">{tier.emoji}</span>
+                  <span className="text-xs font-bold text-white">
                     {tier.name}
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-white/80 bg-black/20 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-semibold text-white/80 bg-black/20 px-1.5 py-0.5 rounded">
                   {tier.odds}
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="grid grid-cols-2 gap-1.5 text-xs">
                 <div className="bg-black/20 rounded px-2 py-1">
-                  <div className="text-white/70 text-[10px] uppercase">QUEST</div>
+                  <div className="text-white/70 text-[9px] uppercase">QUEST</div>
                   <div className="font-bold text-white truncate">
                     {tier.ore.toFixed(2)}
                   </div>
                 </div>
                 <div className="bg-black/20 rounded px-2 py-1">
-                  <div className="text-white/70 text-[10px] uppercase">SOL</div>
+                  <div className="text-white/70 text-[9px] uppercase">SOL</div>
                   <div className="font-bold text-white truncate">
                     {tier.sol.toFixed(4)}
                   </div>
