@@ -91,7 +91,7 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
         {/* Time display */}
         <div className="mb-3">
           {notStarted ? (
-            <div className="text-xl font-bold text-gray-200 py-4">
+            <div className="text-xl font-bold text-gray-200 py-2">
               Round Not Started
             </div>
           ) : (
@@ -112,14 +112,14 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
         </div>
 
         {/* Info */}
-        <div className="bg-black/20 rounded-lg p-3 backdrop-blur-sm">
+{/*         <div className="bg-black/20 rounded-lg p-3 backdrop-blur-sm">
           <div className="text-xs text-blue-200/80">
             End Slot: <span className="font-mono">{endSlot.toString()}</span>
           </div>
           <div className="text-xs text-blue-200/80 mt-1">
             Current: <span className="font-mono">{currentSlot.toString()}</span>
           </div>
-        </div>
+        </div> */}
 
         {/* Progress bar */}
         {!isExpired && !notStarted && (

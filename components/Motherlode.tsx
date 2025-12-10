@@ -95,7 +95,7 @@ export function Motherlode({ amount }: MotherlodeProps) {
         </div>
 
         {/* Tiers */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid sm:grid-cols-1 md:grid-cols-3 gap-2">
           {tiers.map((tier) => (
             <div
               key={tier.name}
