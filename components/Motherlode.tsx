@@ -1,99 +1,77 @@
-import { gramsToOre, lamportsToSol, fetchTreasury, getTreasuryPDA } from '@/lib/accounts';
-import { connection } from '@/lib/solana';
-import { useEffect, useState } from 'react';
+import { gramsToOre, lamportsToSol } from '@/lib/accounts';
+import { useRoundData } from '@/hooks/useRoundData';
+import { useMemo } from 'react';
 
 interface MotherlodeProps {
   amount?: bigint;
 }
 
 export function Motherlode({ amount }: MotherlodeProps) {
-  const [tiers, setTiers] = useState([
-    {
-      name: 'MINOR',
-      emoji: '🥉',
-      odds: '1/125',
-      ore: 0,
-      sol: 0,
-      gradient: 'from-amber-600 to-yellow-600',
-      borderColor: 'border-amber-400/30',
-    },
-    {
-      name: 'MAJOR',
-      emoji: '🥈',
-      odds: '1/625',
-      ore: 0,
-      sol: 0,
-      gradient: 'from-gray-400 to-gray-500',
-      borderColor: 'border-gray-300/30',
-    },
-    {
-      name: 'GRAND',
-      emoji: '🥇',
-      odds: '1/2500',
-      ore: 0,
-      sol: 0,
-      gradient: 'from-yellow-400 to-orange-500',
-      borderColor: 'border-yellow-300/40',
-    },
-  ]);
+  const { treasury } = useRoundData();
 
-  useEffect(() => {
-    const loadTreasury = async () => {
-      try {
-        const treasury = await fetchTreasury(connection);
-        setTiers([
-          {
-            name: 'MINOR',
-            emoji: '🥉',
-            odds: '1/125',
-            ore: gramsToOre(treasury.motherlodeOreMinor),
-            sol: lamportsToSol(treasury.motherlodeSolMinor),
-            gradient: 'from-amber-600 to-yellow-600',
-            borderColor: 'border-amber-400/30',
-          },
-          {
-            name: 'MAJOR',
-            emoji: '🥈',
-            odds: '1/625',
-            ore: gramsToOre(treasury.motherlodeOreMajor),
-            sol: lamportsToSol(treasury.motherlodeSolMajor),
-            gradient: 'from-gray-400 to-gray-500',
-            borderColor: 'border-gray-300/30',
-          },
-          {
-            name: 'GRAND',
-            emoji: '🥇',
-            odds: '1/2500',
-            ore: gramsToOre(treasury.motherlodeOreGrand),
-            sol: lamportsToSol(treasury.motherlodeSolGrand),
-            gradient: 'from-yellow-400 to-orange-500',
-            borderColor: 'border-yellow-300/40',
-          },
-        ]);
-      } catch (err) {
-        console.error('Error loading treasury:', err);
-      }
-    };
+  const tiers = useMemo(() => {
+    if (!treasury) {
+      return [
+        {
+          name: 'MINOR',
+          emoji: '🥉',
+          odds: '1/125',
+          ore: 0,
+          sol: 0,
+          gradient: 'from-amber-600 to-yellow-600',
+          borderColor: 'border-amber-400/30',
+        },
+        {
+          name: 'MAJOR',
+          emoji: '🥈',
+          odds: '1/625',
+          ore: 0,
+          sol: 0,
+          gradient: 'from-gray-400 to-gray-500',
+          borderColor: 'border-gray-300/30',
+        },
+        {
+          name: 'GRAND',
+          emoji: '🥇',
+          odds: '1/2500',
+          ore: 0,
+          sol: 0,
+          gradient: 'from-yellow-400 to-orange-500',
+          borderColor: 'border-yellow-300/40',
+        },
+      ];
+    }
 
-    // Load immediately
-    loadTreasury();
-
-    // Subscribe to Treasury account changes via WebSocket
-    const treasuryPDA = getTreasuryPDA();
-    const subscriptionId = connection.onAccountChange(
-      treasuryPDA,
-      () => {
-        // Treasury account updated, reload data
-        loadTreasury();
+    return [
+      {
+        name: 'MINOR',
+        emoji: '🥉',
+        odds: '1/125',
+        ore: gramsToOre(treasury.motherlodeOreMinor),
+        sol: lamportsToSol(treasury.motherlodeSolMinor),
+        gradient: 'from-amber-600 to-yellow-600',
+        borderColor: 'border-amber-400/30',
       },
-      'confirmed'
-    );
-
-    // Cleanup subscription on unmount
-    return () => {
-      connection.removeAccountChangeListener(subscriptionId);
-    };
-  }, []);
+      {
+        name: 'MAJOR',
+        emoji: '🥈',
+        odds: '1/625',
+        ore: gramsToOre(treasury.motherlodeOreMajor),
+        sol: lamportsToSol(treasury.motherlodeSolMajor),
+        gradient: 'from-gray-400 to-gray-500',
+        borderColor: 'border-gray-300/30',
+      },
+      {
+        name: 'GRAND',
+        emoji: '🥇',
+        odds: '1/2500',
+        ore: gramsToOre(treasury.motherlodeOreGrand),
+        sol: lamportsToSol(treasury.motherlodeSolGrand),
+        gradient: 'from-yellow-400 to-orange-500',
+        borderColor: 'border-yellow-300/40',
+      },
+    ];
+  }, [treasury]);
 
   return (
     <div className="relative overflow-hidden bg-linear-to-br from-purple-900/40 via-indigo-900/40 to-purple-800/40 rounded-xl p-4 shadow-xl border border-purple-500/20 my-4">

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { connection, getCurrentSlot } from '@/lib/solana';
 import { fetchBoard, fetchMiner, fetchRound, getBoardPDA, getMinerPDA, getRoundPDA, gramsToOre, getTreasuryPDA, fetchTreasury } from '@/lib/accounts';
-import type { Board, Round, Miner } from '@/lib/types';
+import type { Board, Round, Miner, Treasury } from '@/lib/types';
 import { PublicKey, AccountInfo } from '@solana/web3.js';
 import { useWallet } from '@solana/wallet-adapter-react';
 
@@ -17,6 +17,7 @@ export function useRoundData() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
   const [miner, setMiner] = useState<Miner | null>(null);
+  const [treasury, setTreasury] = useState<Treasury | null>(null);
 
   // Fetch Board data (called initially and when Board account changes)
   const fetchBoardData = useCallback(async () => {
@@ -69,13 +70,8 @@ export function useRoundData() {
 
         // Fetch initial treasury/motherlode data
         try {
-          const motherlode = await fetchTreasury(connection);
-          // Update round with correct motherlode
-          if (roundData) {
-            setRound({
-              ...roundData,
-            });
-          }
+          const treasuryData = await fetchTreasury(connection);
+          setTreasury(treasuryData);
         } catch (err) {
           console.error('Error fetching initial treasury:', err);
         }
@@ -139,12 +135,8 @@ export function useRoundData() {
 
             // Fetch Treasury's live motherlode for the new round
             try {
-              const motherlode = await fetchTreasury(connection);
-              if (newRoundData) {
-                setRound({
-                  ...newRoundData,
-                });
-              }
+              const treasuryData = await fetchTreasury(connection);
+              setTreasury(treasuryData);
             } catch (err) {
               console.error('Error fetching treasury for new round:', err);
             }
@@ -413,41 +405,13 @@ export function useRoundData() {
         console.log('🔔 Treasury PDA account changed!');
 
         try {
-          // Parse Treasury account data
-          // Structure: discriminator(8) + balance(8) + buffer_a(8) + motherlode(8) + ...
-          const data = accountInfo.data;
-
-          if (data.length < 32) {
-            console.error('Invalid Treasury account data');
-            return;
-          }
-
-          // Skip discriminator (8 bytes)
-          let offset = 8;
-
-          // Skip balance: u64
-          offset += 8;
-
-          // Skip buffer_a: u64
-          offset += 8;
-
-          // Read motherlode: u64 (at offset 24)
-          const motherlode = data.readBigUInt64LE(offset);
-
-          console.log('💰 Motherlode updated:', motherlode.toString(), 'grams');
-          console.log('💰 Motherlode:', gramsToOre(motherlode).toFixed(4), 'ORE');
-
-          // Update the round's motherlode using callback form to get latest state
-          setRound((currentRound) => {
-            if (!currentRound) return currentRound;
-            return {
-              ...currentRound,
-              motherlode: motherlode,
-            };
-          });
+          // Fetch full Treasury data when account changes
+          const treasuryData = await fetchTreasury(connection);
+          setTreasury(treasuryData);
           setLastUpdate(new Date());
+          console.log('💰 Treasury updated - Minor:', gramsToOre(treasuryData.motherlodeOreMinor).toFixed(2), 'ORE');
         } catch (err) {
-          console.error('Error parsing Treasury PDA account update:', err);
+          console.error('Error fetching Treasury update:', err);
         }
       },
       'confirmed'
@@ -468,5 +432,6 @@ export function useRoundData() {
     error,
     lastUpdate,
     miner,
+    treasury,
   };
 }
