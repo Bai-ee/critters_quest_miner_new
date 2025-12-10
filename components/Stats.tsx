@@ -1,11 +1,12 @@
 import { lamportsToSol, gramsToOre } from '@/lib/accounts';
-import type { Round } from '@/lib/types';
+import type { Miner, Round } from '@/lib/types';
 
 interface StatsProps {
   round: Round;
+  miner: Miner;
 }
 
-export function Stats({ round }: StatsProps) {
+export function Stats({ round, miner }: StatsProps) {
   const statCards = [
     {
       label: 'Total Deployed',
@@ -15,7 +16,7 @@ export function Stats({ round }: StatsProps) {
     },
     {
       label: 'Your Deployed',
-      value: `${lamportsToSol(round.totalDeployed).toFixed(4)} SOL`,
+      value: `${miner.roundId==round.id ? lamportsToSol(miner.deployed.reduce((a, b) => a + b)).toFixed(4) : 0} SOL`,
       icon: '🏆',
       color: 'from-purple-600 to-purple-700',
     },

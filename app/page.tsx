@@ -195,7 +195,7 @@ export default function Home() {
             {/* Row 2: Timer and Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Timer endSlot={board.endSlot} currentSlot={currentSlot} startSlot={board.startSlot} />
-              <Stats round={round} />
+              <Stats round={round} miner={miner} />
             </div>
 
             {/* Row 3: Action Buttons */}
