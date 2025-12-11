@@ -142,6 +142,7 @@ export function createAutomateInstruction(
   reload: boolean
 ): TransactionInstruction {
   const automationPDA = getAutomationPDA(signer);
+  const boardPDA = getBoardPDA();
   const minerPDA = getMinerPDA(signer);
 
   // Serialize instruction data
@@ -190,9 +191,11 @@ export function createAutomateInstruction(
     keys: [
       { pubkey: signer, isSigner: true, isWritable: true },
       { pubkey: automationPDA, isSigner: false, isWritable: true },
+      { pubkey: boardPDA, isSigner: false, isWritable: true },
       { pubkey: executor, isSigner: false, isWritable: false },
       { pubkey: minerPDA, isSigner: false, isWritable: true },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: new PublicKey(CONSTANTS.PROGRAM_ID), isSigner: false, isWritable: false },
     ],
     programId: new PublicKey(CONSTANTS.PROGRAM_ID),
     data,
