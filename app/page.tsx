@@ -192,6 +192,9 @@ export default function Home() {
               </div>
 
             </div>
+
+            {/* Round Results*/}
+            <RoundResults round={round} miner={miner} />
           </div>
 
           {/* Right Column - Motherlode, Timer/Stats, Actions */}
@@ -219,9 +222,6 @@ export default function Home() {
           </div>
 
         </div>
-
-        {/* Round Results*/}
-        <RoundResults round={round} miner={miner} />
 
         {/* Footer Info */}
         <div className="text-center text-gray-500 text-sm space-y-1">

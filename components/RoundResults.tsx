@@ -1,5 +1,4 @@
 import { Miner, Round } from '@/lib/types';
-import { bigIntToNumber } from '@/lib/formatters';
 import { lamportsToSol, gramsToOre, getWinningSquare } from '@/lib/accounts';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRoundData } from '@/hooks/useRoundData';
@@ -139,6 +138,16 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
         </div>
       </div>
     );
+  }
+
+  // Check if user's last played round is too far behind current round
+  const currentRoundId = Number(round.id);
+  const minerRoundId = Number(miner.roundId);
+  const roundsBehind = currentRoundId - minerRoundId;
+
+  // Hide results if user is more than 2 rounds behind (hasn't played recently)
+  if (roundsBehind > 2) {
+    return null;
   }
 
   const {
