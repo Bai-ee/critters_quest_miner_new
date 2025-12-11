@@ -9,6 +9,7 @@ import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
+import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState } from 'react';
 
@@ -17,6 +18,13 @@ export default function Home() {
   const { board, round, currentSlot, loading, error, lastUpdate, miner, automation } = useRoundData();
   const { connected, publicKey } = useWallet();
   const { balance: solBalance } = useSolBalance();
+
+  // Get token balance
+  const { balance: tokenBalance } = useTokenBalance({
+    tokenMint: 'QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s',
+    walletAddress: 'GkvAksZA1map1tNjVsH5vz5yx9a7ZEJafojoCkALMknZ',
+    decimals: 9
+  });
 
   // Shared state for square selection
   const [selectedSquares, setSelectedSquares] = useState<Set<number>>(new Set());
@@ -158,7 +166,6 @@ export default function Home() {
           </div>
         </div>
 
-
         {/* Row 1: Motherlode Tiers */}
         <Motherlode />
 
@@ -175,6 +182,9 @@ export default function Home() {
                 </h2>
                 <div className="text-xs text-gray-500 font-mono">
                   Real-time updates
+                </div>
+                <div className="text-xs text-gray-500 font-mono">
+                  Next Round Reward: { ( tokenBalance / 525600 ).toFixed(2) } $QUEST
                 </div>
               </div>
 

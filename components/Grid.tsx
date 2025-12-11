@@ -1,3 +1,4 @@
+import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { lamportsToSol, getWinningSquare } from '@/lib/accounts';
 import { Round } from '@/lib/types';
 import { useWallet } from '@solana/wallet-adapter-react';
