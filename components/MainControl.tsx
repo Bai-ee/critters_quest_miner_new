@@ -58,9 +58,9 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
             setLoading(true);
 
             // Calculate deposit based on rounds
-            // NOTE: Program closes automation when balance < (amount + fee)
-            // This is per-square cost, not total cost for all squares
-            const costPerRound = amount + executorFee;
+            // Cost per round = (amount per square × number of squares) + executor fee
+            const squareCount = selectedSquares.size;
+            const costPerRound = (amount * squareCount) + executorFee;
             const depositAmount = costPerRound * rounds;
 
             // Enable automation - executor will handle deployments
@@ -102,13 +102,23 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
     };
 
     // Calculate total cost and remaining rounds
-    // NOTE: Cost per round is based on single square + fee (program's close condition)
+    // Cost per round = (amount per square × number of squares) + executor fee
     const squareCount = selectedSquares.size;
-    const costPerRound = amount + executorFee;
+    const costPerRound = squareCount > 0 ? (amount * squareCount) + executorFee : 0;
     const totalCost = costPerRound * rounds;
-    const remainingRounds = automation
-        ? Math.floor(bigIntToNumber(automation.balance) / 1e9 / costPerRound)
-        : 0;
+
+    // For automation, calculate remaining rounds based on selected squares from mask
+    const remainingRounds = automation ? (() => {
+        // Count how many squares are in the automation mask
+        let automationSquareCount = 0;
+        for (let i = 0; i < 25; i++) {
+            if ((automation.mask & (1n << BigInt(i))) !== 0n) {
+                automationSquareCount++;
+            }
+        }
+        const automationCostPerRound = (bigIntToNumber(automation.amount) / 1e9 * automationSquareCount) + (bigIntToNumber(automation.fee) / 1e9);
+        return Math.floor(bigIntToNumber(automation.balance) / 1e9 / automationCostPerRound);
+    })() : 0;
 
     const handleDeploy = async () => {
         if (selectedSquares.size === 0) {

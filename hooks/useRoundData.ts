@@ -284,6 +284,13 @@ export function useRoundData() {
         console.log('🔔 Miner account changed!');
 
         try {
+          // Check if account was closed (empty data)
+          if (accountInfo.data.length === 0) {
+            console.log('🔴 Miner account closed');
+            setMiner(null);
+            return;
+          }
+
           // Parse the new miner data
           const data = accountInfo.data;
           let offset = 8; // Skip discriminator
@@ -423,6 +430,13 @@ export function useRoundData() {
         console.log('🔔 Automation account changed!');
 
         try {
+          // Check if account was closed (empty data)
+          if (accountInfo.data.length === 0) {
+            console.log('🔴 Automation account closed');
+            setAutomation(null);
+            return;
+          }
+
           // Parse the new automation data
           const data = accountInfo.data;
           let offset = 8; // Skip discriminator
