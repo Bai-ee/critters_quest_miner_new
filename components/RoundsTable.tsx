@@ -198,7 +198,7 @@ export default function RoundsTable() {
                     <td className="py-4">
                       <div className="flex items-center gap-1">
                         <span className="text-orange-400">⛏</span>
-                        <span className="text-white">{formatNumber(round.total_minted, 11)}</span>
+                        <span className="text-white">{formatNumber(round.total_minted, 9)}</span>
                       </div>
                     </td>
                     <td className="py-4">
