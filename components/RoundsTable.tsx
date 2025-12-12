@@ -154,7 +154,7 @@ export default function RoundsTable() {
               <tr className="text-left text-gray-400 text-sm border-b border-gray-800">
                 <th className="pb-3 font-medium">Round</th>
                 <th className="pb-3 font-medium">Block</th>
-                <th className="pb-3 font-medium">$QUEST Lottery Winner</th>
+                <th className="pb-3 font-medium">Lottery Winner</th>
                 <th className="pb-3 font-medium">Winners</th>
                 <th className="pb-3 font-medium">Deployed</th>
                 <th className="pb-3 font-medium">$QUEST Rewards</th>
@@ -236,8 +236,7 @@ export default function RoundsTable() {
                 <th className="pb-3 font-medium">Round</th>
                 <th className="pb-3 font-medium">Miner</th>
                 <th className="pb-3 font-medium">Lottery</th>
-                <th className="pb-3 font-medium">$QUEST Guaranteed</th>
-                <th className="pb-3 font-medium">$QUEST Lottery</th>
+                <th className="pb-3 font-medium">$QUEST Reward</th>
                 <th className="pb-3 font-medium">SOL Reward</th>
                 <th className="pb-3 font-medium">Motherlode $QUEST</th>
                 <th className="pb-3 font-medium">Motherlode SOL</th>
@@ -284,16 +283,6 @@ export default function RoundsTable() {
                         <span className="text-orange-400">⛏</span>
                         <span className="text-white">{formatNumber(winner.ore_reward_guaranteed, 9)}</span>
                       </div>
-                    </td>
-                    <td className="py-4">
-                      {winner.ore_reward_lottery > 0 ? (
-                        <div className="flex items-center gap-1">
-                          <span className="text-orange-400">⛏</span>
-                          <span className="text-yellow-400">{formatNumber(winner.ore_reward_lottery, 9)}</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">–</span>
-                      )}
                     </td>
                     <td className="py-4">
                       <div className="flex items-center gap-1">
