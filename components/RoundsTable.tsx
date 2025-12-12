@@ -45,7 +45,7 @@ const formatNumber = (num: number, decimals: number = 4) => {
 };
 
 const formatAddress = (address: string) => {
-  if (!address || address === 'Split') return address;
+  if (!address || address === 'Split' || address === 'Motherlode') return address;
   return `${address.slice(0, 4)}...${address.slice(-4)}`;
 };
 
@@ -154,7 +154,7 @@ export default function RoundsTable() {
               <tr className="text-left text-gray-400 text-sm border-b border-gray-800">
                 <th className="pb-3 font-medium">Round</th>
                 <th className="pb-3 font-medium">Block</th>
-                <th className="pb-3 font-medium">$QUEST Winner</th>
+                <th className="pb-3 font-medium">$QUEST Lottery Winner</th>
                 <th className="pb-3 font-medium">Winners</th>
                 <th className="pb-3 font-medium">Deployed</th>
                 <th className="pb-3 font-medium">$QUEST Rewards</th>
@@ -165,12 +165,11 @@ export default function RoundsTable() {
             </thead>
             <tbody>
               {rounds.map((round) => {
-                const oreWinner = round.lottery_outcome === 'Single Winner'
-                  ? (round.round_winner || 'Split')
-                  : 'Split';
+                const oreWinner = round.lottery_outcome === 'Single Winner' ? (round.round_winner || 'Single Winner') : round.lottery_outcome === 'Motherlode' ? 'Motherlode' : 'Split';
 
-                const hasMotherlode = round.motherlode_tier !== 'None' &&
-                  (round.ore_motherlode_payout > 0 || round.sol_motherlode_payout > 0);
+                const hasMotherlode = round.lottery_outcome === 'Motherlode';
+
+                const hasMotherLodeRewards = round.motherlode_tier !== 'None' && (round.ore_motherlode_payout > 0 || round.sol_motherlode_payout > 0);
 
                 return (
                   <tr
@@ -198,19 +197,19 @@ export default function RoundsTable() {
                     <td className="py-4">
                       <div className="flex items-center gap-1">
                         <span className="text-orange-400">⛏</span>
-                        <span className="text-white">{formatNumber(round.total_minted, 9)}</span>
+                        <span className="text-white">{formatNumber(round.total_minted, 9)} {hasMotherLodeRewards ? `+ ${formatNumber(round.ore_motherlode_payout, 9)}` : ''}</span>
                       </div>
                     </td>
                     <td className="py-4">
                       <div className="flex items-center gap-1">
                         <span className="text-purple-400">≡</span>
-                        <span className="text-white">{formatNumber(round.total_winnings, 9)}</span>
+                        <span className="text-white">{formatNumber(round.total_winnings, 9)} {hasMotherLodeRewards ? `+ ${formatNumber(round.sol_motherlode_payout, 9)}` : ''}</span>
                       </div>
                     </td>
                     <td className="py-4 text-gray-400">
                       {hasMotherlode ? (
                         <span className="text-yellow-400">
-                          {round.motherlode_tier}
+                          +{formatNumber(round.total_minted/2, 9)}
                         </span>
                       ) : (
                         '–'
