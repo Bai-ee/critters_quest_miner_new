@@ -4,6 +4,7 @@ import { Grid } from '@/components/Grid';
 import { MainControl } from '@/components/MainControl';
 import { Motherlode } from '@/components/Motherlode';
 import { RoundResults } from '@/components/RoundResults';
+import RoundsTable from '@/components/RoundsTable';
 import { Stats } from '@/components/Stats';
 import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
@@ -232,6 +233,9 @@ export default function Home() {
           </div>
 
         </div>
+
+        {/* Row 4: Rounds Table */}
+        <RoundsTable />
 
         {/* Footer Info */}
         <div className="text-center text-gray-500 text-sm space-y-1">
