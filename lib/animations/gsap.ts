@@ -1,16 +1,6 @@
-/**
- * GSAP Animation Utilities
- * 
- * Reusable animation functions using GSAP with the master config.
- * These functions provide consistent animations throughout the app.
- */
-
 import gsap from 'gsap';
 import { ANIMATION_CONFIG } from './config';
 
-/**
- * Animate card entrance
- */
 export function animateCardEntrance(
   element: gsap.TweenTarget,
   delay: number = 0,
@@ -20,13 +10,9 @@ export function animateCardEntrance(
   
   return gsap.fromTo(
     element,
-    {
-      ...config.from,
-      opacity: config.from.opacity,
-    },
+    config.from,
     {
       ...config.to,
-      opacity: config.to.opacity,
       duration: config.duration,
       delay: delay + config.delay,
       ease: config.ease,
@@ -35,9 +21,6 @@ export function animateCardEntrance(
   );
 }
 
-/**
- * Animate card hover
- */
 export function animateCardHover(
   element: gsap.TweenTarget,
   isHovering: boolean
@@ -47,12 +30,6 @@ export function animateCardHover(
   if (isHovering) {
     gsap.to(element, {
       scale: config.scale,
-      duration: config.duration,
-      ease: config.ease,
-    });
-    
-    // Add glow effect if element has box-shadow support
-    gsap.to(element, {
       boxShadow: `0 0 ${config.glow.intensity * 20}px ${config.glow.color}`,
       duration: config.duration,
       ease: config.ease,
@@ -60,11 +37,6 @@ export function animateCardHover(
   } else {
     gsap.to(element, {
       scale: 1,
-      duration: config.duration,
-      ease: config.ease,
-    });
-    
-    gsap.to(element, {
       boxShadow: '0 0 0px rgba(0, 0, 0, 0)',
       duration: config.duration,
       ease: config.ease,
@@ -72,9 +44,6 @@ export function animateCardHover(
   }
 }
 
-/**
- * Animate card exit
- */
 export function animateCardExit(
   element: gsap.TweenTarget,
   onComplete?: () => void
@@ -89,9 +58,6 @@ export function animateCardExit(
   });
 }
 
-/**
- * Animate modal backdrop
- */
 export function animateModalBackdrop(
   element: gsap.TweenTarget,
   isOpening: boolean,
@@ -100,29 +66,21 @@ export function animateModalBackdrop(
   const config = ANIMATION_CONFIG.modal.backdrop;
   
   if (isOpening) {
-    return gsap.fromTo(
-      element,
-      config.from,
-      {
-        ...config.to,
-        duration: config.duration,
-        ease: config.ease,
-        onComplete,
-      }
-    );
-  } else {
-    return gsap.to(element, {
-      ...config.from,
+    return gsap.fromTo(element, config.from, {
+      ...config.to,
       duration: config.duration,
       ease: config.ease,
       onComplete,
     });
   }
+  return gsap.to(element, {
+    ...config.from,
+    duration: config.duration,
+    ease: config.ease,
+    onComplete,
+  });
 }
 
-/**
- * Animate modal entrance
- */
 export function animateModalEntrance(
   element: gsap.TweenTarget,
   onComplete?: () => void
@@ -141,9 +99,6 @@ export function animateModalEntrance(
   );
 }
 
-/**
- * Animate modal exit
- */
 export function animateModalExit(
   element: gsap.TweenTarget,
   onComplete?: () => void
@@ -158,9 +113,6 @@ export function animateModalExit(
   });
 }
 
-/**
- * Animate button hover
- */
 export function animateButtonHover(
   element: gsap.TweenTarget,
   isHovering: boolean
@@ -194,9 +146,6 @@ export function animateButtonHover(
   }
 }
 
-/**
- * Animate button active/pressed
- */
 export function animateButtonActive(
   element: gsap.TweenTarget,
   isActive: boolean
@@ -218,9 +167,6 @@ export function animateButtonActive(
   }
 }
 
-/**
- * Animate button loading pulse
- */
 export function animateButtonLoading(element: gsap.TweenTarget) {
   const config = ANIMATION_CONFIG.button.loading.pulse;
   
@@ -233,9 +179,6 @@ export function animateButtonLoading(element: gsap.TweenTarget) {
   });
 }
 
-/**
- * Animate grid square hover
- */
 export function animateGridSquareHover(
   element: gsap.TweenTarget,
   isHovering: boolean
@@ -245,11 +188,6 @@ export function animateGridSquareHover(
   if (isHovering) {
     gsap.to(element, {
       scale: config.scale,
-      duration: config.duration,
-      ease: config.ease,
-    });
-    
-    gsap.to(element, {
       boxShadow: `0 0 ${config.glow.intensity * 20}px ${config.glow.color}`,
       duration: config.duration,
       ease: config.ease,
@@ -257,11 +195,6 @@ export function animateGridSquareHover(
   } else {
     gsap.to(element, {
       scale: 1,
-      duration: config.duration,
-      ease: config.ease,
-    });
-    
-    gsap.to(element, {
       boxShadow: '0 0 0px rgba(0, 0, 0, 0)',
       duration: config.duration,
       ease: config.ease,
@@ -269,9 +202,6 @@ export function animateGridSquareHover(
   }
 }
 
-/**
- * Animate grid square selected
- */
 export function animateGridSquareSelected(
   element: gsap.TweenTarget,
   isSelected: boolean
@@ -291,7 +221,6 @@ export function animateGridSquareSelected(
       ease: config.ease,
     });
     
-    // Add pulse animation
     gsap.to(element, {
       scale: config.pulse.scale,
       duration: config.pulse.duration,
@@ -315,9 +244,6 @@ export function animateGridSquareSelected(
   }
 }
 
-/**
- * Animate grid square winner celebration
- */
 export function animateGridSquareWinner(
   element: gsap.TweenTarget,
   onComplete?: () => void
@@ -326,7 +252,6 @@ export function animateGridSquareWinner(
   
   const tl = gsap.timeline({ onComplete });
   
-  // Scale and glow
   tl.to(element, {
     scale: config.to.scale,
     boxShadow: `0 0 ${config.glow.intensity * 30}px ${config.glow.color}`,
@@ -334,7 +259,6 @@ export function animateGridSquareWinner(
     ease: config.ease,
   });
   
-  // Bounce
   tl.to(element, {
     y: config.bounce.y,
     duration: config.bounce.duration,
@@ -344,9 +268,6 @@ export function animateGridSquareWinner(
   return tl;
 }
 
-/**
- * Stagger animation for multiple elements
- */
 export function animateStagger(
   elements: gsap.TweenTarget,
   animation: (element: gsap.TweenTarget) => gsap.core.Tween,
@@ -362,9 +283,6 @@ export function animateStagger(
   });
 }
 
-/**
- * Page entrance animation
- */
 export function animatePageEntrance(
   element: gsap.TweenTarget,
   onComplete?: () => void
@@ -383,9 +301,6 @@ export function animatePageEntrance(
   );
 }
 
-/**
- * Loading spinner animation
- */
 export function animateLoadingSpinner(element: gsap.TweenTarget) {
   const config = ANIMATION_CONFIG.loading.spinner;
   
@@ -397,9 +312,6 @@ export function animateLoadingSpinner(element: gsap.TweenTarget) {
   });
 }
 
-/**
- * Loading pulse animation
- */
 export function animateLoadingPulse(element: gsap.TweenTarget) {
   const config = ANIMATION_CONFIG.loading.pulse;
   
@@ -413,17 +325,11 @@ export function animateLoadingPulse(element: gsap.TweenTarget) {
   });
 }
 
-/**
- * Utility to check if user prefers reduced motion
- */
 export function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined') return false;
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-/**
- * Get animation duration with reduced motion support
- */
 export function getAnimationDuration(baseDuration: number): number {
   return prefersReducedMotion() ? 0 : baseDuration;
 }

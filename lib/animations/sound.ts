@@ -1,14 +1,6 @@
-/**
- * Sound Manager
- * 
- * Centralized sound effect management using Howler.js
- * Provides easy-to-use functions for playing game sounds.
- */
-
 import { Howl } from 'howler';
 import { ANIMATION_CONFIG } from './config';
 
-// Sound file paths (to be added when sound files are available)
 const SOUND_PATHS = {
   hover: '/sounds/hover.mp3',
   click: '/sounds/click.mp3',
@@ -20,12 +12,8 @@ const SOUND_PATHS = {
   ambient: '/sounds/ambient.mp3',
 } as const;
 
-// Sound instances cache
 const soundCache = new Map<string, Howl>();
 
-/**
- * Initialize a sound
- */
 function initSound(
   key: keyof typeof SOUND_PATHS,
   options: { volume?: number; loop?: boolean } = {}
@@ -45,26 +33,18 @@ function initSound(
   return sound;
 }
 
-/**
- * Sound Manager Class
- */
 class SoundManager {
   private masterVolume: number = 1;
   private enabled: boolean = true;
   private muted: boolean = false;
 
   constructor() {
-    // Check if sounds should be enabled (user preference, mobile, etc.)
     if (typeof window !== 'undefined') {
-      // Disable by default on mobile to save battery/data
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       this.enabled = !isMobile;
     }
   }
 
-  /**
-   * Set master volume (0-1)
-   */
   setMasterVolume(volume: number) {
     this.masterVolume = Math.max(0, Math.min(1, volume));
     soundCache.forEach((sound) => {
@@ -72,23 +52,14 @@ class SoundManager {
     });
   }
 
-  /**
-   * Get master volume
-   */
   getMasterVolume(): number {
     return this.masterVolume;
   }
 
-  /**
-   * Enable/disable sounds
-   */
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
   }
 
-  /**
-   * Mute/unmute sounds
-   */
   setMuted(muted: boolean) {
     this.muted = muted;
     soundCache.forEach((sound) => {
@@ -100,16 +71,10 @@ class SoundManager {
     });
   }
 
-  /**
-   * Check if sounds are enabled
-   */
   isEnabled(): boolean {
     return this.enabled && !this.muted;
   }
 
-  /**
-   * Play a sound effect
-   */
   play(
     key: keyof typeof SOUND_PATHS,
     options: {
@@ -141,9 +106,6 @@ class SoundManager {
     }
   }
 
-  /**
-   * Stop a sound
-   */
   stop(key: keyof typeof SOUND_PATHS) {
     const sound = soundCache.get(key);
     if (sound) {
@@ -151,18 +113,12 @@ class SoundManager {
     }
   }
 
-  /**
-   * Stop all sounds
-   */
   stopAll() {
     soundCache.forEach((sound) => {
       sound.stop();
     });
   }
 
-  /**
-   * Preload all sounds
-   */
   preloadAll() {
     Object.keys(SOUND_PATHS).forEach((key) => {
       initSound(key as keyof typeof SOUND_PATHS);
@@ -170,10 +126,8 @@ class SoundManager {
   }
 }
 
-// Export singleton instance
 export const soundManager = new SoundManager();
 
-// Convenience functions
 export const playHoverSound = () => {
   soundManager.play('hover', {
     volume: ANIMATION_CONFIG.sound.volume.hover,
@@ -218,6 +172,5 @@ export const playWinnerSound = () => {
   });
 };
 
-// Export for use in components
 export default soundManager;
 

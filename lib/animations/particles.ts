@@ -1,10 +1,3 @@
-/**
- * Particle System Utilities
- * 
- * Three.js particle system for celebrations and effects.
- * Provides reusable particle effects for game interactions.
- */
-
 import * as THREE from 'three';
 import { ANIMATION_CONFIG } from './config';
 
@@ -19,9 +12,6 @@ export interface ParticleSystemOptions {
   size?: number;
 }
 
-/**
- * Create a celebration particle system
- */
 export function createCelebrationParticles(
   container: HTMLElement,
   options: ParticleSystemOptions = {}
@@ -166,9 +156,6 @@ export function createCelebrationParticles(
   };
 }
 
-/**
- * Create a hover particle effect (lighter, fewer particles)
- */
 export function createHoverParticles(
   container: HTMLElement,
   options: ParticleSystemOptions = {}
@@ -193,9 +180,6 @@ export function createHoverParticles(
   });
 }
 
-/**
- * Simple particle burst (no Three.js, CSS-based for performance)
- */
 export function createSimpleParticleBurst(
   element: HTMLElement,
   options: {

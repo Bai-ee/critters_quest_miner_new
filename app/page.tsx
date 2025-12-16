@@ -13,6 +13,7 @@ import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState } from 'react';
+import { CALCULATIONS } from '@/lib/constants';
 
 
 export default function Home() {
@@ -185,7 +186,7 @@ export default function Home() {
                   Real-time updates
                 </div>
                 <div className="text-xs text-gray-500 font-mono">
-                  Next Round Reward: { ( tokenBalance / 525600 ).toFixed(2) } $QUEST
+                  Next Round Reward: { ( tokenBalance / CALCULATIONS.MINUTES_PER_YEAR ).toFixed(2) } $QUEST
                 </div>
               </div>
 

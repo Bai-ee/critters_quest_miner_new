@@ -1,10 +1,3 @@
-/**
- * useAnimation Hook
- * 
- * React hook for easy animation integration in components.
- * Provides refs and handlers for common animation patterns.
- */
-
 import { useRef, useEffect, useCallback } from 'react';
 import gsap from 'gsap';
 import {
@@ -22,9 +15,6 @@ export interface UseAnimationOptions {
   soundDelay?: number;
 }
 
-/**
- * Hook for card animations
- */
 export function useCardAnimation(options: UseAnimationOptions = {}) {
   const cardRef = useRef<HTMLDivElement>(null);
   const { enableSound = true } = options;
@@ -51,9 +41,6 @@ export function useCardAnimation(options: UseAnimationOptions = {}) {
   };
 }
 
-/**
- * Hook for button animations
- */
 export function useButtonAnimation(options: UseAnimationOptions = {}) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { enableSound = true } = options;
@@ -97,9 +84,6 @@ export function useButtonAnimation(options: UseAnimationOptions = {}) {
   };
 }
 
-/**
- * Hook for grid square animations
- */
 export function useGridSquareAnimation(
   isSelected: boolean,
   options: UseAnimationOptions = {}
@@ -142,9 +126,6 @@ export function useGridSquareAnimation(
   };
 }
 
-/**
- * Hook for GSAP timeline animations
- */
 export function useGSAPTimeline() {
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
 

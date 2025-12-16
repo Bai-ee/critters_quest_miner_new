@@ -1,10 +1,3 @@
-/**
- * Modal Component
- * 
- * Reusable modal component with GSAP animations.
- * Supports backdrop, close on click outside, ESC key, and smooth animations.
- */
-
 'use client';
 
 import { useEffect, useRef, ReactNode } from 'react';
@@ -45,7 +38,6 @@ export function Modal({
   const backdropRef = useRef<HTMLDivElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Handle ESC key
   useEffect(() => {
     if (!isOpen || !closeOnEscape) return;
 
@@ -60,24 +52,16 @@ export function Modal({
     return () => window.removeEventListener('keydown', handleEscape);
   }, [isOpen, closeOnEscape, onClose]);
 
-  // Animate modal entrance/exit
   useEffect(() => {
     if (!backdropRef.current || !modalRef.current) return;
 
     if (isOpen) {
-      // Animate backdrop
       animateModalBackdrop(backdropRef.current, true);
-      
-      // Animate modal
       animateModalEntrance(modalRef.current);
-      
-      // Prevent body scroll
       document.body.style.overflow = 'hidden';
     } else {
-      // Animate exit
       animateModalBackdrop(backdropRef.current, false);
       animateModalExit(modalRef.current, () => {
-        // Re-enable body scroll after animation
         document.body.style.overflow = '';
       });
     }
@@ -122,7 +106,6 @@ export function Modal({
         `}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
         {(title || showCloseButton) && (
           <div className="flex items-center justify-between p-6 border-b border-gray-700/50">
             {title && (
@@ -164,7 +147,6 @@ export function Modal({
           </div>
         )}
 
-        {/* Content */}
         <div className="p-6">
           {children}
         </div>
