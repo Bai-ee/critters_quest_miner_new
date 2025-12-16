@@ -33,3 +33,6 @@ yarn-error.log*
 next-env.d.ts
 scripts/automation-keypair.json
 .env
+
+# cursor
+.cursor/
