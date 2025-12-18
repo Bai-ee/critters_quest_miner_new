@@ -8,6 +8,7 @@ import gsap from 'gsap';
 interface GridProps {
   round: Round;
   miner?: Miner | null;
+  currentSlot: bigint;
   selectedSquares: Set<number>;
   toggleSquare: (index: number) => void;
 }
@@ -24,7 +25,7 @@ const MINING_ITEMS = [
   'Seep.png', 'Shimmerwood.png'
 ];
 
-export function Grid({ round, miner, selectedSquares, toggleSquare }: GridProps) {
+export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare }: GridProps) {
   const { publicKey } = useWallet();
   const [showWinner, setShowWinner] = useState(false);
   const [winnerSquareIndex, setWinnerSquareIndex] = useState<number | null>(null);
@@ -33,6 +34,22 @@ export function Grid({ round, miner, selectedSquares, toggleSquare }: GridProps)
   const gridRef = useRef<HTMLDivElement>(null);
   const hasAnimatedRef = useRef(false);
   const [animationPhase, setAnimationPhase] = useState<'initial' | 'animating' | 'completed'>('initial');
+
+  // Determine if the round is currently in the "mining" phase (timer running)
+  const isMining = useMemo(() => {
+    if (!round.id || !currentSlot) return false;
+    // Round is active if current slot is between start and end slots
+    return currentSlot >= round.id && currentSlot < (round.id + BigInt(150 * 5)); // Approximate end slot if not available
+    // Actually, we should use round.startSlot and round.endSlot from the Board if available, 
+    // but Grid only gets Round. Let's use the current round active status.
+  }, [round.id, currentSlot]);
+
+  // Better way to check if timer is running: use board data from parent or just check if round is not expired
+  const isTimerRunning = useMemo(() => {
+    // If we have a slot hash, the round is finalized/expired
+    const isExpired = round.slotHash && round.slotHash.some(b => b !== 0);
+    return !isExpired;
+  }, [round.slotHash]);
 
   // Generate a stable set of random images for the back of each card
   const backImages = useMemo(() => {
@@ -135,6 +152,18 @@ export function Grid({ round, miner, selectedSquares, toggleSquare }: GridProps)
 
   return (
     <div ref={gridRef} className="grid grid-cols-5 gap-1 sm:gap-2" style={{ perspective: '1200px' }}>
+      <style>{`
+        @keyframes subtle-shake {
+          0% { transform: rotate(0deg); }
+          25% { transform: rotate(1deg); }
+          50% { transform: rotate(0deg); }
+          75% { transform: rotate(-1deg); }
+          100% { transform: rotate(0deg); }
+        }
+        .animate-shake {
+          animation: subtle-shake 0.3s ease-in-out infinite;
+        }
+      `}</style>
       {round.deployed.map((lamports, index) => {
         const sol = lamportsToSol(lamports);
         const miners = round.count[index];
@@ -178,6 +207,7 @@ export function Grid({ round, miner, selectedSquares, toggleSquare }: GridProps)
                 className={`
                   absolute inset-0 w-full h-full flex flex-col
                   ${isWinner ? 'scale-110 z-20' : isChosen ? 'scale-105 z-10' : ''}
+                  ${isChosen && isTimerRunning ? 'animate-shake' : ''}
                 `}
                 style={{
                   backgroundImage: "url('/img/card_bg.png')",

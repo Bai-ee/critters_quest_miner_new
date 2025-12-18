@@ -404,6 +404,7 @@ export default function Home() {
             <Grid
               round={round}
               miner={miner}
+              currentSlot={currentSlot}
               selectedSquares={selectedSquares}
               toggleSquare={toggleSquare}
             />
