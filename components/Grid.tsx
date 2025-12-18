@@ -1,12 +1,13 @@
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { lamportsToSol, getWinningSquare } from '@/lib/accounts';
-import { Round } from '@/lib/types';
+import { Round, Miner } from '@/lib/types';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import gsap from 'gsap';
 
 interface GridProps {
   round: Round;
+  miner?: Miner | null;
   selectedSquares: Set<number>;
   toggleSquare: (index: number) => void;
 }
@@ -23,7 +24,7 @@ const MINING_ITEMS = [
   'Seep.png', 'Shimmerwood.png'
 ];
 
-export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
+export function Grid({ round, miner, selectedSquares, toggleSquare }: GridProps) {
   const { publicKey } = useWallet();
   const [showWinner, setShowWinner] = useState(false);
   const [winnerSquareIndex, setWinnerSquareIndex] = useState<number | null>(null);
@@ -138,6 +139,15 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
         const sol = lamportsToSol(lamports);
         const miners = round.count[index];
         const isSelected = selectedSquares.has(index);
+        
+        // Check if user has already deployed to this square in the current round
+        const hasMined = miner && 
+                        miner.roundId.toString() === round.id.toString() && 
+                        miner.deployed && 
+                        miner.deployed[index] > BigInt(0);
+        
+        // Final chosen state is either selected in UI or already mined on-chain
+        const isChosen = isSelected || hasMined;
         const isWinner = index === winnerSquareIndex && showWinner;
 
         return (
@@ -167,7 +177,7 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
               <div 
                 className={`
                   absolute inset-0 w-full h-full flex flex-col
-                  ${isWinner ? 'scale-110 z-20' : isSelected ? 'scale-105 z-10' : ''}
+                  ${isWinner ? 'scale-110 z-20' : isChosen ? 'scale-105 z-10' : ''}
                 `}
                 style={{
                   backgroundImage: "url('/img/card_bg.png')",
@@ -179,7 +189,7 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
                   WebkitBackfaceVisibility: 'hidden',
                   zIndex: 2,
                   transition: animationPhase === 'completed' ? 'transform 0.2s ease, box-shadow 0.2s ease' : 'none',
-                  boxShadow: isWinner ? '0 0 25px rgba(255,215,0,0.6)' : isSelected ? '0 0 15px rgba(255,255,255,0.5)' : 'none',
+                  boxShadow: isWinner ? '0 0 25px rgba(255,215,0,0.6)' : isChosen ? '0 0 15px rgba(255,255,255,0.5)' : 'none',
                   borderRadius: '8px',
                   color: 'black',
                   padding: '13cqw' // Use container-relative padding
@@ -210,13 +220,13 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
                 <div 
                   className={`absolute top-[14cqw] right-[15cqw] min-w-[22cqw] h-[22cqw] rounded-full border flex items-center justify-center z-30 shadow-sm px-1 overflow-hidden transition-all duration-200`}
                   style={{
-                    background: isSelected 
+                    background: isChosen 
                       ? 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)' 
                       : 'white',
-                    borderColor: isSelected ? 'rgb(35,116,13)' : 'black',
+                    borderColor: isChosen ? 'rgb(35,116,13)' : 'black',
                   }}
                 >
-                  {isSelected && (
+                  {isChosen && (
                     <>
                       {/* Glossy Overlay - Top Highlight */}
                       <div 
@@ -230,7 +240,7 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
                       />
                     </>
                   )}
-                  <span className={`text-[11cqw] font-bold leading-none z-10 ${isSelected ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]' : 'text-black'}`}>
+                  <span className={`text-[11cqw] font-bold leading-none z-10 ${isChosen ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]' : 'text-black'}`}>
                     {miners.toString()}
                   </span>
                 </div>

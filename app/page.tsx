@@ -126,7 +126,7 @@ export default function Home() {
             needCheckpoint
         );
         toast.success(`Deploy successful! ${signature.slice(0, 8)}...${signature.slice(-8)}`);
-        clearSelection(); // Clear selection after successful deploy
+        // We no longer clear selection here so user can see which squares they've mined
     } catch (error) {
         console.error('Deploy failed:', error);
         toast.error(`Deploy failed: ${error}`);
@@ -403,6 +403,7 @@ export default function Home() {
           <div className="mt-0" style={{ overflow: 'visible' }}>
             <Grid
               round={round}
+              miner={miner}
               selectedSquares={selectedSquares}
               toggleSquare={toggleSquare}
             />
