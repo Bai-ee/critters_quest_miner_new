@@ -152,8 +152,8 @@ export default function Home() {
       </div>
 
       {/* Mining items gradient image at top - scrolls with page */}
+      {/* 
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
-        {/* Misc value space images and Miner logo - horizontally centered */}
         <div className="absolute flex items-center justify-center gap-4" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
           <img 
             src="/img/misc_value_space.png" 
@@ -187,7 +187,6 @@ export default function Home() {
             }}
           />
         </div>
-        {/* Timer, Pickaxe, and Red box - positioned around pickaxe */}
         {board?.endSlot && currentSlot && (
           <div className="absolute top-[90px]" style={{ left: '50%', transform: 'translateX(-50%)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
             <Timer endSlot={board.endSlot} currentSlot={currentSlot} startSlot={board.startSlot} />
@@ -206,7 +205,6 @@ export default function Home() {
             </div>
           </div>
         )}
-        {/* Mining items gradient - in front of logo */}
         <img 
           src="/img/mining_items_gradient.png" 
           alt="" 
@@ -223,6 +221,7 @@ export default function Home() {
           }}
         />
       </div>
+      */}
 
       {/* TOP HUD - Fixed height */}
       <div
