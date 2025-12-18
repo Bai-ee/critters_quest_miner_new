@@ -2,7 +2,7 @@ import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { lamportsToSol, getWinningSquare } from '@/lib/accounts';
 import { Round } from '@/lib/types';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import gsap from 'gsap';
 
 interface GridProps {
@@ -10,6 +10,18 @@ interface GridProps {
   selectedSquares: Set<number>;
   toggleSquare: (index: number) => void;
 }
+
+// List of available mining item images for the back of the cards
+const MINING_ITEMS = [
+  'Ancient Cache.png', 'Ancient Formation.png', 'Ancient Grove.png', 'Ancient Oak.png',
+  'Basic Rock.png', 'Birch.png', 'Bone Pile.png', 'Common Deposit.png',
+  'Crystal Pine.png', 'Crystal Soil.png', 'Elderwood.png', 'Exceptional Cluster.png',
+  'Gravel.png', 'Herb Patch.png', 'Ironwood.png', 'Legendary Remnant.png',
+  'Loose Soil.png', 'Maple.png', 'Mineral Deposit.png', 'Mineral Outcrop.png',
+  'Mushroom Circle.png', 'Oak.png', 'Pine.png', 'Precious Deposit.png',
+  'Pristine Geode.png', 'Rare Formation.png', 'Rich Vein.png', 'Sapling.png',
+  'Seep.png', 'Shimmerwood.png'
+];
 
 export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
   const { publicKey } = useWallet();
@@ -21,47 +33,52 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
   const hasAnimatedRef = useRef(false);
   const [animationPhase, setAnimationPhase] = useState<'initial' | 'animating' | 'completed'>('initial');
 
-  // Animate grid cards on load
+  // Generate a stable set of random images for the back of each card
+  const backImages = useMemo(() => {
+    return Array.from({ length: 25 }, () => 
+      MINING_ITEMS[Math.floor(Math.random() * MINING_ITEMS.length)]
+    );
+  }, []);
+
+  // Rebuilt staggered 3D flip animation timeline
   useEffect(() => {
     if (gridRef.current && !hasAnimatedRef.current) {
-      const cards = gridRef.current.children;
-      const cardsArray = Array.from(cards).filter(el => !el.classList.contains('col-span-5'));
+      const cardInners = gridRef.current.querySelectorAll('.cq-card-inner');
       
-      if (cardsArray.length > 0) {
+      if (cardInners.length > 0) {
+        hasAnimatedRef.current = true;
         setAnimationPhase('animating');
         
-        // Set container perspective for 3D effect
-        gsap.set(gridRef.current, { perspective: 1000 });
-        
-        // Animate cards in from off-screen
-        gsap.fromTo(cardsArray, 
-          { 
-            opacity: 0, 
-            y: 100, 
-            rotationX: 0,
-            transformOrigin: "center bottom",
-            scale: 1
-          },
-          {
-            opacity: 1,
-            y: 0,
-            rotationX: 0,
-            scale: 1,
-            duration: 0,
-            delay: 3, // Start immediately to ensure overlap
-            stagger: 0.05,
-            ease: "power2.out",
-            onComplete: () => {
-              setAnimationPhase('completed');
-            },
-            clearProps: "transform,rotationX,transformOrigin,scale"
+        // Initial state: Flipped to show the back (-180 deg) and visible
+        gsap.set(cardInners, { 
+          opacity: 1, 
+          rotationY: -180,
+          transformOrigin: "center center"
+        });
+
+        const tl = gsap.timeline({
+          onComplete: () => {
+            setAnimationPhase('completed');
           }
-        );
+        });
+
+        // Flip to reveal the front
+        tl.to(cardInners, {
         
-        hasAnimatedRef.current = true;
+          opacity: 1,
+          rotationY: 0,
+          duration: .5,
+          stagger: {
+            each: 0.1,
+            from: "start",
+            grid: [5, 5]
+          },
+          ease: "power2.out",
+          delay: 1
+        });
       }
     }
-  }, [round.deployed]); // Re-run if deployed data changes, hasAnimatedRef ensures it only plays once
+  }, [round.deployed]);
 
   // Calculate winning square if round is finalized
   const winningSquare = getWinningSquare(round.slotHash);
@@ -116,80 +133,119 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
   const maxDeployed = Math.max(...round.deployed.map(d => Number(d)));
 
   return (
-    <div ref={gridRef} className="grid grid-cols-5 gap-1 sm:gap-2">
+    <div ref={gridRef} className="grid grid-cols-5 gap-1 sm:gap-2" style={{ perspective: '1200px' }}>
       {round.deployed.map((lamports, index) => {
         const sol = lamportsToSol(lamports);
         const miners = round.count[index];
-        const isEmpty = sol === 0;
         const isSelected = selectedSquares.has(index);
         const isWinner = index === winnerSquareIndex && showWinner;
-
-        const intensity = maxDeployed > 0
-          ? Math.min(100, Math.floor((Number(lamports) / maxDeployed) * 100))
-          : 0;
 
         return (
           <div
             key={index}
-            onClick={() => toggleSquare(index)}
-            className={`
-              relative aspect-square cursor-pointer transition-all duration-200
-              ${isWinner 
-                ? 'scale-110 z-20' 
-                : isSelected 
-                  ? 'scale-105 z-10'
-                  : ''
-              }
-            `}
-            style={{
-              backgroundImage: "url('/img/card_bg.png')",
-              backgroundSize: '100% 100%',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              border: 'none',
-              boxShadow: 'none',
-              backgroundColor: 'transparent',
-              // Initially hidden, visible during animation (GSAP handles it), and kept visible after
-              opacity: animationPhase === 'initial' ? 0 : 1,
+            className="relative aspect-square cursor-pointer"
+            style={{ 
+              transformStyle: 'preserve-3d',
+              perspective: '1000px',
+              containerType: 'inline-size' // Enable container queries for scaling
             }}
+            onClick={() => toggleSquare(index)}
           >
-            <div className="relative h-full flex flex-col p-1 sm:p-3">
-              {/* Square number badge */}
-              <div className={`absolute top-1 right-1 text-[10px] font-mono font-bold text-black`}>
-                #{index + 1}
-              </div>
+            {/* Inner Wrapper for GSAP Flip Animation */}
+            <div 
+              className="cq-card-inner w-full h-full relative"
+              style={{ 
+                transformStyle: 'preserve-3d',
+                width: '100%',
+                height: '100%',
+                // Cards are visible on load, showing their back face
+                opacity: 1,
+                transform: animationPhase === 'completed' ? 'rotateY(0deg)' : 'rotateY(-180deg)'
+              }}
+            >
+              {/* FRONT FACE (Data) */}
+              <div 
+                className={`
+                  absolute inset-0 w-full h-full flex flex-col
+                  ${isWinner ? 'scale-110 z-20' : isSelected ? 'scale-105 z-10' : ''}
+                `}
+                style={{
+                  backgroundImage: "url('/img/card_bg.png')",
+                  backgroundSize: '100% 100%',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundColor: 'transparent',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  zIndex: 2,
+                  transition: animationPhase === 'completed' ? 'transform 0.2s ease, box-shadow 0.2s ease' : 'none',
+                  boxShadow: isWinner ? '0 0 25px rgba(255,215,0,0.6)' : isSelected ? '0 0 15px rgba(255,255,255,0.5)' : 'none',
+                  borderRadius: '8px',
+                  color: 'black',
+                  padding: '13cqw' // Use container-relative padding
+                }}
+              >
+                {/* Card number badge (Top Left - tucked inside bezel) */}
+                <div className="absolute top-[14cqw] left-[15cqw] text-[10cqw] font-mono font-bold text-black z-30 opacity-70">
+                  #{index + 1}
+                </div>
 
-              {/* Winner indicator */}
-              {isWinner && (
-                <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <div className="text-3xl sm:text-4xl animate-bounce">
-                    👑
+                {/* Winner indicator */}
+                {isWinner && (
+                  <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
+                    <div className="text-[30cqw] animate-bounce text-black">👑</div>
+                  </div>
+                )}
+
+                {/* Selection indicator */}
+                {isSelected && !isWinner && (
+                  <div className="absolute top-[12cqw] left-[15cqw] text-black text-[15cqw] font-bold z-30">✓</div>
+                )}
+
+                {/* Center Item Image */}
+                <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                  <img 
+                    src={`/img/MINING_ITEMS_INDIVIDUAL/${backImages[index]}`}
+                    alt="Mining Item Small"
+                    className="w-[64%] h-[64%] object-contain opacity-80"
+                  />
+                </div>
+
+                {/* Miner count circle (Top Right - aligned with card number) */}
+                <div className="absolute top-[14cqw] right-[15cqw] min-w-[22cqw] h-[22cqw] rounded-full bg-white border border-black flex items-center justify-center z-30 shadow-sm px-1">
+                  <span className="text-[11cqw] font-bold text-black leading-none">
+                    {miners.toString()}
+                  </span>
+                </div>
+
+                {/* Bottom Info Row (SOL value - moved up inside bezel) */}
+                <div className="absolute bottom-[13cqw] left-0 right-0 w-full flex justify-center items-center px-1">
+                  <div className="text-[10cqw] font-bold text-black whitespace-nowrap bg-white/40 px-[2cqw] rounded">
+                    {sol.toFixed(4)} SOL
                   </div>
                 </div>
-              )}
-
-              {/* Selection indicator */}
-              {isSelected && !isWinner && (
-                <div className="absolute top-1 left-1 text-black text-lg font-bold z-10">
-                  ✓
-                </div>
-              )}
-
-              {/* SOL amount */}
-              <div className={`text-[10px] sm:text-sm font-bold mb-0.5 text-black`}>
-                {sol.toFixed(4)}
-              </div>
-              <div className={`text-[8px] sm:text-[10px] mb-1 ${
-                isWinner ? 'font-semibold' : 'font-normal'
-              } text-black`}>
-                {isWinner ? 'WINNER!' : 'SOL'}
               </div>
 
-              {/* Miner count */}
-              <div className="flex items-center gap-1 text-[8px] sm:text-[10px] mt-auto">
-                <span className="text-black font-bold">
-                  👤 {miners.toString()}
-                </span>
+              {/* BACK FACE (Mining Item) */}
+              <div 
+                className="absolute inset-0 w-full h-full flex items-center justify-center"
+                style={{
+                  backgroundImage: "url('/img/card_bg.png')",
+                  backgroundSize: '100% 100%',
+                  backgroundColor: 'transparent',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  transform: 'rotateY(180deg)',
+                  borderRadius: '8px',
+                  zIndex: 1,
+                  padding: '3px'
+                }}
+              >
+                <img 
+                  src={`/img/MINING_ITEMS_INDIVIDUAL/${backImages[index]}`}
+                  alt="Mining Item"
+                  className="w-[64%] h-[64%] object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]"
+                />
               </div>
             </div>
           </div>

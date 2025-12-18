@@ -203,9 +203,10 @@ export default function Home() {
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
         <div className="absolute flex items-start justify-center gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, width: '100%', maxWidth: '100vw' }}>
           {/* Left: Wallet Button (Replaced Placeholder) */}
-          <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '-5px', marginLeft: '-3px' }}>
+          <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '-5px', marginLeft: '-8px' }}>
             <WalletButton 
               className="mr-0 mt-0" 
+              width="75%"
             />
           </div>
           <img 
@@ -419,11 +420,11 @@ export default function Home() {
       >
         {/* Drawer Handle Area - Always Fixed at top of drawer */}
         <div 
-          className="w-full h-[48px] flex items-center justify-between px-6 cursor-pointer border-b border-black/10 flex-none"
+          className="w-full h-[48px] grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 cursor-pointer border-b border-black/10 flex-none"
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         >
           {/* Left: Selected Info */}
-          <div className="flex items-center gap-1.5 min-w-0 mt-[10px]">
+          <div className="flex items-center gap-1.5 min-w-0 mt-[10px] justify-start">
             <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Selected:</span>
             <span className="text-xs font-black text-black/60 leading-none">{selectedSquares.size}</span>
           </div>
@@ -436,7 +437,7 @@ export default function Home() {
           </div>
 
           {/* Right: Round Info */}
-          <div className="flex items-center gap-1.5 min-w-0 mt-[10px]">
+          <div className="flex items-center gap-1.5 min-w-0 mt-[10px] justify-end">
             <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Round:</span>
             <span className="text-xs font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
           </div>
@@ -450,9 +451,9 @@ export default function Home() {
               selectedSquares.size > 0 ? 'h-[42px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
             }`}
           >
-            <div className="max-w-xl mx-auto flex items-center h-full px-4">
-              {/* Left Side: Cost & Amt (Fixed widths, pushed left) */}
-              <div className="flex-1 flex items-center justify-start gap-6">
+            <div className="max-w-xl mx-auto grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-4 h-full">
+              {/* Left Side: Cost & Amt */}
+              <div className="flex items-center justify-start gap-4 min-w-0">
                 <div className="w-[60px] flex flex-col items-start justify-center flex-none">
                   <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Cost</span>
                   <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
@@ -463,8 +464,8 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Center: MINE Button (Always Geometric Center) */}
-              <div className="flex-none px-2">
+              {/* Center: MINE Button */}
+              <div className="flex justify-center px-2">
                 <GlossyButton
                   onClick={handleDeploy}
                   size="md"
@@ -475,8 +476,8 @@ export default function Home() {
                 </GlossyButton>
               </div>
 
-              {/* Right Side: Increment Controls (Pushed right) */}
-              <div className="flex-1 flex items-center justify-end gap-4">
+              {/* Right Side: Increment Controls */}
+              <div className="flex items-center justify-end gap-2 min-w-0">
                 <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-3xl">+</GlossyButton>
                 <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-3xl">-</GlossyButton>
               </div>
