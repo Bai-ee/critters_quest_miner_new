@@ -190,7 +190,6 @@
 }
 
 body {
-  min-width: 375px;
   color: var(--text-primary);
   background: var(--bg-primary);
   font-family: var(--font-sans);
