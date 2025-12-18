@@ -200,9 +200,9 @@ export default function Home() {
 
       {/* Mining items gradient image at top - scrolls with page */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
-        <div className="absolute flex items-start justify-center gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
+        <div className="absolute flex items-start justify-center gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, width: '100%', maxWidth: '100vw' }}>
           {/* Left: Wallet Button (Replaced Placeholder) */}
-          <div className="sm:w-[10%] flex items-center justify-center" style={{ width: '8%', marginTop: '-5px', marginLeft: '5px' }}>
+          <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '-5px', marginLeft: '2px' }}>
             <WalletButton 
               className="mr-0 mt-0" 
             />
@@ -214,12 +214,13 @@ export default function Home() {
               width: '140px',
               height: 'auto',
               display: 'block',
-              maxWidth: '20%',
-              marginTop:'-20px'
+              maxWidth: '35%',
+              marginTop:'-20px',
+              flexShrink: 0
             }}
           />
           {/* Right: SOL and QUEST Balances */}
-          <div className="flex flex-col gap-2 sm:w-[10%]" style={{ width: '8%', marginRight: '5px' }}>
+          <div className="flex-none flex flex-col gap-2" style={{ width: 'clamp(80px, 22vw, 110px)', marginRight: '2px' }}>
             <div className="relative">
               <img 
                 src="/img/sol_amount.png" 
@@ -231,7 +232,7 @@ export default function Home() {
                 }}
               />
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '21px' }}>
-                <div className="text-[12px] font-bold text-white leading-none mt-[3px]">
+                <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none mt-[3px]">
                   <AnimatedNumber value={solBalance.toFixed(2).padStart(7, '0')} />
                 </div>
               </div>
@@ -247,7 +248,7 @@ export default function Home() {
                 }}
               />
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '21px' }}>
-                <div className="text-[12px] font-bold text-white leading-none mt-[3px]">
+                <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none mt-[3px]">
                   <AnimatedNumber value={Math.floor(tokenBalance).toString().padStart(5, '0')} />
                 </div>
               </div>
