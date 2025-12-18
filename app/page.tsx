@@ -248,7 +248,6 @@ export default function Home() {
       </div>
 
       {/* CENTER STAGE - Grid always centered */}
-      {/* 
       <div 
         className="flex-1 flex flex-col items-center justify-start pb-32 px-3 sm:px-4 relative"
         style={{ minHeight: 'calc(100svh - 80px - 120px)', overflow: 'visible', marginTop: '0px' }}
@@ -300,7 +299,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-      */}
 
       {/* BOTTOM CONTROL BAR - Sticky */}
       <div 
