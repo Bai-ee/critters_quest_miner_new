@@ -416,13 +416,27 @@ export default function Home() {
       >
         {/* Drawer Handle Area - Always Fixed at top of drawer */}
         <div 
-          className="w-full h-[48px] flex flex-col items-center justify-center cursor-pointer border-b border-black/10 flex-none"
+          className="w-full h-[48px] flex items-center justify-between px-4 cursor-pointer border-b border-black/10 flex-none"
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         >
-          <div className="w-12 h-1.5 bg-black/20 rounded-full mb-1"></div>
-          <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">
-            {isDrawerOpen ? 'CLOSE CONTROLS' : 'OPEN CONTROLS'}
-          </span>
+          {/* Left: Selected Info */}
+          <div className="flex flex-col items-start min-w-[60px]">
+            <span className="text-[9px] font-black text-black/40 uppercase leading-none mb-1">Selected</span>
+            <span className="text-xs font-black text-black/60 leading-none">{selectedSquares.size}</span>
+          </div>
+
+          <div className="flex flex-col items-center justify-center">
+            <div className="w-12 h-1.5 bg-black/20 rounded-full mb-1"></div>
+            <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">
+              {isDrawerOpen ? 'CLOSE CONTROLS' : 'OPEN CONTROLS'}
+            </span>
+          </div>
+
+          {/* Right: Round Info */}
+          <div className="flex flex-col items-end min-w-[60px]">
+            <span className="text-[9px] font-black text-black/40 uppercase leading-none mb-1">Round</span>
+            <span className="text-xs font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
+          </div>
         </div>
 
         {/* Expandable Content Area */}
@@ -434,20 +448,20 @@ export default function Home() {
             }`}
           >
             <div className="max-w-xl mx-auto flex items-center h-full px-4">
-              {/* Left Side: Selected & Round Info (Flexible space) */}
-              <div className="flex-1 flex items-center justify-start gap-[clamp(8px,3vw,32px)] min-w-0">
+              {/* Left Side: Cost & Amt (Flexible space) */}
+              <div className="flex-1 flex items-center justify-start gap-[clamp(8px,2vw,24px)] min-w-0">
                 <div className="flex flex-col items-start flex-none">
-                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Selected</span>
-                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{selectedSquares.size}</span>
+                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Cost</span>
+                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
                 </div>
                 <div className="flex flex-col items-start flex-none">
-                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Round</span>
-                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">#{board?.roundId?.toString() || '0'}</span>
+                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Amt</span>
+                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{amount}</span>
                 </div>
               </div>
 
               {/* Center Group: MINE Button (Always centered) */}
-              <div className="flex-none px-2">
+              <div className="flex-none px-4">
                 <GlossyButton
                   onClick={handleDeploy}
                   size="md"
@@ -458,18 +472,8 @@ export default function Home() {
                 </GlossyButton>
               </div>
 
-              {/* Right Side: Cost, Amt & Controls (Flexible space) */}
-              <div className="flex-1 flex items-center justify-end gap-[clamp(8px,3vw,32px)] min-w-0">
-                <div className="flex items-center gap-[clamp(8px,2vw,24px)] min-w-0 overflow-hidden">
-                  <div className="flex flex-col items-end">
-                    <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Cost</span>
-                    <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Amt</span>
-                    <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{amount}</span>
-                  </div>
-                </div>
+              {/* Right Side: Increment Controls (Flexible space) */}
+              <div className="flex-1 flex items-center justify-end min-w-0">
                 <div className="flex items-center gap-1.5 flex-none">
                   <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-xl">+</GlossyButton>
                   <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-xl">-</GlossyButton>
