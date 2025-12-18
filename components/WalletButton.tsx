@@ -25,7 +25,7 @@ export const WalletButton = ({ className = "mr-[-7px] mt-[13px] sm:mr-0 sm:mt-0"
       <img
         src={connected ? '/img/Attached_wallet.png' : '/img/wallet.png'}
         alt={connected ? 'Connected Wallet' : 'Connect Wallet'}
-        style={{ height: 'auto', width: width, display: 'block', marginRight: '17px' }}
+        style={{ height: 'auto', width: width, display: 'block', marginRight: '0px' }}
       />
     </button>
   );

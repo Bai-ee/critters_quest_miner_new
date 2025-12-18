@@ -202,7 +202,7 @@ export default function Home() {
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
         <div className="absolute flex items-start justify-center gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
           {/* Left: Wallet Button (Replaced Placeholder) */}
-          <div className="sm:w-[10%] flex items-center justify-center" style={{ width: '8%', marginTop: '-5px' }}>
+          <div className="sm:w-[10%] flex items-center justify-center" style={{ width: '8%', marginTop: '-5px', marginLeft: '5px' }}>
             <WalletButton 
               className="mr-0 mt-0" 
             />
@@ -219,7 +219,7 @@ export default function Home() {
             }}
           />
           {/* Right: SOL and QUEST Balances */}
-          <div className="flex flex-col gap-2 sm:w-[10%]" style={{ width: '8%' }}>
+          <div className="flex flex-col gap-2 sm:w-[10%]" style={{ width: '8%', marginRight: '5px' }}>
             <div className="relative">
               <img 
                 src="/img/sol_amount.png" 
