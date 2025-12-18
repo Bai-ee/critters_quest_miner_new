@@ -152,9 +152,8 @@ export default function Home() {
       </div>
 
       {/* Mining items gradient image at top - scrolls with page */}
-      <div className="relative w-full overflow-hidden" style={{ zIndex: 1, marginTop: '0px' }}>
-        <div className="relative" style={{ width: '4000px', left: '50%', transform: 'translateX(-50%)', overflow: 'visible' }}>
-          {/* Misc value space images and Miner logo - horizontally centered */}
+      <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
+        {/* Misc value space images and Miner logo - horizontally centered */}
         <div className="absolute flex items-center justify-center gap-4" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
           <img 
             src="/img/misc_value_space.png" 
@@ -252,11 +251,11 @@ export default function Home() {
       </div>
 
       {/* CENTER STAGE - Grid always centered */}
+      {/* 
       <div 
         className="flex-1 flex flex-col items-center justify-start pb-32 px-3 sm:px-4 relative"
         style={{ minHeight: 'calc(100svh - 80px - 120px)', overflow: 'visible', marginTop: '0px' }}
       >
-        {/* Black background div - behind content, extends full height */}
         <div 
           className="absolute inset-0 w-full"
           style={{
@@ -269,7 +268,6 @@ export default function Home() {
             overflow: 'hidden'
           }}
         >
-          {/* Background image - pinned to top of parent */}
           <div 
             style={{
               position: 'absolute',
@@ -285,8 +283,7 @@ export default function Home() {
           />
         </div>
 
-        {/* Motherlode - Full Width on Desktop */}
-        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mx-auto relative z-30 mb-0 overflow-x-hidden sm:overflow-x-visible" style={{ overflowY: 'visible' }}>
+        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mx-auto relative z-30 mb-0" style={{ overflow: 'visible' }}>
           <div className="p-2 sm:p-6 mt-[-90px] sm:mt-[-110px] md:mt-[-130px] lg:mt-[-140px]" style={{ overflow: 'visible' }}>
             <Motherlode
               endSlot={board.endSlot}
@@ -296,7 +293,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mining Grid - Constrained Width */}
         <div className="w-full max-w-[min(92vw,520px)] relative z-30" style={{ overflow: 'visible' }}>
           <div className="mt-[-20px] sm:mt-[-40px]" style={{ overflow: 'visible' }}>
             <Grid
@@ -307,6 +303,7 @@ export default function Home() {
           </div>
         </div>
       </div>
+      */}
 
       {/* BOTTOM CONTROL BAR - Sticky */}
       <div 
