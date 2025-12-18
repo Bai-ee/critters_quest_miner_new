@@ -404,21 +404,18 @@ export default function Home() {
 
       {/* BOTTOM CONTROL BAR - Sticky */}
       <div 
-        className={`fixed bottom-0 left-0 right-0 z-40 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out ${
-          !isDrawerOpen 
-            ? (selectedSquares.size > 0 ? 'translate-y-[calc(100%-120px)]' : 'translate-y-[calc(100%-68px)]') 
-            : 'translate-y-0'
-        }`}
+        className="fixed bottom-0 left-0 right-0 z-40 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out"
         style={{ 
           backgroundColor: '#FFB84A',
           boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          height: isDrawerOpen ? 'auto' : (selectedSquares.size > 0 ? '120px' : '68px'),
-          paddingBottom: '20px'
+          height: isDrawerOpen ? '400px' : (selectedSquares.size > 0 ? '110px' : '68px'),
+          paddingBottom: '20px',
+          bottom: 0
         }}
       >
         {/* Drawer Handle Area - Always Fixed at top of drawer */}
         <div 
-          className="w-full h-[48px] flex flex-col items-center justify-center cursor-pointer border-b border-black/10"
+          className="w-full h-[48px] flex flex-col items-center justify-center cursor-pointer border-b border-black/10 flex-none"
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         >
           <div className="w-12 h-1.5 bg-black/20 rounded-full mb-1"></div>
@@ -428,11 +425,11 @@ export default function Home() {
         </div>
 
         {/* Expandable Content Area */}
-        <div className="w-full">
+        <div className="w-full overflow-hidden flex flex-col h-full">
           {/* Contextual MINE Action Bar - Revealed when squares selected */}
           <div 
-            className={`w-full border-b border-black/5 overflow-hidden transition-all duration-500 ease-in-out ${
-              selectedSquares.size > 0 ? 'h-[60px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
+            className={`w-full border-b border-black/5 flex-none transition-all duration-500 ease-in-out ${
+              selectedSquares.size > 0 ? 'h-[42px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
             }`}
           >
             <div className="max-w-xl mx-auto flex items-center h-full px-4">
