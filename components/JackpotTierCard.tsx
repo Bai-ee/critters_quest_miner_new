@@ -27,11 +27,9 @@ const formatNumber = (num: number): string => {
 };
 
 const formatMainValue = (num: number): string => {
-  if (isNaN(num) || !isFinite(num)) return '0000.00';
   const parts = num.toFixed(2).split('.');
-  const integerPart = (parts[0] || '0').padStart(4, '0');
-  const decimalPart = parts[1] || '00';
-  return `${integerPart}.${decimalPart}`;
+  const integerPart = parts[0].padStart(4, '0');
+  return `${integerPart}.${parts[1]}`;
 };
 
 // Sub-components
