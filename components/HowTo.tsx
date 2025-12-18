@@ -6,28 +6,23 @@ export const HowTo = () => {
   const steps = [
     {
       title: 'CONNECT WALLET',
-      description: 'Tap the wallet icon at the top to connect your Solana wallet and start your mining journey.',
-      icon: '🔗'
+      description: 'Tap the wallet icon at the top to connect your Solana wallet and start your mining journey.'
     },
     {
       title: 'PICK YOUR SQUARES',
-      description: 'Select one or more squares on the grid. Each square represents a chance to find the jackpot!',
-      icon: '⛏️'
+      description: 'Select one or more squares on the grid. Each square represents a chance to find the jackpot!'
     },
     {
       title: 'CHOOSE YOUR STAKE',
-      description: 'Adjust your mining amount using the +/- buttons. More stake means bigger potential rewards.',
-      icon: '💎'
+      description: 'Adjust your mining amount using the +/- buttons. More stake means bigger potential rewards.'
     },
     {
       title: 'HIT THE MINE BUTTON',
-      description: 'When you\'re ready, press MINE! Your entries will be deployed for the current round.',
-      icon: '🚀'
+      description: 'When you\'re ready, press MINE! Your entries will be deployed for the current round.'
     },
     {
       title: 'COLLECT REWARDS',
-      description: 'Once the timer hits zero, check the results and claim your SOL and QUEST winnings!',
-      icon: '💰'
+      description: 'Once the timer hits zero, check the results and claim your SOL and QUEST winnings!'
     }
   ];
 
@@ -44,10 +39,10 @@ export const HowTo = () => {
         {steps.map((step, index) => (
           <div 
             key={index}
-            className="cq-panel p-4 flex items-start gap-4 transition-transform hover:scale-[1.02]"
+            className="cq-panel p-4 flex items-center gap-4 transition-transform hover:scale-[1.02]"
             style={{
-              background: 'linear-gradient(180deg, rgba(255, 184, 74, 0.15) 0%, rgba(36, 20, 6, 0.8) 100%)',
-              borderColor: 'rgba(255, 184, 74, 0.3)'
+              background: 'black',
+              borderColor: 'rgba(255, 184, 74, 0.2)'
             }}
           >
             {/* Step Number Circle */}
@@ -63,11 +58,6 @@ export const HowTo = () => {
               <p className="text-xs font-bold text-white/80 leading-relaxed">
                 {step.description}
               </p>
-            </div>
-
-            {/* Step Icon */}
-            <div className="flex-none text-2xl filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-              {step.icon}
             </div>
           </div>
         ))}

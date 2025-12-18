@@ -423,7 +423,7 @@ export default function Home() {
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         >
           {/* Left: Selected Info */}
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 mt-[10px]">
             <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Selected:</span>
             <span className="text-xs font-black text-black/60 leading-none">{selectedSquares.size}</span>
           </div>
@@ -436,7 +436,7 @@ export default function Home() {
           </div>
 
           {/* Right: Round Info */}
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 mt-[10px]">
             <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Round:</span>
             <span className="text-xs font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
           </div>
