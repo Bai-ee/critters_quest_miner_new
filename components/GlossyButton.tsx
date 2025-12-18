@@ -23,10 +23,10 @@ export const GlossyButton: React.FC<GlossyButtonProps> = ({
   const shineRef = useRef<HTMLDivElement>(null);
   
   const sizeClasses = {
-    sm: 'px-3 py-1 text-[10px] sm:text-xs shadow-[0_3px_0_rgb(120,63,4)] disabled:shadow-[0_1px_0_rgb(120,63,4)] border-2',
-    md: 'px-6 py-2.5 text-2xl shadow-[0_6px_0_rgb(120,63,4)] disabled:shadow-[0_2px_0_rgb(120,63,4)] border-4',
+    sm: 'px-3 py-1 text-[10px] sm:text-xs shadow-[0_2px_0_rgb(120,63,4)] disabled:shadow-[0_1px_0_rgb(120,63,4)] border-2',
+    md: 'px-6 py-2.5 text-2xl shadow-[0_4px_0_rgb(120,63,4)] disabled:shadow-[0_2px_0_rgb(120,63,4)] border-[3px]',
     lg: 'px-10 py-4 text-4xl shadow-[0_10px_0_rgb(120,63,4)] disabled:shadow-[0_3px_0_rgb(120,63,4)] border-4',
-    icon: 'w-8 h-8 flex items-center justify-center text-lg shadow-[0_3px_0_rgb(120,63,4)] border-2',
+    icon: 'w-8 h-8 flex items-center justify-center text-lg shadow-[0_2px_0_rgb(120,63,4)] border-2',
   };
 
   const getBackground = () => {
@@ -123,7 +123,7 @@ export const GlossyButton: React.FC<GlossyButtonProps> = ({
       style={{
         background: getBackground(),
         borderColor: getBorderColor(),
-        boxShadow: `0 ${size === 'sm' || size === 'icon' ? '3px' : '6px'} 0 ${getShadowColor()}`,
+        boxShadow: `0 ${size === 'sm' || size === 'icon' ? '2px' : size === 'md' ? '4px' : '10px'} 0 ${getShadowColor()}`,
         fontFamily: "var(--font-sans)",
         color: getTextColor(),
       }}
