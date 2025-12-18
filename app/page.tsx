@@ -450,21 +450,21 @@ export default function Home() {
               selectedSquares.size > 0 ? 'h-[42px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
             }`}
           >
-            <div className="max-w-xl mx-auto flex items-center justify-between px-4 h-full">
-              {/* Cost: Fixed Width */}
-              <div className="w-[60px] flex flex-col items-start justify-center flex-none">
-                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Cost</span>
-                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
+            <div className="max-w-xl mx-auto flex items-center h-full px-4">
+              {/* Left Side: Cost & Amt (Fixed widths, pushed left) */}
+              <div className="flex-1 flex items-center justify-start gap-6">
+                <div className="w-[60px] flex flex-col items-start justify-center flex-none">
+                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Cost</span>
+                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
+                </div>
+                <div className="w-[45px] flex flex-col items-start justify-center flex-none">
+                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Amt</span>
+                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{amount}</span>
+                </div>
               </div>
 
-              {/* Amt: Fixed Width */}
-              <div className="w-[45px] flex flex-col items-start justify-center flex-none">
-                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Amt</span>
-                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{amount}</span>
-              </div>
-
-              {/* MINE Button: Center */}
-              <div className="flex-none flex justify-center">
+              {/* Center: MINE Button (Always Geometric Center) */}
+              <div className="flex-none px-2">
                 <GlossyButton
                   onClick={handleDeploy}
                   size="md"
@@ -475,11 +475,9 @@ export default function Home() {
                 </GlossyButton>
               </div>
 
-              {/* Increment Controls: Spaced */}
-              <div className="flex-none">
+              {/* Right Side: Increment Controls (Pushed right) */}
+              <div className="flex-1 flex items-center justify-end gap-4">
                 <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-xl">+</GlossyButton>
-              </div>
-              <div className="flex-none">
                 <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-xl">-</GlossyButton>
               </div>
             </div>
