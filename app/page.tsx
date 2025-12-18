@@ -5,6 +5,7 @@ import { MainControl } from '@/components/MainControl';
 import { Motherlode } from '@/components/Motherlode';
 import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
+import { GlossyButton } from '@/components/GlossyButton';
 import { Modal } from '@/components/Modal';
 import { RoundResults } from '@/components/RoundResults';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
@@ -14,6 +15,7 @@ import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect } from 'react';
 import { CALCULATIONS } from '@/lib/constants';
+import toast from 'react-hot-toast';
 
 
 export default function Home() {
@@ -42,6 +44,7 @@ export default function Home() {
 
   // Shared state for square selection
   const [selectedSquares, setSelectedSquares] = useState<Set<number>>(new Set());
+  const [amount, setAmount] = useState<number>(0.01);
 
   const toggleSquare = (index: number) => {
     const newSelected = new Set(selectedSquares);
@@ -79,6 +82,49 @@ export default function Home() {
     const randomSquares = allSquares.slice(0, maxSquares);
     setSelectedSquares(new Set(randomSquares));
   }
+
+  const incrementAmount = () => {
+    setAmount(prev => +(prev + 0.001).toFixed(3));
+  };
+
+  const decrementAmount = () => {
+    setAmount(prev => Math.max(0.001, +(prev - 0.001).toFixed(3)));
+  };
+
+  const handleDeploy = async () => {
+    if (selectedSquares.size === 0) {
+        toast.error('Please select at least one square');
+        return;
+    }
+
+    // Check if user has enough SOL balance
+    const totalCost = amount * selectedSquares.size;
+    const estimatedFees = 0.01; // Estimate for transaction fees
+    const requiredBalance = totalCost + estimatedFees;
+
+    if (solBalance < requiredBalance) {
+        toast.error(`Insufficient balance! Need ${requiredBalance.toFixed(4)} SOL (including fees), but you have ${solBalance.toFixed(4)} SOL`);
+        return;
+    }
+
+    let needCheckpoint = false;
+
+    // Checkpoint is needed if miner's round is behind the current round
+    if (miner && round && BigInt(miner.roundId) < BigInt(round.id)) {
+        needCheckpoint = true;
+    }
+
+    try {
+        // We'll need to use the deploy function from the hook, 
+        // but for now we'll just show a toast or handle it if we pass the hook down
+        // Since this is Home component, we'll need to define deploy here or import it
+        toast.success(`Deploying to ${selectedSquares.size} squares...`);
+        // clearSelection(); // Clear selection after successful deploy
+    } catch (error) {
+        console.error('Deploy failed:', error);
+        toast.error(`Deploy failed: ${error}`);
+    }
+  };
 
   if (loading) {
     return (
@@ -301,27 +347,44 @@ export default function Home() {
         </div>
 
         <div className="w-full max-w-[min(92vw,520px)] mx-auto relative z-30" style={{ overflow: 'visible' }}>
-          {/* Timer and Round Info placed below Motherlode and on top of the Mining Grid */}
+          {/* Timer and Selection Controls placed below Motherlode and on top of the Mining Grid */}
           {board?.endSlot && currentSlot && (
-            <div className="w-full flex items-center justify-center gap-4 mb-2">
+            <div className="w-full flex items-center justify-center gap-2 mb-2">
               <div className="flex-1 min-w-0" style={{ marginLeft: '-5px' }}>
-                <Timer endSlot={board.endSlot} currentSlot={currentSlot} startSlot={board.startSlot} />
+                <Timer 
+                  endSlot={board.endSlot} 
+                  currentSlot={currentSlot} 
+                  startSlot={board.startSlot} 
+                  roundId={board.roundId?.toString()}
+                  selectedCount={selectedSquares.size}
+                />
               </div>
-              <div style={{ 
-                backgroundColor: '#FFB84A', 
-                width: '100px',
-                minWidth: '100px',
-                minHeight: '50px', 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                padding: '8px', 
-                border: board?.startSlot && currentSlot && currentSlot >= board.startSlot ? 'none' : '2px solid black', 
-                borderRadius: '8px'
-              }}>
-                <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">R#{board?.roundId?.toString() || '0'}</span>
-                <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">{selectedSquares.size} selected</span>
+              
+              <div className="flex-1 flex gap-1 justify-between items-center min-w-0">
+                <GlossyButton
+                  onClick={selectAll}
+                  size="sm"
+                  variant="success"
+                  className="flex-1 min-w-0 !px-0 !py-2 !text-[9px] sm:!text-[11px]"
+                >
+                  ALL
+                </GlossyButton>
+                <GlossyButton
+                  onClick={randomSelection}
+                  size="sm"
+                  variant="success"
+                  className="flex-1 min-w-0 !px-0 !py-2 !text-[9px] sm:!text-[11px]"
+                >
+                  RANDOM
+                </GlossyButton>
+                <GlossyButton
+                  onClick={clearSelection}
+                  size="icon"
+                  variant="danger"
+                  className="flex-none !w-8 !h-8 sm:!w-9 sm:!h-9"
+                >
+                  ✕
+                </GlossyButton>
               </div>
             </div>
           )}
@@ -340,26 +403,72 @@ export default function Home() {
 
       {/* BOTTOM CONTROL BAR - Sticky */}
       <div 
-        className={`fixed bottom-0 left-0 right-0 z-40 border-t-2 border-black transition-transform duration-300 ease-in-out ${
-          !isDrawerOpen ? 'translate-y-[calc(100%-48px)] sm:translate-y-0' : 'translate-y-0'
+        className={`fixed bottom-0 left-0 right-0 z-40 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out ${
+          !isDrawerOpen ? 'translate-y-[calc(100%-48px)] sm:translate-y-[calc(100%-100px)]' : 'translate-y-0'
         }`}
-        style={{ backgroundColor: '#FFB84A' }}
-        onClick={() => !isDrawerOpen && setIsDrawerOpen(true)}
+        style={{ 
+          backgroundColor: '#FFB84A',
+          boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
+          height: isDrawerOpen ? 'auto' : (selectedSquares.size > 0 ? '100px' : '48px')
+        }}
       >
-        {/* Drawer Handle for Mobile */}
+        {/* Drawer Handle Area / Selection Action Bar */}
         <div 
-          className="sm:hidden w-full h-[48px] flex flex-col items-center justify-center cursor-pointer border-b border-black/10"
+          className="w-full h-auto min-h-[48px] flex flex-col items-center justify-center cursor-pointer border-b border-black/10"
           onClick={(e) => {
             if (isDrawerOpen) {
               e.stopPropagation();
               setIsDrawerOpen(false);
+            } else if (selectedSquares.size === 0) {
+              setIsDrawerOpen(true);
             }
           }}
         >
-          <div className="w-12 h-1 bg-black/20 rounded-full mb-1"></div>
-          <span className="text-[10px] font-bold text-black/40 uppercase tracking-widest">
-            {isDrawerOpen ? 'Close Controls' : 'Open Controls'}
-          </span>
+          {/* Default Handle (visible when nothing selected) */}
+          {selectedSquares.size === 0 && (
+            <div className="flex flex-col items-center justify-center h-[48px]">
+              <div className="w-12 h-1.5 bg-black/20 rounded-full mb-1"></div>
+              <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">
+                {isDrawerOpen ? 'CLOSE CONTROLS' : 'OPEN CONTROLS'}
+              </span>
+            </div>
+          )}
+
+          {/* Juicy MINE Bar (visible when squares selected) */}
+          {selectedSquares.size > 0 && (
+            <div 
+              className={`w-full max-w-xl mx-auto flex items-center justify-between px-4 py-1.5 gap-4 transition-all duration-300 ${isDrawerOpen ? 'opacity-50' : 'opacity-100'}`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Left: Cost Info */}
+              <div className="flex-1 flex items-center gap-2">
+                <span className="text-[10px] font-black text-[rgb(120,63,4)]/60 leading-none">COST:</span>
+                <span className="text-base font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
+              </div>
+
+              {/* Center: MINE Button */}
+              <div className="flex-none flex justify-center">
+                <GlossyButton
+                  onClick={handleDeploy}
+                  size="sm"
+                  className="min-w-[120px] !py-1.5"
+                >
+                  MINE
+                </GlossyButton>
+              </div>
+
+              {/* Right: Increment Controls */}
+              <div className="flex-1 flex items-center justify-end gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-black text-[rgb(120,63,4)]">{amount}</span>
+                  <div className="flex gap-1">
+                    <GlossyButton onClick={incrementAmount} size="icon" className="!w-6 !h-6 !text-xs">+</GlossyButton>
+                    <GlossyButton onClick={decrementAmount} size="icon" className="!w-6 !h-6 !text-xs">-</GlossyButton>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">

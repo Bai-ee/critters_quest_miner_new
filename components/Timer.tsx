@@ -7,9 +7,11 @@ interface TimerProps {
   endSlot: bigint;
   currentSlot: bigint;
   startSlot?: bigint;
+  roundId?: string;
+  selectedCount?: number;
 }
 
-export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
+export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount = 0 }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isExpired, setIsExpired] = useState(false);
   const [notStarted, setNotStarted] = useState(false);
@@ -178,9 +180,9 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
         />
         
         {/* Time Text Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="text-white font-bold text-sm tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-            {notStarted ? 'WAITING' : isExpired ? '00:00' : formatTime(timeLeft)}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
+          <span className="text-white font-bold text-[10px] sm:text-xs tracking-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap overflow-hidden">
+            R#{roundId || '0'} | {notStarted ? 'WAITING' : isExpired ? '00:00' : formatTime(timeLeft)} | {selectedCount} SELECTED
           </span>
         </div>
       </div>
@@ -192,7 +194,7 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
           alt="Timer" 
           className="animate-ticking"
           style={{ 
-            height: '65px', 
+            height: '48px', 
             width: 'auto',
             filter: `drop-shadow(0 4px 6px rgba(0,0,0,0.4)) ${progress < 50 || notStarted || isExpired ? `drop-shadow(0 0 10px ${getProgressColor()})` : ''}`,
             animationDuration: getAnimationSpeed(),

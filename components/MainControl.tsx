@@ -4,6 +4,7 @@ import { Automation, Miner, Round } from '@/lib/types';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { GlossyButton } from './GlossyButton';
 
 interface MainControlProps {
     round: Round;
@@ -235,28 +236,6 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                         AUTO
                     </button>
                 </div>
-                {mode === 'manual' && (
-                    <div className="flex gap-2">
-                        <button
-                            onClick={selectAll}
-                            className="cq-button-secondary px-2 py-1.5 text-xs font-bold text-gray-300"
-                        >
-                            ALL
-                        </button>
-                        <button
-                            onClick={clearSelection}
-                            className="cq-button-secondary px-2 py-1.5 text-xs font-bold text-gray-300"
-                        >
-                            CLEAR
-                        </button>
-                        <button
-                            onClick={randomSelection}
-                            className="cq-button-secondary px-2 py-1.5 text-xs font-bold text-gray-300"
-                        >
-                            RANDOM
-                        </button>
-                    </div>
-                )}
             </div>
 
             {mode === 'manual' && (
@@ -278,13 +257,14 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                             <span className="text-xs text-gray-400">COST:</span>
                             <span className="text-sm font-bold text-cq-gold">{(amount * selectedSquares.size).toFixed(4)}</span>
                         </div>
-                        <button
+                        <GlossyButton
                             onClick={handleDeploy}
                             disabled={!publicKey || deploying || selectedSquares.size === 0 || solBalance < (amount * selectedSquares.size + 0.01)}
-                            className="cq-button-primary px-4 sm:px-6 py-3 text-sm sm:text-base font-bold text-black disabled:opacity-50 disabled:cursor-not-allowed"
+                            size="lg"
+                            className="w-full sm:w-auto min-w-[220px]"
                         >
-                            {deploying ? 'DEPLOYING...' : `DEPLOY ${selectedSquares.size}`}
-                        </button>
+                            {deploying ? 'DEPLOYING...' : 'MINE'}
+                        </GlossyButton>
                     </div>
                 </>
             )}
@@ -322,21 +302,24 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                             </span>
                         </div>
                         {automation ? (
-                            <button
+                            <GlossyButton
                                 onClick={handleDisableAutomation}
                                 disabled={loading}
-                                className="cq-button-secondary px-4 py-3 text-sm font-bold text-cq-gold border-cq-gold/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                variant="danger"
+                                size="md"
+                                className="w-full sm:w-auto min-w-[180px]"
                             >
                                 {loading ? 'CANCELING...' : 'CANCEL'}
-                            </button>
+                            </GlossyButton>
                         ) : (
-                            <button
+                            <GlossyButton
                                 onClick={handleSetupAutomation}
                                 disabled={!publicKey || loading || selectedSquares.size === 0 || solBalance < totalCost}
-                                className="cq-button-primary px-4 sm:px-6 py-3 text-sm sm:text-base font-bold text-black disabled:opacity-50 disabled:cursor-not-allowed"
+                                size="lg"
+                                className="w-full sm:w-auto min-w-[220px]"
                             >
                                 {loading ? 'ENABLING...' : 'ENABLE AUTO'}
-                            </button>
+                            </GlossyButton>
                         )}
                     </div>
                 </>
@@ -345,13 +328,14 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
             {/* Rewards Section */}
             <div className="flex items-center gap-2 sm:gap-3">
                 {miner && miner.checkpointId < miner.roundId && miner.roundId < round.id && (
-                    <button
+                    <GlossyButton
                         onClick={handleCheckpoint}
                         disabled={!publicKey}
-                        className="cq-button-secondary px-3 py-2 text-xs font-bold text-cq-gold border-cq-gold/50 disabled:opacity-50"
+                        size="sm"
+                        className="min-w-[120px]"
                     >
                         CHECKPOINT
-                    </button>
+                    </GlossyButton>
                 )}
                 <div className="cq-jackpot-strip px-3 py-2 flex items-center gap-3">
                     <div className="text-right">
@@ -367,13 +351,14 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                         </div>
                     </div>
                 </div>
-                <button
+                <GlossyButton
                     onClick={handleClaimAll}
                     disabled={!publicKey || !miner || (bigIntToNumber(miner.rewardsSol) === 0 && bigIntToNumber(miner.rewardsOre) === 0)}
-                    className="cq-button-primary px-4 sm:px-6 py-3 text-sm sm:text-base font-bold text-black disabled:opacity-50 disabled:cursor-not-allowed"
+                    size="md"
+                    className="w-full sm:w-auto min-w-[180px]"
                 >
                     CLAIM ALL
-                </button>
+                </GlossyButton>
             </div>
         </div>
     );
