@@ -7,7 +7,7 @@ export interface ParticleSystemOptions {
   spread?: number;
   speed?: { min: number; max: number };
   gravity?: number;
-  colors?: string[];
+  colors?: string[] | readonly string[];
   position?: { x: number; y: number; z: number };
   size?: number;
 }
@@ -184,7 +184,7 @@ export function createSimpleParticleBurst(
   element: HTMLElement,
   options: {
     count?: number;
-    colors?: string[];
+    colors?: string[] | readonly string[];
     duration?: number;
   } = {}
 ) {

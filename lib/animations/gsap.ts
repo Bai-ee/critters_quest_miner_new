@@ -276,7 +276,7 @@ export function animateStagger(
   const config = ANIMATION_CONFIG.stagger;
   
   return gsap.utils.toArray(elements).forEach((element, index) => {
-    const anim = animation(element);
+    const anim = animation(element as gsap.TweenTarget);
     if (anim) {
       anim.delay(index * delay);
     }

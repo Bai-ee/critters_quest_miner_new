@@ -92,7 +92,7 @@ export const ANIMATION_CONFIG = {
       pulse: {
         duration: 1.5,
         ease: 'power1.inOut',
-        scale: [1, 1.05, 1],
+        scale: 1.05,
       },
     },
   },
@@ -118,7 +118,7 @@ export const ANIMATION_CONFIG = {
       pulse: {
         duration: 2,
         ease: 'power1.inOut',
-        scale: [1.05, 1.08, 1.05],
+        scale: 1.08,
       },
     },
     winner: {
@@ -133,7 +133,7 @@ export const ANIMATION_CONFIG = {
       bounce: {
         duration: 0.5,
         ease: 'bounce.out',
-        y: [-10, 0],
+        y: -10,
       },
     },
   },
@@ -188,8 +188,8 @@ export const ANIMATION_CONFIG = {
     pulse: {
       duration: 1.5,
       ease: 'power1.inOut',
-      scale: [1, 1.1, 1],
-      opacity: [0.5, 1, 0.5],
+      scale: 1.1,
+      opacity: 0.5,
     },
   },
 
