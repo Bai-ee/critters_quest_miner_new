@@ -182,7 +182,7 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
         {/* Time Text Overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
           <span className="text-white font-bold text-[10px] sm:text-xs tracking-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap overflow-hidden">
-            R#{roundId || '0'} | {notStarted ? 'WAITING' : isExpired ? '00:00' : formatTime(timeLeft)} | {selectedCount} SELECTED
+            {notStarted ? 'WAITING' : isExpired ? '00:00' : formatTime(timeLeft)}
           </span>
         </div>
       </div>

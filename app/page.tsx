@@ -365,7 +365,7 @@ export default function Home() {
                   onClick={selectAll}
                   size="sm"
                   variant="success"
-                  className="flex-1 min-w-0 !px-0 !py-2 !text-[9px] sm:!text-[11px]"
+                  className="flex-1 min-w-0 !px-0 !py-2 !text-[11px] sm:!text-[13px]"
                 >
                   ALL
                 </GlossyButton>
@@ -373,7 +373,7 @@ export default function Home() {
                   onClick={randomSelection}
                   size="sm"
                   variant="success"
-                  className="flex-1 min-w-0 !px-0 !py-2 !text-[9px] sm:!text-[11px]"
+                  className="flex-1 min-w-0 !px-0 !py-2 !text-[11px] sm:!text-[13px]"
                 >
                   RANDOM
                 </GlossyButton>
@@ -404,84 +404,94 @@ export default function Home() {
       {/* BOTTOM CONTROL BAR - Sticky */}
       <div 
         className={`fixed bottom-0 left-0 right-0 z-40 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out ${
-          !isDrawerOpen ? 'translate-y-[calc(100%-48px)] sm:translate-y-[calc(100%-100px)]' : 'translate-y-0'
+          !isDrawerOpen 
+            ? (selectedSquares.size > 0 ? 'translate-y-[calc(100%-120px)]' : 'translate-y-[calc(100%-68px)]') 
+            : 'translate-y-0'
         }`}
         style={{ 
           backgroundColor: '#FFB84A',
           boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          height: isDrawerOpen ? 'auto' : (selectedSquares.size > 0 ? '100px' : '48px')
+          height: isDrawerOpen ? 'auto' : (selectedSquares.size > 0 ? '120px' : '68px'),
+          paddingBottom: '20px'
         }}
       >
-        {/* Drawer Handle Area / Selection Action Bar */}
+        {/* Drawer Handle Area - Always Fixed at top of drawer */}
         <div 
-          className="w-full h-auto min-h-[48px] flex flex-col items-center justify-center cursor-pointer border-b border-black/10"
-          onClick={(e) => {
-            if (isDrawerOpen) {
-              e.stopPropagation();
-              setIsDrawerOpen(false);
-            } else if (selectedSquares.size === 0) {
-              setIsDrawerOpen(true);
-            }
-          }}
+          className="w-full h-[48px] flex flex-col items-center justify-center cursor-pointer border-b border-black/10"
+          onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         >
-          {/* Default Handle (visible when nothing selected) */}
-          {selectedSquares.size === 0 && (
-            <div className="flex flex-col items-center justify-center h-[48px]">
-              <div className="w-12 h-1.5 bg-black/20 rounded-full mb-1"></div>
-              <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">
-                {isDrawerOpen ? 'CLOSE CONTROLS' : 'OPEN CONTROLS'}
-              </span>
-            </div>
-          )}
+          <div className="w-12 h-1.5 bg-black/20 rounded-full mb-1"></div>
+          <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">
+            {isDrawerOpen ? 'CLOSE CONTROLS' : 'OPEN CONTROLS'}
+          </span>
+        </div>
 
-          {/* Juicy MINE Bar (visible when squares selected) */}
-          {selectedSquares.size > 0 && (
-            <div 
-              className={`w-full max-w-xl mx-auto flex items-center justify-between px-4 py-1.5 gap-4 transition-all duration-300 ${isDrawerOpen ? 'opacity-50' : 'opacity-100'}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Left: Cost Info */}
-              <div className="flex-1 flex items-center gap-2">
-                <span className="text-[10px] font-black text-[rgb(120,63,4)]/60 leading-none">COST:</span>
-                <span className="text-base font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
+        {/* Expandable Content Area */}
+        <div className="w-full">
+          {/* Contextual MINE Action Bar - Revealed when squares selected */}
+          <div 
+            className={`w-full border-b border-black/5 overflow-hidden transition-all duration-500 ease-in-out ${
+              selectedSquares.size > 0 ? 'h-[60px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
+            }`}
+          >
+            <div className="max-w-xl mx-auto flex items-center h-full px-4">
+              {/* Left Side: Selected & Round Info (Flexible space) */}
+              <div className="flex-1 flex items-center justify-start gap-[clamp(8px,3vw,32px)] min-w-0">
+                <div className="flex flex-col items-start flex-none">
+                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Selected</span>
+                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{selectedSquares.size}</span>
+                </div>
+                <div className="flex flex-col items-start flex-none">
+                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Round</span>
+                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">#{board?.roundId?.toString() || '0'}</span>
+                </div>
               </div>
 
-              {/* Center: MINE Button */}
-              <div className="flex-none flex justify-center">
+              {/* Center Group: MINE Button (Always centered) */}
+              <div className="flex-none px-2">
                 <GlossyButton
                   onClick={handleDeploy}
-                  size="sm"
-                  className="min-w-[120px] !py-1.5"
+                  size="md"
+                  variant="success"
+                  className="min-w-[120px] !py-1 !text-lg"
                 >
                   MINE
                 </GlossyButton>
               </div>
 
-              {/* Right: Increment Controls */}
-              <div className="flex-1 flex items-center justify-end gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-black text-[rgb(120,63,4)]">{amount}</span>
-                  <div className="flex gap-1">
-                    <GlossyButton onClick={incrementAmount} size="icon" className="!w-6 !h-6 !text-xs">+</GlossyButton>
-                    <GlossyButton onClick={decrementAmount} size="icon" className="!w-6 !h-6 !text-xs">-</GlossyButton>
+              {/* Right Side: Cost, Amt & Controls (Flexible space) */}
+              <div className="flex-1 flex items-center justify-end gap-[clamp(8px,3vw,32px)] min-w-0">
+                <div className="flex items-center gap-[clamp(8px,2vw,24px)] min-w-0 overflow-hidden">
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Cost</span>
+                    <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
                   </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap">Amt</span>
+                    <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{amount}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 flex-none">
+                  <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-xl">+</GlossyButton>
+                  <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-xl">-</GlossyButton>
                 </div>
               </div>
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <MainControl
-            round={round}
-            miner={miner}
-            selectedSquares={selectedSquares}
-            selectAll={selectAll}
-            clearSelection={clearSelection}
-            randomSelection={randomSelection}
-            solBalance={solBalance}
-            automation={automation}
-          />
+          {/* Full Menu Content */}
+          <div className={`max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <MainControl
+              round={round}
+              miner={miner}
+              selectedSquares={selectedSquares}
+              selectAll={selectAll}
+              clearSelection={clearSelection}
+              randomSelection={randomSelection}
+              solBalance={solBalance}
+              automation={automation}
+            />
+          </div>
         </div>
       </div>
 

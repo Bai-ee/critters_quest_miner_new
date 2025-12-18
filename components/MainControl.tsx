@@ -261,6 +261,7 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                             onClick={handleDeploy}
                             disabled={!publicKey || deploying || selectedSquares.size === 0 || solBalance < (amount * selectedSquares.size + 0.01)}
                             size="lg"
+                            variant="success"
                             className="w-full sm:w-auto min-w-[220px]"
                         >
                             {deploying ? 'DEPLOYING...' : 'MINE'}

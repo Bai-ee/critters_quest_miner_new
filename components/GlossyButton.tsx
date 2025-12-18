@@ -123,7 +123,7 @@ export const GlossyButton: React.FC<GlossyButtonProps> = ({
       style={{
         background: getBackground(),
         borderColor: getBorderColor(),
-        boxShadow: `0 ${size === 'sm' || size === 'icon' ? '3px' : '6px'} 0 ${getShadowColor()}, 0 12px 15px rgba(0,0,0,0.4)`,
+        boxShadow: `0 ${size === 'sm' || size === 'icon' ? '3px' : '6px'} 0 ${getShadowColor()}`,
         fontFamily: "var(--font-sans)",
         color: getTextColor(),
       }}
@@ -153,7 +153,7 @@ export const GlossyButton: React.FC<GlossyButtonProps> = ({
         />
       </div>
 
-      <span className="relative z-10 flex items-center justify-center gap-2 font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+      <span className="relative z-10 flex items-center justify-center gap-2 font-bold">
         {children}
       </span>
     </button>
