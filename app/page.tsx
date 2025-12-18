@@ -9,6 +9,7 @@ import { GlossyButton } from '@/components/GlossyButton';
 import { Modal } from '@/components/Modal';
 import { RoundResults } from '@/components/RoundResults';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
+import { HowTo } from '@/components/HowTo';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
@@ -399,6 +400,8 @@ export default function Home() {
               toggleSquare={toggleSquare}
             />
           </div>
+          
+          <HowTo />
         </div>
       </div>
 
