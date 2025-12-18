@@ -13,6 +13,7 @@ import { HowTo } from '@/components/HowTo';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
+import { useDeployToSquares } from '@/lib/instrucionsHooks';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect } from 'react';
 import { CALCULATIONS } from '@/lib/constants';
@@ -23,6 +24,7 @@ export default function Home() {
   const { board, round, previousRound, currentSlot, loading, error, lastUpdate, miner, automation } = useRoundData();
   const { connected, publicKey } = useWallet();
   const { balance: solBalance } = useSolBalance();
+  const { deploy } = useDeployToSquares();
 
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [lastShownRoundId, setLastShownRoundId] = useState<string | null>(null);
@@ -116,11 +118,15 @@ export default function Home() {
     }
 
     try {
-        // We'll need to use the deploy function from the hook, 
-        // but for now we'll just show a toast or handle it if we pass the hook down
-        // Since this is Home component, we'll need to define deploy here or import it
-        toast.success(`Deploying to ${selectedSquares.size} squares...`);
-        // clearSelection(); // Clear selection after successful deploy
+        const squaresArray = Array.from(selectedSquares);
+        const signature = await deploy(
+            amount,
+            squaresArray,
+            '9nmmN2Cj6Bj3ob8tteszatY87Jz2QYSpxstWiXg2v6iC',
+            needCheckpoint
+        );
+        toast.success(`Deploy successful! ${signature.slice(0, 8)}...${signature.slice(-8)}`);
+        clearSelection(); // Clear selection after successful deploy
     } catch (error) {
         console.error('Deploy failed:', error);
         toast.error(`Deploy failed: ${error}`);

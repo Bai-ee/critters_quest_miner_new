@@ -28,24 +28,24 @@ export function Stats({ round, miner }: StatsProps) {
 
   return (
     <div className="flex flex-col sm:flex-row gap-2">
-      {statCards.map((stat, index) => (
-        <div
-          key={index}
+          {statCards.map((stat, index) => (
+            <div
+              key={index}
           className="cq-jackpot-strip flex-1 px-3 py-2"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
               <span className="text-sm">{stat.icon}</span>
               <span className="text-xs text-gray-400 font-medium uppercase">
-                {stat.label}
+                    {stat.label}
               </span>
-            </div>
+                  </div>
             <span className="text-sm font-bold text-cq-gold">
-              {stat.value}
+                  {stat.value}
             </span>
-          </div>
-        </div>
-      ))}
+              </div>
+            </div>
+          ))}
     </div>
   );
 }

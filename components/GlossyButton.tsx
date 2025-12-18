@@ -153,7 +153,7 @@ export const GlossyButton: React.FC<GlossyButtonProps> = ({
         />
       </div>
 
-      <span className="relative z-10 flex items-center justify-center gap-2 font-bold">
+      <span className="relative z-10 flex items-center justify-center gap-2 font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
         {children}
       </span>
     </button>

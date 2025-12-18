@@ -128,11 +128,14 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
   };
 
   // Dynamic styles based on progress
-  const getProgressColor = () => {
-    if (notStarted || isExpired) return '#52D43B'; // Green when inactive
-    if (progress > 50) return '#52D43B'; // Green
-    if (progress > 20) return '#f97316'; // Orange
-    return '#ef4444'; // Red
+  const getProgressBackground = () => {
+    if (notStarted || isExpired) {
+      // Darker green gradient matching button success state
+      return 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)';
+    }
+    if (progress > 50) return 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)';
+    if (progress > 20) return 'linear-gradient(180deg, #FFEFBA 0%, #f97316 20%, #ea580c 60%, #9a3412 100%)'; // Orange theme
+    return 'linear-gradient(180deg, #FF9999 0%, #ef4444 20%, #b91c1c 60%, #7f1d1d 100%)'; // Red theme
   };
 
   const getGlowIntensity = () => {
@@ -162,10 +165,11 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
       <div 
         className="absolute right-0 bg-black rounded-full overflow-hidden flex items-center" 
         style={{ 
-          width: 'calc(100% - 40px)', 
-          height: '35px',
-          border: `2px solid ${progress < 50 && !notStarted && !isExpired ? getProgressColor() : (notStarted || isExpired ? '#52D43B' : 'rgba(255, 255, 255, 0.1)')}`,
-          boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.5), ${getGlowIntensity()}`,
+          left:'5px',
+          width: 'calc(100% - 4px)', 
+          height: '37px', // Adjusted height to better match button scale
+          border: '2px solid rgb(35,116,13)', // Normalized border width
+          boxShadow: '0 2px 0 rgb(35,116,13)', // Normalized shadow depth (matching sm buttons)
           transition: 'all 0.5s ease'
         }}
       >
@@ -174,14 +178,28 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
           className="h-full transition-all duration-1000 ease-linear"
           style={{ 
             width: `${progress}%`,
-            backgroundColor: getProgressColor(),
-            boxShadow: `inset 0 0 10px rgba(0, 0, 0, 0.3), ${getGlowIntensity()}`
+            background: getProgressBackground(),
+            boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.3)'
           }}
         />
         
+        {/* Glossy Overlays exactly matching GlossyButton settings */}
+        <div className="absolute inset-0 pointer-events-none">
+          {/* Top Highlight */}
+          <div 
+            className="absolute top-1 left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full"
+            style={{ filter: 'blur(1px)' }}
+          />
+          {/* Bottom Highlight */}
+          <div 
+            className="absolute bottom-1.5 left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full"
+            style={{ filter: 'blur(2px)' }}
+          />
+        </div>
+
         {/* Time Text Overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none px-4">
-          <span className="text-white font-bold text-[10px] sm:text-xs tracking-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap overflow-hidden">
+          <span className="text-white font-bold text-[11px] sm:text-[13px] tracking-tight drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] whitespace-nowrap overflow-hidden">
             {notStarted ? 'WAITING' : isExpired ? '00:00' : formatTime(timeLeft)}
           </span>
         </div>
@@ -196,7 +214,7 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
           style={{ 
             height: '48px', 
             width: 'auto',
-            filter: `drop-shadow(0 4px 6px rgba(0,0,0,0.4)) ${progress < 50 || notStarted || isExpired ? `drop-shadow(0 0 10px ${getProgressColor()})` : ''}`,
+            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))', // Flat shadow consistent with normalized theme
             animationDuration: getAnimationSpeed(),
             // @ts-ignore - custom property for keyframes
             '--tick-rotate': getRotationIntensity()

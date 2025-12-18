@@ -2,7 +2,6 @@ import { gramsToOre, lamportsToSol } from '@/lib/accounts';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useMemo } from 'react';
 import { JackpotTierCard } from './JackpotTierCard';
-import { Timer } from './Timer';
 
 interface MotherlodeProps {
   amount?: bigint;
@@ -11,144 +10,68 @@ interface MotherlodeProps {
   startSlot?: bigint;
 }
 
-export function Motherlode({ amount, endSlot, currentSlot, startSlot }: MotherlodeProps) {
+export function Motherlode({ endSlot, currentSlot, startSlot }: MotherlodeProps) {
   const { treasury } = useRoundData();
 
-  const tiers = useMemo(() => {
-    if (!treasury) {
-      return [
-        {
-          name: 'GRAND',
-          emoji: '🎰',
-          odds: '1/2500',
-          ore: 0,
-          sol: 0,
-        },
-        {
-          name: 'MAJOR',
-          emoji: '💎',
-          odds: '1/625',
-          ore: 0,
-          sol: 0,
-        },
-        {
-          name: 'MINOR',
-          emoji: '⭐',
-          odds: '1/125',
-          ore: 0,
-          sol: 0,
-        },
-      ];
-    }
-
-    return [
-      {
-        name: 'GRAND',
-        emoji: '🎰',
-        odds: '1/2500',
-        ore: gramsToOre(treasury.motherlodeOreGrand),
-        sol: lamportsToSol(treasury.motherlodeSolGrand),
-      },
-      {
-        name: 'MAJOR',
-        emoji: '💎',
-        odds: '1/625',
-        ore: gramsToOre(treasury.motherlodeOreMajor),
-        sol: lamportsToSol(treasury.motherlodeSolMajor),
-      },
-      {
-        name: 'MINOR',
-        emoji: '⭐',
-        odds: '1/125',
+  const data = useMemo(() => {
+    if (!treasury) return null;
+    return {
+      minor: {
         ore: gramsToOre(treasury.motherlodeOreMinor),
         sol: lamportsToSol(treasury.motherlodeSolMinor),
       },
-    ];
+      major: {
+        ore: gramsToOre(treasury.motherlodeOreMajor),
+        sol: lamportsToSol(treasury.motherlodeSolMajor),
+      },
+      grand: {
+        ore: gramsToOre(treasury.motherlodeOreGrand),
+        sol: lamportsToSol(treasury.motherlodeSolGrand),
+      }
+    };
   }, [treasury]);
 
-  const formatNumber = (num: number) => {
-    if (num >= 1e12) return `${(num / 1e12).toFixed(1)}T`;
-    if (num >= 1e9) return `${(num / 1e9).toFixed(1)}B`;
-    if (num >= 1e6) return `${(num / 1e6).toFixed(1)}M`;
-    if (num >= 1e3) return `${(num / 1e3).toFixed(1)}K`;
-    return num.toFixed(1);
-  };
-
-  const getTierStyles = (name: string) => {
-    switch (name) {
-      case 'GRAND':
-        return {
-          bg: 'var(--tier-grand-bg)',
-          text: 'var(--tier-grand-text)',
-        };
-      case 'MAJOR':
-        return {
-          bg: 'var(--tier-major-bg)',
-          text: 'var(--tier-major-text)',
-        };
-      case 'MINOR':
-        return {
-          bg: 'var(--tier-minor-bg)',
-          text: 'var(--tier-minor-text)',
-        };
-      default:
-        return {
-          bg: 'var(--tier-mini-bg)',
-          text: 'var(--tier-mini-text)',
-        };
-    }
-  };
-
-  const grandTier = tiers[0];
-  const majorTier = tiers[1];
-  const minorTier = tiers[2];
-
-  const grandTotalValue = grandTier.sol + (grandTier.ore * 0.0001);
-  const majorTotalValue = majorTier.sol + (majorTier.ore * 0.0001);
-  const minorTotalValue = minorTier.sol + (minorTier.ore * 0.0001);
+  if (!data) return null;
 
   return (
-    <div className="mb-0" style={{ overflow: 'visible' }}>
-      {/* Unified Layout: Stacked Orientation for all sizes */}
-      <div className="flex flex-col items-center justify-center" style={{ overflow: 'visible' }}>
-        <div className="relative w-full" style={{ overflow: 'visible', marginBottom: '0', paddingBottom: '0', marginTop: '0', paddingTop: '0' }}>
+    <div className="w-full max-w-[800px] mx-auto" style={{ overflow: 'visible', marginTop: '-82px' }}>
+      <div className="flex flex-col items-center w-full gap-0">
+        {/* GRAND Card - Full Width */}
+        <div className="w-full px-2">
           <JackpotTierCard
             tier="GRAND"
-            value={grandTotalValue}
-            ore={grandTier.ore}
-            sol={grandTier.sol}
-            odds={grandTier.odds}
+            ore={data.grand.ore}
+            sol={data.grand.sol}
+            odds="1/2500"
             bgImage="/img/grand_award_bg.png"
             labelImage="/img/grand_winner_label.png"
             scale={1}
           />
+        </div>
 
-          {/* MAJOR and MINOR nested inside the same parent div as GRAND */}
-          <div className="relative flex flex-row w-full items-start justify-center gap-0 mt-0" style={{ overflow: 'visible' }}>
-            <div className="flex-1 w-full flex justify-center items-center" style={{ minWidth: 0 }}>
-              <JackpotTierCard
-                tier="MAJOR"
-                value={majorTotalValue}
-                ore={majorTier.ore}
-                sol={majorTier.sol}
-                odds={majorTier.odds}
-                bgImage="/img/award_label_major.png"
-                labelImage="/img/major_winner_label.png"
-                scale={0.9}
-              />
-            </div>
-            <div className="flex-1 w-full flex justify-center items-center" style={{ minWidth: 0 }}>
-              <JackpotTierCard
-                tier="MINOR"
-                value={minorTotalValue}
-                ore={minorTier.ore}
-                sol={minorTier.sol}
-                odds={minorTier.odds}
-                bgImage="/img/award_label_minor.png"
-                labelImage="/img/minor_winner_label.png"
-                scale={0.9}
-              />
-            </div>
+        {/* MAJOR and MINOR - Side by Side with 2px gap */}
+        <div className="flex flex-row w-full gap-[2px] px-2" style={{ marginTop: '-12px' }}>
+          <div className="flex-1 min-w-0">
+            <JackpotTierCard
+              tier="MAJOR"
+              ore={data.major.ore}
+              sol={data.major.sol}
+              odds="1/625"
+              bgImage="/img/award_label_major.png"
+              labelImage="/img/major_winner_label.png"
+              scale={0.9}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <JackpotTierCard
+              tier="MINOR"
+              ore={data.minor.ore}
+              sol={data.minor.sol}
+              odds="1/125"
+              bgImage="/img/award_label_minor.png"
+              labelImage="/img/minor_winner_label.png"
+              scale={0.9}
+            />
           </div>
         </div>
       </div>
