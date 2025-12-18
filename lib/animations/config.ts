@@ -203,6 +203,14 @@ export const ANIMATION_CONFIG = {
       ambient: 0.1,
     },
   },
+  slotMachine: {
+    totalDuration: 0.75, // Total animation duration in seconds
+    delay: 0.25, // Delay before animation starts
+    startChar: '-', // Character to show before animation
+    spinCount: 100, // Base number of spins per digit
+    spinCountIncrement: 20, // Additional spins per digit position
+    ease: 'power4.out', // Heavy easing for smooth landing
+  },
 } as const;
 
 export const {

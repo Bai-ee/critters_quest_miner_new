@@ -1,21 +1,46 @@
 # Style Guide: Critters Quest Miner
 
+## 🎰 Design Philosophy: Casino / Juicy Theme
+
+The Critters Quest Miner UI follows a **bright, vibrant, flashy casino aesthetic** with **deep shadows and glossy depth**. The design emphasizes:
+
+- **Warm Gold Accent** (`#FFCF84`) as the primary brand color throughout
+- **Deep, dramatic shadows** for maximum visual depth
+- **Glossy, juicy buttons** with shine overlays and thick borders
+- **Slot machine tile aesthetic** for grid squares
+- **Warm brown/copper backgrounds** that complement the gold accent
+- **Bright, vibrant colors** with neon glows and effects
+
+### Key Design Principles
+
+1. **Depth & Shadow**: Every element uses deep shadows (`--shadow-button`, `--shadow-cabinet`) to create a 3D, arcade cabinet feel
+2. **Glossy Surfaces**: Buttons and panels have shine overlays and bevel effects for a "juicy" tactile feel
+3. **Warm Color Palette**: Shift from cool grays to warm browns/coppers that harmonize with the gold accent
+4. **Bright Accents**: Gold (`#FFCF84`), purple (SOL), orange (QUEST), and neon glows create vibrant contrast
+5. **Mobile-First**: All components are designed for thumb-friendly mobile interaction with responsive scaling
+
+---
+
 ## 🎨 Visual Design System
+
+### Casino / Juicy Theme
+
+**Main Accent Color:** `#FFCF84` (Warm Gold) — The primary brand accent used throughout the UI for highlights, buttons, and special effects.
 
 ### Color Palette
 
-#### Primary Colors
+#### Primary Colors (Backgrounds / Panels)
 ```css
-/* Backgrounds */
---bg-primary: #111827 (gray-900)
---bg-secondary: #1f2937 (gray-800)
---bg-tertiary: #374151 (gray-700)
---bg-card: rgba(31, 41, 55, 0.5) /* gray-800/50 with backdrop-blur */
+/* Warm casino cabinet backgrounds */
+--bg-primary: #140c05        /* Deep espresso - main background */
+--bg-secondary: #241406      /* Warm brown panel - secondary surfaces */
+--bg-tertiary: #3a230a       /* Bronze/brown lift - elevated elements */
+--bg-card: rgba(36, 20, 6, 0.62)  /* Warm glass effect */
 
 /* Text */
---text-primary: #ffffff (white)
---text-secondary: #9ca3af (gray-400)
---text-muted: #6b7280 (gray-500)
+--text-primary: #ffffff       /* Pure white - primary text */
+--text-secondary: #ffe7c7     /* Warm cream - secondary text */
+--text-muted: #c7a67a         /* Muted gold-brown - muted text */
 ```
 
 #### Status Colors
@@ -23,55 +48,74 @@
 /* Success/Green */
 --success: #34d399 (green-400)
 --success-dark: #10b981 (green-500)
---success-bg: rgba(6, 78, 59, 0.3) /* green-900/30 */
+--success-bg: rgba(6, 78, 59, 0.28)
 
-/* Warning/Yellow */
---warning: #fbbf24 (yellow-400)
---warning-dark: #f59e0b (amber-500)
---warning-bg: rgba(120, 53, 15, 0.3) /* yellow-900/30 */
+/* Warning/Gold (matches brand accent) */
+--warning: #FFCF84           /* Main brand accent */
+--warning-dark: #e4a64f      /* Deeper amber */
+--warning-bg: rgba(124, 45, 18, 0.22)
 
 /* Error/Red */
 --error: #f87171 (red-400)
 --error-dark: #ef4444 (red-500)
---error-bg: rgba(127, 29, 29, 0.3) /* red-900/30 */
+--error-bg: rgba(127, 29, 29, 0.26)
 
 /* Info/Blue */
 --info: #60a5fa (blue-400)
 --info-dark: #3b82f6 (blue-500)
---info-bg: rgba(30, 58, 138, 0.3) /* blue-900/30 */
+--info-bg: rgba(30, 58, 138, 0.26)
 ```
 
 #### Token Colors
 ```css
-/* SOL (Purple) */
+/* SOL (Violet) - Premium contrast against warm cabinet */
 --sol: #a78bfa (purple-400)
---sol-dark: #9333ea (purple-600)
---sol-bg: rgba(88, 28, 135, 0.3) /* purple-900/30 */
+--sol-dark: #7c3aed (purple-600)
+--sol-bg: rgba(88, 28, 135, 0.26)
 
-/* QUEST (Orange) */
+/* QUEST (Orange) - Warmer to harmonize with #FFCF84 */
 --quest: #fb923c (orange-400)
 --quest-dark: #ea580c (orange-600)
---quest-bg: rgba(124, 45, 18, 0.3) /* orange-900/30 */
+--quest-bg: rgba(124, 45, 18, 0.26)
 ```
 
-#### Special Colors
+#### Special / Jackpot Colors
 ```css
-/* Motherlode/Gold */
---gold: #fbbf24 (yellow-400)
---gold-dark: #f59e0b (amber-500)
---gold-light: #fcd34d (yellow-300)
+/* Motherlode/Gold - Main accent family */
+--gold: #FFCF84              /* Main brand accent */
+--gold-dark: #e4a64f         /* Deeper amber */
+--gold-light: #ffe2b0         /* Light gold highlight */
 
 /* Winner Highlight */
---winner: #fbbf24 (yellow-400)
---winner-glow: rgba(251, 191, 36, 0.5) /* yellow-400/50 */
+--winner: #FFCF84            /* Winner glow uses main accent */
+--winner-glow: rgba(255, 207, 132, 0.55)
+```
+
+#### Jackpot Tier Colors
+```css
+/* GRAND: Red → Gold gradient (top rarity) */
+--tier-grand-bg: linear-gradient(180deg, #ef4444 0%, #FFCF84 100%)
+--tier-grand-text: #2b1300
+
+/* MAJOR: Premium violet */
+--tier-major-bg: linear-gradient(180deg, #a78bfa 0%, #7c3aed 100%)
+--tier-major-text: #ffffff
+
+/* MINOR: Green */
+--tier-minor-bg: linear-gradient(180deg, #34d399 0%, #10b981 100%)
+--tier-minor-text: #052e1b
+
+/* MINI: Blue */
+--tier-mini-bg: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%)
+--tier-mini-text: #061a3b
 ```
 
 ### Typography Scale
 
 ```css
 /* Font Families */
---font-sans: Arial, Helvetica, sans-serif
---font-mono: ui-monospace, monospace /* For addresses, numbers */
+--font-sans: 'Comic Neue', 'Comic Sans MS', cursive, sans-serif
+--font-mono: 'Comic Neue', 'Comic Sans MS', ui-monospace, monospace /* For addresses, numbers */
 
 /* Font Sizes */
 --text-xs: 0.75rem (12px)
@@ -120,19 +164,55 @@
 --radius-full: 9999px
 ```
 
-### Shadows
+### Shadows (Casino Depth)
 
 ```css
-/* Card Shadow */
---shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.1)
+/* Card Shadow - Deep, dramatic depth */
+--shadow-card: 0 14px 22px -8px rgba(0, 0, 0, 0.55)
 
-/* Button Shadow */
---shadow-button: 0 4px 6px -1px rgba(0, 0, 0, 0.1)
+/* Button Shadow - Heavy "arcade thunk" feel */
+--shadow-button: 0 6px 0 rgba(0, 0, 0, 0.35), 0 14px 26px rgba(0, 0, 0, 0.5)
 
-/* Glow Effects */
---shadow-glow-blue: 0 0 20px rgba(59, 130, 246, 0.3)
---shadow-glow-purple: 0 0 20px rgba(147, 51, 234, 0.3)
---shadow-glow-yellow: 0 0 20px rgba(251, 191, 36, 0.5)
+/* Cabinet/Frame Shadow - Maximum depth */
+--shadow-cabinet: 0 22px 44px rgba(0, 0, 0, 0.65)
+
+/* Glow Effects - Bright, vibrant neon glows */
+--shadow-glow-blue: 0 0 22px rgba(59, 130, 246, 0.32)
+--shadow-glow-purple: 0 0 22px rgba(167, 139, 250, 0.32)
+--shadow-glow-gold: 0 0 26px rgba(255, 207, 132, 0.55)  /* Main accent glow */
+```
+
+### Grid Tile Tokens (Slot-Symbol Feel)
+
+```css
+/* Grid tile styling for slot machine aesthetic */
+--grid-tile-bg: linear-gradient(180deg, #3a230a 0%, #241406 100%)
+--grid-tile-border: rgba(255, 207, 132, 0.45)
+--grid-tile-shadow: 
+  inset 0 2px 0 rgba(255,255,255,0.10),
+  inset 0 -8px 18px rgba(0,0,0,0.55),
+  0 10px 18px rgba(0,0,0,0.45)
+
+--grid-hover-glow: var(--shadow-glow-gold)
+--grid-win-glow: 0 0 34px rgba(255, 207, 132, 0.75)
+```
+
+### Button Tokens (Juicy Casino Style)
+
+```css
+/* Primary Button - Big, glossy, golden */
+--button-primary-bg: linear-gradient(180deg, #FFCF84 0%, #e4a64f 100%)
+--button-primary-border: rgba(0,0,0,0.85)
+--button-primary-text: #2b1300
+
+/* Secondary Button - Subtle gold tint */
+--button-secondary-bg: linear-gradient(180deg, rgba(255,207,132,0.28) 0%, rgba(255,207,132,0.12) 100%)
+--button-secondary-border: rgba(255,207,132,0.45)
+--button-secondary-text: #fff3e3
+
+/* Danger Button - Red gradient */
+--button-danger-bg: linear-gradient(180deg, #ef4444 0%, #7f1d1d 100%)
+--button-danger-text: #ffffff
 ```
 
 ---
@@ -141,10 +221,17 @@
 
 ### Card Component
 
-**Base Pattern:**
+**Base Pattern (Casino Panel):**
 ```tsx
-<div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
+<div className="cq-panel p-4">
   {/* Content */}
+</div>
+```
+
+**Cabinet Frame (Main Grid Container):**
+```tsx
+<div className="cq-cabinet p-6">
+  {/* Content with deep shadow and warm glow */}
 </div>
 ```
 
@@ -167,33 +254,37 @@
 
 ### Button Components
 
-**Primary Button:**
+**Primary Button (Glossy Gold):**
 ```tsx
-<button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40">
-  Button Text
+<button className="cq-button-primary px-6 py-3 text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed">
+  BUTTON TEXT
 </button>
 ```
+Uses: `--button-primary-bg`, `--button-primary-text`, `--shadow-button` with shine overlay (`::after` pseudo-element)
 
-**Secondary Button:**
+**Secondary Button (Subtle Gold):**
 ```tsx
-<button className="px-4 py-2 bg-gray-700/50 hover:bg-gray-600/50 text-white rounded-lg transition-all duration-200 border border-gray-600/50 hover:border-gray-500">
+<button className="cq-button-secondary px-4 py-2 text-sm font-bold">
   Button Text
 </button>
 ```
+Uses: `--button-secondary-bg`, `--button-secondary-text` with warm gold tint
 
 **Danger Button:**
 ```tsx
-<button className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold">
-  Button Text
+<button className="px-6 py-3 text-base font-bold text-white rounded-full border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed" style={{ background: 'var(--button-danger-bg)', boxShadow: 'var(--shadow-button)' }}>
+  DANGER ACTION
 </button>
 ```
+Uses: `--button-danger-bg`, `--button-danger-text` with red gradient
 
-**Ghost Button:**
+**Ghost Button (Minimal):**
 ```tsx
-<button className="px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-800/50 rounded-lg transition-all duration-200">
+<button className="px-4 py-2 text-text-secondary hover:text-gold rounded-lg transition-all duration-200 hover:bg-bg-card">
   Button Text
 </button>
 ```
+Subtle hover effect with warm cream text
 
 ### Input Components
 
@@ -238,43 +329,45 @@
 </span>
 ```
 
-### Grid Square Pattern
+### Grid Square Pattern (Slot Tile)
 
 **Base Square:**
 ```tsx
-<div className="relative rounded-lg p-4 transition-all duration-500 hover:scale-105 hover:shadow-lg cursor-pointer bg-blue-900/30 border border-blue-500">
+<div className="cq-slot-tile cq-grid-tile">
   {/* Content */}
 </div>
 ```
+Uses: `--grid-tile-bg`, `--grid-tile-border`, `--grid-tile-shadow` with warm brown gradient
 
 **Selected Square:**
 ```tsx
-<div className="bg-green-600/50 border border-green-400 ring-2 ring-green-300">
+<div className="cq-slot-tile cq-slot-tile-selected">
 ```
+Pulsing gold glow using `--grid-hover-glow` and `--gold` accent
 
 **Winner Square:**
 ```tsx
-<div className="animate-pulse bg-linear-to-br from-yellow-400 via-amber-500 to-yellow-600 border-4 border-yellow-300 ring-4 ring-yellow-400/50 shadow-2xl shadow-yellow-500/50 scale-110 z-10">
+<div className="cq-slot-tile cq-slot-tile-winner">
 ```
+Strong gold glow using `--grid-win-glow` and `--winner-glow` with sparkle animation
 
 **Empty Square:**
 ```tsx
-<div className="bg-gray-800/50 border border-gray-700">
+<div className="cq-slot-tile">
 ```
+Same base styling, appears darker due to empty content
 
-### Stat Card Pattern
+### Jackpot Strip Pattern
 
 ```tsx
-<div className="bg-linear-to-br from-green-600 to-green-700 rounded-lg p-3 shadow-lg">
+<div className="cq-jackpot-strip px-3 py-2">
   <div className="flex items-center justify-between">
-    <div className="flex items-center gap-2">
-      <span className="text-xl">📊</span>
-      <div className="text-xs text-white/80 font-medium">Label</div>
-    </div>
-    <div className="text-lg font-bold text-white">Value</div>
+    <span className="text-xs text-gray-400 font-medium uppercase">LABEL</span>
+    <span className="cq-jackpot-number text-sm">VALUE</span>
   </div>
 </div>
 ```
+Uses warm gold gradient background with animated shine effect and gold text glow
 
 ### Gradient Backgrounds
 

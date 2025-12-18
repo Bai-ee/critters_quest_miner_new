@@ -27,40 +27,25 @@ export function Stats({ round, miner }: StatsProps) {
   ];
 
   return (
-    <div className="relative overflow-hidden rounded-xl p-6 shadow-xl bg-linear-to-br from-gray-700 to-gray-800">
-      <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl">📈</span>
-          <h2 className="text-xl font-bold text-white">
-            Round Stats
-          </h2>
-        </div>
-        <div className="space-y-3">
-          {statCards.map((stat, index) => (
-            <div
-              key={index}
-              className={`
-                bg-linear-to-br ${stat.color}
-                rounded-lg p-3 shadow-lg
-                transform transition-all duration-200
-                hover:scale-[1.02] hover:shadow-xl
-              `}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xl">{stat.icon}</span>
-                  <div className="text-xs text-white/80 font-medium">
-                    {stat.label}
-                  </div>
-                </div>
-                <div className="text-lg font-bold text-white">
-                  {stat.value}
-                </div>
-              </div>
+    <div className="flex flex-col sm:flex-row gap-2">
+      {statCards.map((stat, index) => (
+        <div
+          key={index}
+          className="cq-jackpot-strip flex-1 px-3 py-2"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{stat.icon}</span>
+              <span className="text-xs text-gray-400 font-medium uppercase">
+                {stat.label}
+              </span>
             </div>
-          ))}
+            <span className="text-sm font-bold text-cq-gold">
+              {stat.value}
+            </span>
+          </div>
         </div>
-      </div>
+      ))}
     </div>
   );
 }

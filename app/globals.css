@@ -1,12 +1,415 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Comic Neue';
+  src: url('/fonts/ComicNeue-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Comic Neue';
+  src: url('/fonts/ComicNeue-BoldItalic.ttf') format('truetype');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Comic Neue';
+  src: url('/fonts/ComicNeue-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Comic Neue';
+  src: url('/fonts/ComicNeue-Italic.ttf') format('truetype');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Comic Neue';
+  src: url('/fonts/ComicNeue-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Comic Sans MS';
+  src: url('/fonts/ComicSansMS.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --background: #0a0a0a;
+  --background: #63DFCB;
   --foreground: #ededed;
+
+  /* Backgrounds */
+  --bg-primary: #63DFCB;
+  --bg-secondary: #FFB84A;
+  --bg-tertiary: #FFB84A;
+  --bg-card: #FFB84A;
+
+  /* Text */
+  --text-primary: #ffffff;
+  --text-secondary: #ffe7c7;
+  --text-muted: #c7a67a;
+
+  /* Status Colors */
+  --success: #34d399;
+  --success-dark: #10b981;
+  --success-bg: rgba(6, 78, 59, 0.28);
+
+  --warning: #FFCF84;
+  --warning-dark: #e4a64f;
+  --warning-bg: rgba(124, 45, 18, 0.22);
+
+  --error: #f87171;
+  --error-dark: #ef4444;
+  --error-bg: rgba(127, 29, 29, 0.26);
+
+  --info: #60a5fa;
+  --info-dark: #3b82f6;
+  --info-bg: rgba(30, 58, 138, 0.26);
+
+  /* Token Colors */
+  --sol: #a78bfa;
+  --sol-dark: #7c3aed;
+  --sol-bg: rgba(88, 28, 135, 0.26);
+
+  --quest: #fb923c;
+  --quest-dark: #ea580c;
+  --quest-bg: rgba(124, 45, 18, 0.26);
+
+  /* Special / Jackpot Colors */
+  --gold: #FFCF84;
+  --gold-dark: #e4a64f;
+  --gold-light: #ffe2b0;
+
+  --winner: #FFCF84;
+  --winner-glow: rgba(255, 207, 132, 0.55);
+
+  /* Typography Scale */
+  --font-sans: 'Comic Neue', 'Comic Sans MS', cursive, sans-serif;
+  --font-mono: 'Comic Neue', 'Comic Sans MS', ui-monospace, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+
+  /* Spacing Scale */
+  --p-1: 0.25rem;
+  --p-2: 0.5rem;
+  --p-3: 0.75rem;
+  --p-4: 1rem;
+  --p-6: 1.5rem;
+  --p-8: 2rem;
+
+  --gap-1: 0.25rem;
+  --gap-2: 0.5rem;
+  --gap-3: 0.75rem;
+  --gap-4: 1rem;
+  --gap-6: 1.5rem;
+  --gap-8: 2rem;
+
+  /* Border Radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+
+  /* Shadows (Casino Depth) */
+  --shadow-card: 0 14px 22px -8px rgba(0, 0, 0, 0.55);
+  --shadow-button: 0 6px 0 rgba(0, 0, 0, 0.35), 0 14px 26px rgba(0, 0, 0, 0.5);
+  --shadow-cabinet: 0 22px 44px rgba(0, 0, 0, 0.65);
+  --shadow-glow-blue: 0 0 22px rgba(59, 130, 246, 0.32);
+  --shadow-glow-purple: 0 0 22px rgba(167, 139, 250, 0.32);
+  --shadow-glow-gold: 0 0 26px rgba(255, 207, 132, 0.55);
+
+  /* Jackpot Tier Tokens - Arcade Plaque Style */
+  --tier-grand-bg: linear-gradient(180deg, #8B0000 0%, #5C0000 100%);
+  --tier-grand-text: #1a0000;
+  --tier-major-bg: linear-gradient(180deg, #6B46C1 0%, #4C1D95 100%);
+  --tier-major-text: #1e0a3d;
+  --tier-minor-bg: linear-gradient(180deg, #0D9488 0%, #065F5A 100%);
+  --tier-minor-text: #042f2e;
+  --tier-mini-bg: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
+  --tier-mini-text: #061a3b;
+
+  /* Arcade Neon Border */
+  --neon-cyan: #00FFFF;
+  --neon-cyan-glow: 0 0 10px rgba(0, 255, 255, 0.6), 0 0 20px rgba(0, 255, 255, 0.4), 0 0 30px rgba(0, 255, 255, 0.2);
+
+  /* Grid Tile Tokens */
+  --grid-tile-bg: linear-gradient(180deg, #3a230a 0%, #241406 100%);
+  --grid-tile-border: rgba(255, 207, 132, 0.45);
+  --grid-tile-shadow: inset 0 2px 0 rgba(255,255,255,0.10), inset 0 -8px 18px rgba(0,0,0,0.55), 0 10px 18px rgba(0,0,0,0.45);
+  --grid-hover-glow: var(--shadow-glow-gold);
+  --grid-win-glow: 0 0 34px rgba(255, 207, 132, 0.75);
+
+  /* Button Tokens */
+  --button-primary-bg: linear-gradient(180deg, #FFCF84 0%, #e4a64f 100%);
+  --button-primary-border: rgba(0,0,0,0.85);
+  --button-primary-text: #2b1300;
+  --button-secondary-bg: linear-gradient(180deg, rgba(255,207,132,0.28) 0%, rgba(255,207,132,0.12) 100%);
+  --button-secondary-border: rgba(255,207,132,0.45);
+  --button-secondary-text: #fff3e3;
+  --button-danger-bg: linear-gradient(180deg, #ef4444 0%, #7f1d1d 100%);
+  --button-danger-text: #ffffff;
+
+  /* Legacy CQ tokens (for compatibility) */
+  --cq-bg-0: var(--bg-primary);
+  --cq-bg-1: var(--bg-secondary);
+  --cq-bg-2: var(--bg-tertiary);
+  --cq-neon: var(--gold);
+  --cq-gold: var(--gold);
+  --cq-cyan: var(--info);
+  --cq-primary-green: #23740D;
+  --cq-secondary-green: #1EA495;
+  --cq-secondary-yellow: #E7EF88;
+  --cq-success-green: #89d005;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  min-width: 375px;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  overflow-x: hidden;
+}
+
+/* .cq-cabinet - All styling removed */
+
+.cq-panel {
+  background: linear-gradient(180deg,
+    rgba(255, 207, 132, 0.08) 0%,
+    rgba(36, 20, 6, 0.62) 100%);
+  border: 1px solid rgba(255, 207, 132, 0.22);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-card);
+}
+
+.cq-glow {
+  box-shadow: 0 0 20px rgba(116, 253, 231, 0.4), 0 0 40px rgba(116, 253, 231, 0.2);
+}
+
+.cq-bevel {
+  position: relative;
+}
+
+.cq-bevel::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.3) 100%);
+  pointer-events: none;
+}
+
+.cq-button-primary {
+  position: relative;
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  border: 2px solid var(--button-primary-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-button);
+  transition: all 0.15s ease;
+  overflow: hidden;
+}
+
+.cq-button-primary::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 8px;
+  height: 35%;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.22);
+  filter: blur(0.6px);
+  pointer-events: none;
+}
+
+.cq-button-primary:active {
+  transform: translateY(3px);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.cq-button-secondary {
+  position: relative;
+  background: var(--button-secondary-bg);
+  color: var(--button-secondary-text);
+  border: 2px solid var(--button-secondary-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.15s ease;
+}
+
+.cq-button-secondary:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* .cq-slot-tile styles moved inline to Grid.tsx */
+
+@keyframes cq-pulse-glow {
+  0%, 100% {
+    box-shadow: 
+      var(--grid-tile-shadow),
+      var(--grid-hover-glow),
+      inset 0 0 20px rgba(255, 207, 132, 0.15);
+  }
+  50% {
+    box-shadow: 
+      var(--grid-tile-shadow),
+      0 0 34px rgba(255, 207, 132, 0.65),
+      inset 0 0 30px rgba(255, 207, 132, 0.2);
+  }
+}
+
+@keyframes cq-winner-sparkle {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.cq-jackpot-strip {
+  background: linear-gradient(90deg, rgba(255, 207, 132, 0.15) 0%, rgba(255, 207, 132, 0.08) 100%);
+  border: 2px solid rgba(255, 207, 132, 0.35);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.cq-jackpot-strip::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.15) 50%, transparent 100%);
+  animation: cq-shine 3s ease-in-out infinite;
+}
+
+.cq-jackpot-number {
+  font-family: var(--font-mono);
+  font-weight: var(--font-bold);
+  color: var(--gold);
+  text-shadow: 0 0 14px rgba(255, 207, 132, 0.55);
+}
+
+.cq-grid-tile {
+  background: var(--grid-tile-bg);
+  border: 2px solid var(--grid-tile-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--grid-tile-shadow);
+}
+
+.cq-grid-tile:hover {
+  box-shadow: var(--grid-tile-shadow), var(--grid-hover-glow);
+  transform: translateY(-1px) scale(1.02);
+}
+
+/* Jackpot Tier Panels - Arcade Plaque Style */
+.cq-jackpot-panel {
+  position: relative;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 4px solid var(--neon-cyan);
+  box-shadow:
+    var(--neon-cyan-glow),
+    0 10px 25px rgba(0, 0, 0, 0.6),
+    inset 0 3px 0 rgba(255, 255, 255, 0.3),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.cq-jackpot-panel:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 0 15px rgba(0, 255, 255, 0.8),
+    0 0 30px rgba(0, 255, 255, 0.5),
+    0 0 45px rgba(0, 255, 255, 0.3),
+    0 15px 35px rgba(0, 0, 0, 0.7),
+    inset 0 3px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -6px 12px rgba(0, 0, 0, 0.6);
+}
+
+.cq-jackpot-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 40%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+/* Arcade Text Styling */
+.cq-tier-label {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  -webkit-text-stroke: 2px rgba(0, 0, 0, 0.9);
+  text-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.6),
+    0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.cq-jackpot-number {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--gold);
+  -webkit-text-stroke: 2px rgba(0, 0, 0, 0.7);
+  text-shadow:
+    2px 2px 0 rgba(0, 0, 0, 0.8),
+    0 3px 6px rgba(0, 0, 0, 0.6),
+    0 0 15px rgba(255, 207, 132, 0.8),
+    0 0 30px rgba(255, 207, 132, 0.5),
+    0 -2px 4px rgba(255, 255, 255, 0.4);
+}
+
+@keyframes cq-shine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }

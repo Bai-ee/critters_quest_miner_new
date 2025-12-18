@@ -70,7 +70,7 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
   const maxDeployed = Math.max(...round.deployed.map(d => Number(d)));
 
   return (
-    <div className="grid grid-cols-5 gap-1.5 sm:gap-2 md:gap-3">
+    <div className="grid grid-cols-5 gap-1 sm:gap-2">
       {round.deployed.map((lamports, index) => {
         const sol = lamportsToSol(lamports);
         const miners = round.count[index];
@@ -78,7 +78,6 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
         const isSelected = selectedSquares.has(index);
         const isWinner = index === winnerSquareIndex && showWinner;
 
-        // Calculate color intensity based on SOL amount
         const intensity = maxDeployed > 0
           ? Math.min(100, Math.floor((Number(lamports) / maxDeployed) * 100))
           : 0;
@@ -88,88 +87,72 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
             key={index}
             onClick={() => toggleSquare(index)}
             className={`
-              relative rounded-md md:rounded-lg p-2 sm:p-3 md:p-4 transition-all duration-500
-              hover:scale-105 hover:shadow-lg cursor-pointer
-              ${isWinner
-                ? 'animate-pulse bg-linear-to-br from-yellow-400 via-amber-500 to-yellow-600 border-4 border-yellow-300 ring-4 ring-yellow-400/50 shadow-2xl shadow-yellow-500/50 scale-110 z-10'
-                : isSelected
-                  ? 'bg-green-600/50 border border-green-400 sm:border-2 ring-1 sm:ring-2 ring-green-300'
-                  : isEmpty
-                    ? 'bg-gray-800/50 border border-gray-700 sm:border-2'
-                    : `bg-blue-900/30 border border-blue-500 sm:border-2`
+              relative aspect-square cursor-pointer transition-all duration-200
+              ${isWinner 
+                ? 'scale-110 z-20' 
+                : isSelected 
+                  ? 'scale-105 z-10'
+                  : ''
               }
             `}
             style={{
-              backgroundColor: isWinner
-                ? undefined // Let the gradient handle it
-                : isSelected
-                  ? 'rgba(34, 197, 94, 0.3)'
-                  : !isEmpty
-                    ? `rgba(59, 130, 246, ${0.1 + (intensity / 100) * 0.4})`
-                    : undefined
+              backgroundImage: "url('/img/card_bg.png')",
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat',
+              border: 'none',
+              boxShadow: 'none',
+              backgroundColor: 'transparent'
             }}
           >
-            {/* Square number badge */}
-            <div className={`absolute top-0.5 right-0.5 sm:top-1 sm:right-1 text-[10px] sm:text-xs font-mono ${isWinner ? 'text-yellow-900 font-bold' : 'text-gray-500'
-              }`}>
-              #{index + 1}
-            </div>
+            <div className="relative h-full flex flex-col p-1 sm:p-3">
+              {/* Square number badge */}
+              <div className={`absolute top-1 right-1 text-[10px] font-mono font-bold text-black`}>
+                #{index + 1}
+              </div>
 
-            {/* Winner indicator */}
-            {isWinner && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-4xl sm:text-5xl md:text-6xl animate-bounce">
-                  👑
+              {/* Winner indicator */}
+              {isWinner && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <div className="text-3xl sm:text-4xl animate-bounce">
+                    👑
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Selection indicator */}
-            {isSelected && (
-              <div className="absolute top-0.5 left-0.5 sm:top-1 sm:left-1 text-green-400 text-sm sm:text-base md:text-lg">
-                ✓
-              </div>
-            )}
-
-            {/* SOL amount */}
-            <div className={`text-xs sm:text-sm md:text-base lg:text-lg font-bold mb-0.5 sm:mb-1 ${isWinner ? 'text-yellow-900' : isEmpty ? 'text-gray-500' : 'text-white'
-              }`}>
-              {sol.toFixed(4)}
-            </div>
-            <div className={`text-[10px] sm:text-xs mb-1 sm:mb-2 ${isWinner ? 'text-yellow-800 font-semibold' : 'text-gray-400'
-              }`}>
-              {isWinner ? 'WINNER!' : 'SOL'}
-            </div>
-
-            {/* Miner count */}
-            <div className="flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs">
-              <span className={isWinner ? 'text-yellow-900 font-bold' : isEmpty ? 'text-gray-600' : 'text-blue-300'}>
-                👤 {miners.toString()}
-              </span>
-            </div>
-
-            {/* Intensity indicator */}
-            {!isEmpty && intensity > 0 && (
-              <div className="absolute bottom-0.5 left-0.5 right-0.5 sm:bottom-1 sm:left-1 sm:right-1">
-                <div className="h-0.5 sm:h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-400 transition-all duration-500"
-                    style={{ width: `${intensity}%` }}
-                  />
+              {/* Selection indicator */}
+              {isSelected && !isWinner && (
+                <div className="absolute top-1 left-1 text-black text-lg font-bold z-10">
+                  ✓
                 </div>
+              )}
+
+              {/* SOL amount */}
+              <div className={`text-[10px] sm:text-sm font-bold mb-0.5 text-black`}>
+                {sol.toFixed(4)}
               </div>
-            )}
+              <div className={`text-[8px] sm:text-[10px] mb-1 ${
+                isWinner ? 'font-semibold' : 'font-normal'
+              } text-black`}>
+                {isWinner ? 'WINNER!' : 'SOL'}
+              </div>
+
+              {/* Miner count */}
+              <div className="flex items-center gap-1 text-[8px] sm:text-[10px] mt-auto">
+                <span className="text-black font-bold">
+                  👤 {miners.toString()}
+                </span>
+              </div>
+            </div>
           </div>
         );
       })}
 
-
       {!publicKey && (
-        <div className="col-span-5 text-xs sm:text-sm text-yellow-400 text-center py-2">
+        <div className="col-span-5 text-xs text-black text-center py-2 mt-2">
           ⚠️ Connect your wallet to deploy
         </div>
       )}
-
     </div>
   );
 }
