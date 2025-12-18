@@ -114,7 +114,7 @@ export const GlossyButton: React.FC<GlossyButtonProps> = ({
     <button
       ref={buttonRef}
       className={`
-        relative group rounded-full font-black uppercase tracking-tight
+        relative group rounded-full uppercase tracking-tight
         transition-shadow duration-150
         disabled:opacity-50 disabled:grayscale-[0.5] disabled:cursor-not-allowed
         ${sizeClasses[size]}
@@ -124,14 +124,8 @@ export const GlossyButton: React.FC<GlossyButtonProps> = ({
         background: getBackground(),
         borderColor: getBorderColor(),
         boxShadow: `0 ${size === 'sm' || size === 'icon' ? '3px' : '6px'} 0 ${getShadowColor()}, 0 12px 15px rgba(0,0,0,0.4)`,
-        fontFamily: "'Comic Sans MS', 'Comic Neue', cursive",
+        fontFamily: "var(--font-sans)",
         color: getTextColor(),
-        textShadow: isPrimary 
-          ? '0 2px 0 rgba(255,255,255,0.4), 1px 1px 1px rgba(0,0,0,0.1)'
-          : '0 2px 0 rgba(0,0,0,0.4), 1px 1px 1px rgba(0,0,0,0.1)',
-        WebkitTextStroke: isPrimary 
-          ? '1px rgba(120,63,4,0.3)'
-          : '1px rgba(0,0,0,0.3)',
       }}
       {...props}
     >
@@ -159,7 +153,7 @@ export const GlossyButton: React.FC<GlossyButtonProps> = ({
         />
       </div>
 
-      <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-[0_2px_0_rgba(255,255,255,0.3)]">
+      <span className="relative z-10 flex items-center justify-center gap-2 font-bold drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
         {children}
       </span>
     </button>
