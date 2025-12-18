@@ -202,7 +202,7 @@ export default function Home() {
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
         <div className="absolute flex items-start justify-center gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, width: '100%', maxWidth: '100vw' }}>
           {/* Left: Wallet Button (Replaced Placeholder) */}
-          <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '-5px', marginLeft: '2px' }}>
+          <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '-5px', marginLeft: '-3px' }}>
             <WalletButton 
               className="mr-0 mt-0" 
             />
@@ -408,9 +408,10 @@ export default function Home() {
         style={{ 
           backgroundColor: '#FFB84A',
           boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          height: isDrawerOpen ? '400px' : (selectedSquares.size > 0 ? '110px' : '68px'),
+          height: isDrawerOpen ? 'auto' : (selectedSquares.size > 0 ? '110px' : '68px'),
           paddingBottom: '20px',
-          bottom: 0
+          bottom: 0,
+          maxHeight: isDrawerOpen ? '85vh' : 'auto'
         }}
       >
         {/* Drawer Handle Area - Always Fixed at top of drawer */}
@@ -425,7 +426,7 @@ export default function Home() {
         </div>
 
         {/* Expandable Content Area */}
-        <div className="w-full overflow-hidden flex flex-col h-full">
+        <div className="w-full flex flex-col h-full overflow-visible">
           {/* Contextual MINE Action Bar - Revealed when squares selected */}
           <div 
             className={`w-full border-b border-black/5 flex-none transition-all duration-500 ease-in-out ${
@@ -478,7 +479,7 @@ export default function Home() {
           </div>
 
           {/* Full Menu Content */}
-          <div className={`max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className={`max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 transition-opacity duration-300 overflow-visible ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <MainControl
               round={round}
               miner={miner}
