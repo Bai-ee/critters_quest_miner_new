@@ -1,4 +1,5 @@
 import { AnimatedNumber } from './AnimatedNumber';
+import { useState, useEffect } from 'react';
 
 interface JackpotTierCardProps {
   tier: 'GRAND' | 'MAJOR' | 'MINOR';
@@ -41,9 +42,17 @@ interface LabelProps {
 function JackpotLabel({ imagePath, scale = 1 }: LabelProps & { scale?: number }) {
   // Use consistent label sizing - both images are 555x143, maintain aspect ratio
   // Scale the label proportionally with the card scale
-  const baseWidth = 150;
+  const baseWidth = 120;
   const baseHeight = 38.65;
   const isScaled = scale < 1;
+  
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // For scaled cards, labels shrink proportionally with the bg image
   // Use responsive sizing that scales with viewport
@@ -66,7 +75,7 @@ function JackpotLabel({ imagePath, scale = 1 }: LabelProps & { scale?: number })
         height: scaledHeight,
         minHeight: scaledHeight,
         zIndex: isScaled ? 30 : 10,
-        top: isScaled ? 'clamp(-51px, calc(-40px + 2vw), -26px)' : 'auto',
+        top: isScaled ? 'clamp(-10px, calc(-40px + 2vw), -26px)' : (isMobile ? '23px' : 'auto'),
         left: isScaled ? '50%' : 'auto',
         transform: isScaled ? 'translateX(-50%)' : 'none',
       }}
@@ -167,15 +176,15 @@ function ValueDisplay({ ore, value, odds, scale = 1 }: ValueDisplayProps) {
 
   return (
     <div 
-      className="relative z-20 flex items-center justify-between w-full mt-3"
+      className="relative z-20 flex items-center justify-between w-full"
       style={{
         paddingTop: isScaled ? '0' : 'clamp(4px, calc(1.86cqw - 6px), 12px)',
         paddingBottom: isScaled ? '0' : '0',
         paddingLeft: isScaled ? 'clamp(0px, calc(0px + 2vw), 8px)' : 'clamp(0px, calc(0px + 6%), 28px)',
         paddingRight: isScaled ? 'clamp(0px, 2vw, 8px)' : 'clamp(0px, calc(0px + 6%), 28px)',
-        marginTop: isScaled ? '8px' : '0',
+        marginTop: '0px',
         gap: isScaled ? '4px' : '4px',
-        top: isScaled ? '3px' : '0px',
+        top: '0px',
       }}
     >
       {/* ORE on left */}
@@ -245,12 +254,12 @@ interface BackgroundContainerProps {
 
 function BackgroundContainer({ bgImage, children, tier, scale = 1 }: BackgroundContainerProps) {
   const isScaled = scale < 1;
-  const marginTop = isScaled ? '-39px' : '-27px';
+  const marginTop = '0px';
   
   const height = isScaled 
     ? 'clamp(26.67px, calc(26.67px + 4vw), 56.67px)' 
     : 'clamp(53.33px, calc(53.33px + (100cqw - 320px) * 0.08), 93.33px)';
-  const borderRadius = isScaled ? '12px' : '24px';
+  const borderRadius = '12px';
 
   // Tier-specific neon gradients
   const gradients = {
@@ -335,7 +344,7 @@ export function JackpotTierCard({
   if (scale === 1) {
     return (
       <div 
-        className="w-full max-w-[750px] mx-auto flex flex-col items-center justify-center relative mt-[10px] sm:mt-[30px]" 
+        className="w-full max-w-[750px] mx-auto flex flex-col items-center justify-center relative mt-0" 
         style={{ 
           containerType: 'inline-size', 
           marginBottom: '0',

@@ -112,24 +112,55 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // Dynamic styles based on progress
+  const getProgressColor = () => {
+    if (notStarted || isExpired) return '#52D43B'; // Green when inactive
+    if (progress > 50) return '#52D43B'; // Green
+    if (progress > 20) return '#f97316'; // Orange
+    return '#ef4444'; // Red
+  };
+
+  const getGlowIntensity = () => {
+    if (isExpired || notStarted) return '0 0 15px rgba(82, 212, 59, 0.6)'; // Green glow when inactive
+    if (progress > 50) return 'none';
+    if (progress > 20) return '0 0 10px #f97316';
+    return '0 0 20px #ef4444, 0 0 30px #ef4444';
+  };
+
+  const getAnimationSpeed = () => {
+    if (isExpired || notStarted) return '2s'; // Slow rocking when not active
+    if (progress > 50) return '1s';
+    if (progress > 20) return '0.5s';
+    return '0.2s';
+  };
+
+  const getRotationIntensity = () => {
+    if (isExpired || notStarted) return '3deg'; // Subtle rock when inactive
+    if (progress > 50) return '5deg';
+    if (progress > 20) return '8deg';
+    return '12deg';
+  };
+
   return (
-    <div className="relative flex items-center" style={{ width: '220px', height: '60px' }}>
+    <div className="relative flex items-center w-full" style={{ height: '60px' }}>
       {/* Background Bar (Black rounded capsule) */}
       <div 
         className="absolute right-0 bg-black rounded-full overflow-hidden flex items-center" 
         style={{ 
-          width: '180px', 
+          width: 'calc(100% - 40px)', 
           height: '35px',
-          border: '2px solid rgba(255, 255, 255, 0.1)',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.5)'
+          border: `2px solid ${progress < 50 && !notStarted && !isExpired ? getProgressColor() : (notStarted || isExpired ? '#52D43B' : 'rgba(255, 255, 255, 0.1)')}`,
+          boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.5), ${getGlowIntensity()}`,
+          transition: 'all 0.5s ease'
         }}
       >
-        {/* Progress Fill (Green) */}
+        {/* Progress Fill (Dynamic Color) */}
         <div 
-          className="h-full bg-[#52D43B] transition-all duration-1000 ease-linear"
+          className="h-full transition-all duration-1000 ease-linear"
           style={{ 
             width: `${progress}%`,
-            boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.3)'
+            backgroundColor: getProgressColor(),
+            boxShadow: `inset 0 0 10px rgba(0, 0, 0, 0.3), ${getGlowIntensity()}`
           }}
         />
         
@@ -146,11 +177,15 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
         <img 
           src="/img/timer.png" 
           alt="Timer" 
+          className="animate-ticking"
           style={{ 
             height: '65px', 
             width: 'auto',
-            filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.4))'
-          }} 
+            filter: `drop-shadow(0 4px 6px rgba(0,0,0,0.4)) ${progress < 50 || notStarted || isExpired ? `drop-shadow(0 0 10px ${getProgressColor()})` : ''}`,
+            animationDuration: getAnimationSpeed(),
+            // @ts-ignore - custom property for keyframes
+            '--tick-rotate': getRotationIntensity()
+          } as React.CSSProperties} 
         />
       </div>
     </div>

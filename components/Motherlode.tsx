@@ -108,22 +108,10 @@ export function Motherlode({ amount, endSlot, currentSlot, startSlot }: Motherlo
   const minorTotalValue = minorTier.sol + (minorTier.ore * 0.0001);
 
   return (
-    <div className="space-y-4 mb-6" style={{ overflow: 'visible' }}>
-      {/* Desktop Layout: 3 Columns (MAJOR | GRAND | MINOR) */}
-      <div className="hidden md:flex flex-row items-start justify-center gap-2 mt-4" style={{ overflow: 'visible' }}>
-        <div className="flex-1 flex justify-center items-center" style={{ minWidth: 0 }}>
-          <JackpotTierCard
-            tier="MAJOR"
-            value={majorTotalValue}
-            ore={majorTier.ore}
-            sol={majorTier.sol}
-            odds={majorTier.odds}
-            bgImage="/img/award_label_major.png"
-            labelImage="/img/major_winner_label.png"
-            scale={1}
-          />
-        </div>
-        <div className="flex-1 flex justify-center items-center" style={{ minWidth: 0 }}>
+    <div className="mb-0" style={{ overflow: 'visible' }}>
+      {/* Unified Layout: Stacked Orientation for all sizes */}
+      <div className="flex flex-col items-center justify-center" style={{ overflow: 'visible' }}>
+        <div className="relative w-full" style={{ overflow: 'visible', marginBottom: '0', paddingBottom: '0', marginTop: '0', paddingTop: '0' }}>
           <JackpotTierCard
             tier="GRAND"
             value={grandTotalValue}
@@ -134,60 +122,33 @@ export function Motherlode({ amount, endSlot, currentSlot, startSlot }: Motherlo
             labelImage="/img/grand_winner_label.png"
             scale={1}
           />
-        </div>
-        <div className="flex-1 flex justify-center items-center" style={{ minWidth: 0 }}>
-          <JackpotTierCard
-            tier="MINOR"
-            value={minorTotalValue}
-            ore={minorTier.ore}
-            sol={minorTier.sol}
-            odds={minorTier.odds}
-            bgImage="/img/award_label_minor.png"
-            labelImage="/img/minor_winner_label.png"
-            scale={1}
-          />
-        </div>
-      </div>
 
-      {/* Mobile/Small Layout: Original Stacked Orientation */}
-      <div className="md:hidden flex flex-col space-y-4" style={{ overflow: 'visible' }}>
-        <div className="relative sm:pt-[10px]" style={{ overflow: 'visible', marginBottom: '0', paddingBottom: '0', marginTop: '0', paddingTop: '0' }}>
-          <JackpotTierCard
-            tier="GRAND"
-            value={grandTotalValue}
-            ore={grandTier.ore}
-            sol={grandTier.sol}
-            odds={grandTier.odds}
-            bgImage="/img/grand_award_bg.png"
-            labelImage="/img/grand_winner_label.png"
-            scale={1}
-          />
-        </div>
-
-        <div className="relative flex flex-row w-full items-start justify-center mt-[10px] sm:mt-4" style={{ overflow: 'visible', gap: '0' }}>
-          <div className="flex-1 w-full flex justify-center items-center" style={{ minWidth: 0 }}>
-            <JackpotTierCard
-              tier="MAJOR"
-              value={majorTotalValue}
-              ore={majorTier.ore}
-              sol={majorTier.sol}
-              odds={majorTier.odds}
-              bgImage="/img/award_label_major.png"
-              labelImage="/img/major_winner_label.png"
-              scale={0.9}
-            />
-          </div>
-          <div className="flex-1 w-full flex justify-center items-center" style={{ minWidth: 0 }}>
-            <JackpotTierCard
-              tier="MINOR"
-              value={minorTotalValue}
-              ore={minorTier.ore}
-              sol={minorTier.sol}
-              odds={minorTier.odds}
-              bgImage="/img/award_label_minor.png"
-              labelImage="/img/minor_winner_label.png"
-              scale={0.9}
-            />
+          {/* MAJOR and MINOR nested inside the same parent div as GRAND */}
+          <div className="relative flex flex-row w-full items-start justify-center gap-0 mt-0" style={{ overflow: 'visible' }}>
+            <div className="flex-1 w-full flex justify-center items-center" style={{ minWidth: 0 }}>
+              <JackpotTierCard
+                tier="MAJOR"
+                value={majorTotalValue}
+                ore={majorTier.ore}
+                sol={majorTier.sol}
+                odds={majorTier.odds}
+                bgImage="/img/award_label_major.png"
+                labelImage="/img/major_winner_label.png"
+                scale={0.9}
+              />
+            </div>
+            <div className="flex-1 w-full flex justify-center items-center" style={{ minWidth: 0 }}>
+              <JackpotTierCard
+                tier="MINOR"
+                value={minorTotalValue}
+                ore={minorTier.ore}
+                sol={minorTier.sol}
+                odds={minorTier.odds}
+                bgImage="/img/award_label_minor.png"
+                labelImage="/img/minor_winner_label.png"
+                scale={0.9}
+              />
+            </div>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
 import { Modal } from '@/components/Modal';
 import { RoundResults } from '@/components/RoundResults';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
@@ -35,7 +36,7 @@ export default function Home() {
   // Get token balance
   const { balance: tokenBalance } = useTokenBalance({
     tokenMint: 'QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s',
-    walletAddress: 'GkvAksZA1map1tNjVsH5vz5yx9a7ZEJafojoCkALMknZ',
+    walletAddress: publicKey?.toBase58() || '',
     decimals: 9
   });
 
@@ -153,17 +154,25 @@ export default function Home() {
 
       {/* Mining items gradient image at top - scrolls with page */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
-        <div className="absolute flex items-center justify-center gap-4" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
-          <img 
-            src="/img/misc_value_space.png" 
-            alt="Value Space Left" 
-            className="sm:w-[20%]"
-            style={{
-              width: '16%',
-              height: 'auto',
-              display: 'block',
-            }}
-          />
+        <div className="absolute flex items-start justify-center gap-0" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
+          {/* Left Placeholder */}
+          <div style={{ 
+            backgroundColor: '#FFB84A', 
+            width: '8%',
+            minWidth: '80px',
+            minHeight: '40px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            padding: '4px', 
+            border: '2px solid black', 
+            borderRadius: '8px',
+            marginTop: '-5px',
+            marginRight: '8px'
+          }}>
+            <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">PLACEHOLDER</span>
+          </div>
           <img 
             src="/img/miner_logo.png" 
             alt="Miner Logo" 
@@ -175,30 +184,44 @@ export default function Home() {
               marginTop:'-20px'
             }}
           />
-          <div className="flex flex-col gap-2 sm:w-[20%]" style={{ width: '16%' }}>
-            <img 
-              src="/img/misc_value_space.png" 
-              alt="Value Space Right Top" 
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-              }}
-            />
-            <img 
-              src="/img/misc_value_space.png" 
-              alt="Value Space Right Bottom" 
-              style={{
-                width: '100%',
-                height: 'auto',
-                display: 'block',
-              }}
-            />
+          {/* Right: SOL and QUEST Balances */}
+          <div className="flex flex-col gap-2 sm:w-[10%]" style={{ width: '8%' }}>
+            <div className="relative">
+              <img 
+                src="/img/sol_amount.png" 
+                alt="SOL Balance Background" 
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block',
+                }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '21px' }}>
+                <div className="text-[12px] font-bold text-white leading-none mt-[3px]">
+                  <AnimatedNumber value={solBalance.toFixed(2).padStart(7, '0')} />
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <img 
+                src="/img/quest_amount.png" 
+                alt="QUEST Balance Background" 
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block',
+                }}
+              />
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '21px' }}>
+                <div className="text-[12px] font-bold text-white leading-none mt-[3px]">
+                  <AnimatedNumber value={Math.floor(tokenBalance).toString().padStart(5, '0')} />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         {board?.endSlot && currentSlot && (
-          <div className="absolute top-[90px]" style={{ left: '50%', transform: 'translateX(-50%)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
-            <Timer endSlot={board.endSlot} currentSlot={currentSlot} startSlot={board.startSlot} />
+          <div className="absolute top-[90px]" style={{ left: '50%', transform: 'translateX(-50%)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <img 
               src="/img/pickaxe_front.gif" 
               alt="Pickaxe" 
@@ -208,10 +231,6 @@ export default function Home() {
                 marginTop:'-50px'
               }}
             />
-            <div style={{ backgroundColor: '#FFB84A', width: '100px', minHeight: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px', border: '2px solid black', borderRadius: '8px' }}>
-              <span className="text-xs sm:text-sm font-bold text-white">R#{board?.roundId?.toString() || '0'}</span>
-              <span className="text-[10px] sm:text-xs font-bold text-white">{selectedSquares.size} selected</span>
-            </div>
           </div>
         )}
         <img 
@@ -259,7 +278,7 @@ export default function Home() {
 
       {/* CENTER STAGE - Grid always centered */}
       <div 
-        className="flex-1 flex flex-col items-center justify-start pb-32 px-3 sm:px-4 relative"
+        className="flex-1 flex flex-col items-center justify-start px-3 sm:px-4 relative"
         style={{ minHeight: 'calc(100svh - 80px - 120px)', overflow: 'visible', marginTop: '0px' }}
       >
         <div 
@@ -289,8 +308,8 @@ export default function Home() {
           />
         </div>
 
-        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mx-auto relative z-30 mb-0" style={{ overflow: 'visible' }}>
-          <div className="p-2 sm:p-6 mt-[-90px] sm:mt-[-110px] md:mt-[-130px] lg:mt-[-140px]" style={{ overflow: 'visible' }}>
+        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mx-auto relative z-30 mb-0" style={{ overflow: 'visible', marginTop: '-102px' }}>
+          <div className="mt-0" style={{ overflow: 'visible' }}>
             <Motherlode
               endSlot={board.endSlot}
               currentSlot={currentSlot}
@@ -299,8 +318,35 @@ export default function Home() {
           </div>
         </div>
 
+        <div className="w-full max-w-[min(92vw,520px)] mx-auto relative z-30" style={{ overflow: 'visible' }}>
+          {/* Timer and Round Info placed below Motherlode and on top of the Mining Grid */}
+          {board?.endSlot && currentSlot && (
+            <div className="w-full flex items-center justify-center gap-4 mb-2">
+              <div className="flex-1 min-w-0" style={{ marginLeft: '-5px' }}>
+                <Timer endSlot={board.endSlot} currentSlot={currentSlot} startSlot={board.startSlot} />
+              </div>
+              <div style={{ 
+                backgroundColor: '#FFB84A', 
+                width: '100px',
+                minWidth: '100px',
+                minHeight: '50px', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                padding: '8px', 
+                border: board?.startSlot && currentSlot && currentSlot >= board.startSlot ? 'none' : '2px solid black', 
+                borderRadius: '8px'
+              }}>
+                <span className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider">R#{board?.roundId?.toString() || '0'}</span>
+                <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">{selectedSquares.size} selected</span>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="w-full max-w-[min(92vw,520px)] relative z-30" style={{ overflow: 'visible' }}>
-          <div className="mt-[-20px] sm:mt-[-40px]" style={{ overflow: 'visible' }}>
+          <div className="mt-0" style={{ overflow: 'visible' }}>
             <Grid
               round={round}
               selectedSquares={selectedSquares}

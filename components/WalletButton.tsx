@@ -14,7 +14,7 @@ export const WalletButton = () => {
   return (
     <button
       onClick={handleClick}
-      className="bg-transparent border-none p-0 cursor-pointer flex justify-end"
+      className="bg-transparent border-none p-0 cursor-pointer flex justify-end mr-[-7px] mt-[13px] sm:mr-0 sm:mt-0"
       style={{ background: 'transparent', border: 'none', padding: 0, width: 'fit-content' }}
     >
       <img

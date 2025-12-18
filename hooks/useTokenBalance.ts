@@ -35,7 +35,6 @@ export function useTokenBalance({ tokenMint, walletAddress, decimals = 9 }: UseT
           mintPubkey = typeof tokenMint === 'string' ? new PublicKey(tokenMint) : tokenMint;
           walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress;
         } catch (e) {
-          console.error('Invalid public key passed to useTokenBalance');
           setBalance(0);
           return;
         }
@@ -49,9 +48,7 @@ export function useTokenBalance({ tokenMint, walletAddress, decimals = 9 }: UseT
         const tokenAccount = await getAccount(connection, tokenAccountAddress);
         setBalance(Number(tokenAccount.amount) / Math.pow(10, decimals));
       } catch (err) {
-        console.error('Error fetching token balance:', err);
         setBalance(0);
-        setError(err instanceof Error ? err.message : 'Failed to fetch token balance');
       } finally {
         setLoading(false);
       }
