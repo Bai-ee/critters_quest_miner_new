@@ -8,25 +8,36 @@ interface WalletButtonProps {
   width?: string;
 }
 
-export const WalletButton = ({ className = "mr-[-7px] mt-[13px] sm:mr-0 sm:mt-0", width = "70%" }: WalletButtonProps) => {
+export const WalletButton = ({ className = "sm:mr-0 sm:mt-0", width = "100%" }: WalletButtonProps) => {
   const { connected } = useWallet();
   const { setVisible } = useWalletModal();
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setVisible(true);
   };
 
   return (
-    <button
-      onClick={handleClick}
-      className={`bg-transparent border-none p-0 cursor-pointer flex justify-end ${className}`}
-      style={{ background: 'transparent', border: 'none', padding: 0, width: 'fit-content' }}
-    >
-      <img
-        src={connected ? '/img/Attached_wallet.png' : '/img/wallet.png'}
-        alt={connected ? 'Connected Wallet' : 'Connect Wallet'}
-        style={{ height: 'auto', width: width, display: 'block', marginRight: '0px' }}
-      />
-    </button>
+    <div className={`flex items-center justify-center ${className}`} style={{ width: '100%', height: '100%' }}>
+      <button
+        onClick={handleClick}
+        className="bg-transparent border-none p-0 cursor-pointer flex items-center justify-center active:scale-95 transition-transform"
+        style={{ 
+          background: 'transparent', 
+          border: 'none', 
+          padding: 0, 
+          width: '100%', 
+          height: '100%',
+          minHeight: '44px' // Recommended touch target size
+        }}
+      >
+        <img
+          src={connected ? '/img/Attached_wallet.png' : '/img/wallet.png'}
+          alt={connected ? 'Connected Wallet' : 'Connect Wallet'}
+          style={{ height: 'auto', width: width, display: 'block', maxWidth: '100%' }}
+        />
+      </button>
+    </div>
   );
 };

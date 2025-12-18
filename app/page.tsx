@@ -201,7 +201,7 @@ export default function Home() {
 
       {/* Mining items gradient image at top - scrolls with page */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
-        <div className="absolute flex items-start justify-center gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, width: '100%', maxWidth: '100vw' }}>
+        <div className="absolute flex items-start justify-center gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, width: '100%', maxWidth: '100vw' }}>
           {/* Left: Wallet Button (Replaced Placeholder) */}
           <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '-5px', marginLeft: '-3px' }}>
             <WalletButton 
@@ -288,12 +288,12 @@ export default function Home() {
 
       {/* TOP HUD - Fixed height */}
       <div
-        className="fixed top-0 left-0 right-0 z-40"
+        className="fixed top-0 left-0 right-0 z-40 pointer-events-none"
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Left: Title */}
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
               <h1 className="text-sm sm:text-base md:text-lg font-bold bg-gradient-to-r from-cq-primary-blue to-cq-primary-yellow bg-clip-text text-transparent">
                 QUEST MINER
               </h1>
