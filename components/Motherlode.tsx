@@ -35,9 +35,9 @@ export function Motherlode({ endSlot, currentSlot, startSlot }: MotherlodeProps)
 
   return (
     <div className="w-full max-w-[800px] mx-auto" style={{ overflow: 'visible', marginTop: '-82px' }}>
-      <div className="flex flex-col items-center w-full gap-0">
+      <div className="flex flex-col items-center w-full gap-0" style={{ overflow: 'visible' }}>
         {/* GRAND Card - Full Width */}
-        <div className="w-full px-2">
+        <div className="w-full px-2" style={{ overflow: 'visible' }}>
           <JackpotTierCard
             tier="GRAND"
             ore={data.grand.ore}
@@ -50,8 +50,8 @@ export function Motherlode({ endSlot, currentSlot, startSlot }: MotherlodeProps)
         </div>
 
         {/* MAJOR and MINOR - Side by Side with 2px gap */}
-        <div className="flex flex-row w-full gap-[2px] px-2" style={{ marginTop: '-12px' }}>
-          <div className="flex-1 min-w-0">
+        <div className="flex flex-row w-full gap-[2px] px-2" style={{ marginTop: '-12px', overflow: 'visible' }}>
+          <div className="flex-1 min-w-0" style={{ overflow: 'visible' }}>
             <JackpotTierCard
               tier="MAJOR"
               ore={data.major.ore}
@@ -62,7 +62,7 @@ export function Motherlode({ endSlot, currentSlot, startSlot }: MotherlodeProps)
               scale={0.9}
             />
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0" style={{ overflow: 'visible' }}>
             <JackpotTierCard
               tier="MINOR"
               ore={data.minor.ore}

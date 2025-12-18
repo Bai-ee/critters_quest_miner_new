@@ -345,7 +345,7 @@ export default function Home() {
           />
         </div>
 
-        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mx-auto relative z-30 mb-0" style={{ overflow: 'visible', marginTop: '-102px' }}>
+        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mx-auto relative z-30 mb-0" style={{ overflow: 'visible', marginTop: '-2px' }}>
           <div className="mt-0" style={{ overflow: 'visible' }}>
             <Motherlode
               endSlot={board.endSlot}

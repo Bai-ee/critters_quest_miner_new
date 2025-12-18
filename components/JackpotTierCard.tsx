@@ -39,10 +39,10 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
       <div 
         className="absolute z-20 pointer-events-none"
         style={{
-          top: isScaled ? '2px' : '5px',
+          top: isScaled ? '-2px' : '5px',
           width: isScaled ? '53%' : '45%',
           maxWidth: isScaled ? '120px' : '140px',
-          transform: `translateY(${isScaled ? '2px' : '0px'})`
+          transform: isScaled ? 'translateY(2px)' : 'none'
         }}
       >
         <img src={labelImage} alt={`${tier} LABEL`} className="w-full h-auto drop-shadow-lg" />
@@ -62,7 +62,7 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
       >
         {/* Inner Content Area with Neon Tier Gradient */}
         <div 
-          className="w-full h-full relative overflow-hidden flex items-center justify-center"
+          className="w-full h-full relative overflow-visible flex items-center justify-center"
           style={{
             background: gradients[tier],
             borderRadius: '8px',
@@ -70,7 +70,7 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
           }}
         >
           {/* Glossy Overlay */}
-          <div className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent mx-2 mt-1 rounded-t-lg pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
 
           {/* Centered Content Layout: QUEST - ODDS - SOL */}
           <div 
@@ -84,20 +84,23 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
                 <img 
                   src="/img/coin.png" 
                   alt="QUEST" 
-                  className={`${isScaled ? 'h-2 sm:h-3' : 'h-3 sm:h-5'} w-auto opacity-90`} 
+                  className={`${tier === 'GRAND' ? (isScaled ? 'h-4 sm:h-6' : 'h-6 sm:h-10') : (isScaled ? 'h-2 sm:h-3' : 'h-3 sm:h-5')} w-auto opacity-90`} 
                 />
-                <div className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] truncate`}>
+                <div 
+                  className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] truncate`}
+                  style={{ overflow: 'visible' }}
+                >
                   <AnimatedNumber value={formatValue(ore)} />
                 </div>
               </div>
             </div>
 
             {/* Center: ODDS */}
-            <div className={`flex flex-col items-center justify-center px-2 ${!isScaled ? 'border-x border-white/10' : ''} min-w-[45px] sm:min-w-[60px]`}>
+            <div className={`flex flex-col items-center justify-center px-2 ${!isScaled ? 'border-x border-white/10 min-w-[45px] sm:min-w-[60px]' : 'min-w-0'}`}>
               {!isScaled && (
-                <span className="text-[8px] font-black text-white/40 uppercase leading-none mb-1 tracking-tight">ODDS</span>
+                <span className="text-[13px] font-black text-white/90 uppercase leading-[1] tracking-tighter">ODDS</span>
               )}
-              <div className={`${oddsFontSize} font-black text-white/90 leading-none whitespace-nowrap`}>
+              <div className={`${oddsFontSize} font-black text-white/90 leading-[1] whitespace-nowrap`}>
                 {isScaled ? (
                   <div className="flex flex-col items-center scale-90 sm:scale-100">
                     <span className="leading-none">{odds.split('/')[0]}/</span>
@@ -115,9 +118,12 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
                 <img 
                   src="/img/solana_logo.png" 
                   alt="SOL" 
-                  className={`${isScaled ? 'h-2 sm:h-3' : 'h-3 sm:h-5'} w-auto opacity-90`} 
+                  className={`${tier === 'GRAND' ? (isScaled ? 'h-2.5 sm:h-4' : 'h-4 sm:h-7') : (isScaled ? 'h-1.5 sm:h-2' : 'h-2 sm:h-3.5')} w-auto opacity-90`} 
                 />
-                <div className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] truncate`}>
+                <div 
+                  className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] truncate`}
+                  style={{ overflow: 'visible' }}
+                >
                   <AnimatedNumber value={formatValue(sol)} />
                 </div>
               </div>

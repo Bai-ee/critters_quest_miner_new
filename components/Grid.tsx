@@ -197,11 +197,6 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
                   </div>
                 )}
 
-                {/* Selection indicator */}
-                {isSelected && !isWinner && (
-                  <div className="absolute top-[12cqw] left-[15cqw] text-black text-[15cqw] font-bold z-30">✓</div>
-                )}
-
                 {/* Center Item Image */}
                 <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
                   <img 
@@ -212,8 +207,30 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
                 </div>
 
                 {/* Miner count circle (Top Right - aligned with card number) */}
-                <div className="absolute top-[14cqw] right-[15cqw] min-w-[22cqw] h-[22cqw] rounded-full bg-white border border-black flex items-center justify-center z-30 shadow-sm px-1">
-                  <span className="text-[11cqw] font-bold text-black leading-none">
+                <div 
+                  className={`absolute top-[14cqw] right-[15cqw] min-w-[22cqw] h-[22cqw] rounded-full border flex items-center justify-center z-30 shadow-sm px-1 overflow-hidden transition-all duration-200`}
+                  style={{
+                    background: isSelected 
+                      ? 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)' 
+                      : 'white',
+                    borderColor: isSelected ? 'rgb(35,116,13)' : 'black',
+                  }}
+                >
+                  {isSelected && (
+                    <>
+                      {/* Glossy Overlay - Top Highlight */}
+                      <div 
+                        className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
+                        style={{ filter: 'blur(0.5cqw)' }}
+                      />
+                      {/* Glossy Overlay - Bottom Subtle Highlight */}
+                      <div 
+                        className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
+                        style={{ filter: 'blur(1cqw)' }}
+                      />
+                    </>
+                  )}
+                  <span className={`text-[11cqw] font-bold leading-none z-10 ${isSelected ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]' : 'text-black'}`}>
                     {miners.toString()}
                   </span>
                 </div>
