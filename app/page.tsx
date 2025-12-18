@@ -152,7 +152,6 @@ export default function Home() {
       </div>
 
       {/* Mining items gradient image at top - scrolls with page */}
-      {/* 
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
         <div className="absolute flex items-center justify-center gap-4" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
           <img 
@@ -221,7 +220,6 @@ export default function Home() {
           }}
         />
       </div>
-      */}
 
       {/* TOP HUD - Fixed height */}
       <div
