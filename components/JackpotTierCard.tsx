@@ -27,9 +27,11 @@ const formatNumber = (num: number): string => {
 };
 
 const formatMainValue = (num: number): string => {
+  if (isNaN(num) || !isFinite(num)) return '0000.00';
   const parts = num.toFixed(2).split('.');
-  const integerPart = parts[0].padStart(4, '0');
-  return `${integerPart}.${parts[1]}`;
+  const integerPart = (parts[0] || '0').padStart(4, '0');
+  const decimalPart = parts[1] || '00';
+  return `${integerPart}.${decimalPart}`;
 };
 
 // Sub-components
@@ -246,73 +248,66 @@ interface BackgroundContainerProps {
 function BackgroundContainer({ bgImage, children, tier, scale = 1 }: BackgroundContainerProps) {
   const isScaled = scale < 1;
   const marginTop = isScaled ? '-39px' : '-27px';
-  const isGrand = tier === 'GRAND';
+  
+  const height = isScaled 
+    ? 'clamp(26.67px, calc(26.67px + 4vw), 56.67px)' 
+    : 'clamp(53.33px, calc(53.33px + (100cqw - 320px) * 0.08), 93.33px)';
+  const borderRadius = isScaled ? '12px' : '24px';
 
-  if (isGrand) {
-    const height = isScaled ? 'clamp(40px, calc(40px + 6vw), 85px)' : 'clamp(80px, calc(80px + (100cqw - 320px) * 0.12), 140px)';
-    return (
-      <div 
-        className="relative w-full flex flex-col items-center justify-center overflow-visible"
-        style={{
-          marginTop: marginTop,
-          height: height,
-          width: '100%',
-        }}
-      >
-        {/* Outer Gold Border / Bezel */}
-        <div 
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
-            padding: '4px',
-            boxShadow: `
-              0 10px 20px rgba(0,0,0,0.5),
-              inset 0 2px 3px rgba(255,255,255,0.8),
-              inset 0 -2px 3px rgba(0,0,0,0.4)
-            `
-          }}
-        >
-          {/* Inner Content Area with Purple Gradient */}
-          <div 
-            className="w-full h-full rounded-full relative overflow-hidden"
-            style={{
-              background: 'linear-gradient(180deg, #5C003D 0%, #A31D5D 50%, #5C003D 100%)',
-              boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.6)'
-            }}
-          >
-            {/* Glossy Reflection Overlay */}
-            <div 
-              className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/25 to-transparent rounded-t-full mx-2 mt-1"
-              style={{ filter: 'blur(1px)' }}
-            />
-          </div>
-        </div>
-
-        {/* The children (ValueDisplay) */}
-        <div className="relative z-20 w-full">
-          {children}
-        </div>
-      </div>
-    );
-  }
+  // Tier-specific neon gradients
+  const gradients = {
+    GRAND: 'linear-gradient(180deg, #4A002E 0%, #FF00A0 50%, #4A002E 100%)',
+    MAJOR: 'linear-gradient(180deg, #0A004A 0%, #0077FF 50%, #0A004A 100%)',
+    MINOR: 'linear-gradient(180deg, #002E1A 0%, #00FF9D 50%, #002E1A 100%)',
+  };
 
   return (
     <div 
-      className="relative w-full flex flex-col items-center justify-center"
+      className="relative w-full flex flex-col items-center justify-center overflow-visible"
       style={{
-        backgroundImage: `url(${bgImage})`,
-        backgroundSize: isScaled ? '100% auto' : '100% auto',
-        backgroundPosition: 'center calc(50% + 5px)',
-        backgroundRepeat: 'no-repeat',
         marginTop: marginTop,
-        paddingTop: isScaled ? '0' : '0',
-        paddingBottom: isScaled ? '0' : '0',
-        height: isScaled ? 'clamp(40px, calc(40px + 6vw), 85px)' : 'clamp(80px, calc(80px + (100cqw - 320px) * 0.12), 140px)',
-        overflow: 'visible',
+        height: height,
         width: '100%',
       }}
     >
-      {children}
+      {/* Outer Gold Border / Bezel */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+          padding: '4px',
+          borderRadius: borderRadius,
+          boxShadow: `
+            0 10px 25px rgba(0,0,0,0.6),
+            inset 0 2px 3px rgba(255,255,255,0.8),
+            inset 0 -2px 3px rgba(0,0,0,0.4)
+          `
+        }}
+      >
+        {/* Inner Content Area with Neon Tier Gradient */}
+        <div 
+          className="w-full h-full relative overflow-hidden"
+          style={{
+            background: gradients[tier],
+            borderRadius: `calc(${borderRadius} - 4px)`,
+            boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7), 0 0 10px rgba(255,255,255,0.1)'
+          }}
+        >
+          {/* Glossy Reflection Overlay */}
+          <div 
+            className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/30 to-transparent mx-2 mt-1"
+            style={{ 
+              filter: 'blur(1px)',
+              borderRadius: `${parseFloat(borderRadius) * 0.8}px ${parseFloat(borderRadius) * 0.8}px 0 0`
+            }}
+          />
+        </div>
+      </div>
+
+      {/* The children (ValueDisplay) */}
+      <div className="relative z-20 w-full">
+        {children}
+      </div>
     </div>
   );
 }

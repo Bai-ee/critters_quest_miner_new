@@ -7,6 +7,7 @@ import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
 import { Modal } from '@/components/Modal';
 import { RoundResults } from '@/components/RoundResults';
+import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
@@ -35,7 +36,7 @@ export default function Home() {
   // Get token balance
   const { balance: tokenBalance } = useTokenBalance({
     tokenMint: 'QUESTP8xKMfot3ErcdfWXsHbG3kN9mutieAqrVNw74s',
-    walletAddress: 'GkvAksZA1map1tNjVsH5vz5yx9a7ZEJafojoCkALMknZ',
+    walletAddress: publicKey?.toBase58() || '',
     decimals: 9
   });
 
@@ -154,16 +155,25 @@ export default function Home() {
       {/* Mining items gradient image at top - scrolls with page */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
         <div className="absolute flex items-center justify-center gap-4" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
-          <img 
-            src="/img/misc_value_space.png" 
-            alt="Value Space Left" 
-            className="sm:w-[20%]"
-            style={{
-              width: '16%',
-              height: 'auto',
-              display: 'block',
-            }}
-          />
+          {/* Left: SOL Balance */}
+          <div className="relative sm:w-[20%]" style={{ width: '16%' }}>
+            <img 
+              src="/img/misc_value_space.png" 
+              alt="Value Space Left" 
+              style={{
+                width: '100%',
+                height: 'auto',
+                display: 'block',
+              }}
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-1">
+              <span className="text-[8px] sm:text-[10px] font-bold text-white/60 leading-none mb-0.5">WALLET SOL</span>
+              <div className="text-[10px] sm:text-xs font-bold text-white leading-none">
+                <AnimatedNumber value={solBalance.toFixed(2)} />
+              </div>
+            </div>
+          </div>
+
           <img 
             src="/img/miner_logo.png" 
             alt="Miner Logo" 
@@ -175,16 +185,44 @@ export default function Home() {
               marginTop:'-20px'
             }}
           />
-          <img 
-            src="/img/misc_value_space.png" 
-            alt="Value Space Right" 
-            className="sm:w-[20%]"
-            style={{
-              width: '16%',
-              height: 'auto',
-              display: 'block',
-            }}
-          />
+
+          {/* Right: QUEST and Round Info */}
+          <div className="flex flex-col gap-2 sm:w-[20%]" style={{ width: '16%' }}>
+            <div className="relative">
+              <img 
+                src="/img/misc_value_space.png" 
+                alt="Value Space Right Top" 
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block',
+                }}
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-1">
+                <span className="text-[8px] sm:text-[10px] font-bold text-white/60 leading-none mb-0.5">WALLET QUEST</span>
+                <div className="text-[10px] sm:text-xs font-bold text-white leading-none">
+                  <AnimatedNumber value={Math.floor(tokenBalance).toString()} />
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <img 
+                src="/img/misc_value_space.png" 
+                alt="Value Space Right Bottom" 
+                style={{
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block',
+                }}
+              />
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-1">
+                <span className="text-[8px] sm:text-[10px] font-bold text-white/60 leading-none mb-0.5">ROUND</span>
+                <div className="text-[10px] sm:text-xs font-bold text-white leading-none">
+                  #{board?.roundId?.toString() || '0'}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         {board?.endSlot && currentSlot && (
           <div className="absolute top-[90px]" style={{ left: '50%', transform: 'translateX(-50%)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '16px' }}>
@@ -235,7 +273,7 @@ export default function Home() {
             </div>
 
             {/* Right: Balances + Wallet */}
-            <div className="flex items-center gap-2" style={{ background: 'transparent' }}>
+            <div className="flex-1 flex items-center justify-end gap-2" style={{ background: 'transparent' }}>
               {connected && publicKey && (
                 <div className="px-2 py-1 hidden sm:block" style={{ background: 'transparent' }}>
                   <span className="text-xs font-bold text-cq-gold">{solBalance.toFixed(2)} SOL</span>

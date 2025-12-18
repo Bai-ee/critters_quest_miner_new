@@ -17,7 +17,7 @@ export function useTokenBalance({ tokenMint, walletAddress, decimals = 9 }: UseT
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!tokenMint || !walletAddress) {
+    if (!tokenMint || !walletAddress || walletAddress === '') {
       setBalance(0);
       setError(null);
       return;
@@ -28,8 +28,17 @@ export function useTokenBalance({ tokenMint, walletAddress, decimals = 9 }: UseT
         setLoading(true);
         setError(null);
 
-        const mintPubkey = typeof tokenMint === 'string' ? new PublicKey(tokenMint) : tokenMint;
-        const walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress;
+        let mintPubkey: PublicKey;
+        let walletPubkey: PublicKey;
+
+        try {
+          mintPubkey = typeof tokenMint === 'string' ? new PublicKey(tokenMint) : tokenMint;
+          walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress;
+        } catch (e) {
+          console.error('Invalid public key passed to useTokenBalance');
+          setBalance(0);
+          return;
+        }
 
         const tokenAccountAddress = await getAssociatedTokenAddress(
           mintPubkey,
