@@ -239,12 +239,63 @@ function ValueDisplay({ ore, value, odds, scale = 1 }: ValueDisplayProps) {
 interface BackgroundContainerProps {
   bgImage: string;
   children: React.ReactNode;
+  tier: 'GRAND' | 'MAJOR' | 'MINOR';
+  scale?: number;
 }
 
-function BackgroundContainer({ bgImage, children, scale = 1 }: BackgroundContainerProps & { scale?: number }) {
+function BackgroundContainer({ bgImage, children, tier, scale = 1 }: BackgroundContainerProps) {
   const isScaled = scale < 1;
-  // Move bg layer up more for scaled cards
   const marginTop = isScaled ? '-39px' : '-27px';
+  const isGrand = tier === 'GRAND';
+
+  if (isGrand) {
+    const height = isScaled ? 'clamp(40px, calc(40px + 6vw), 85px)' : 'clamp(80px, calc(80px + (100cqw - 320px) * 0.12), 140px)';
+    return (
+      <div 
+        className="relative w-full flex flex-col items-center justify-center overflow-visible"
+        style={{
+          marginTop: marginTop,
+          height: height,
+          width: '100%',
+        }}
+      >
+        {/* Outer Gold Border / Bezel */}
+        <div 
+          className="absolute inset-0 rounded-full"
+          style={{
+            background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+            padding: '4px',
+            boxShadow: `
+              0 10px 20px rgba(0,0,0,0.5),
+              inset 0 2px 3px rgba(255,255,255,0.8),
+              inset 0 -2px 3px rgba(0,0,0,0.4)
+            `
+          }}
+        >
+          {/* Inner Content Area with Purple Gradient */}
+          <div 
+            className="w-full h-full rounded-full relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(180deg, #5C003D 0%, #A31D5D 50%, #5C003D 100%)',
+              boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.6)'
+            }}
+          >
+            {/* Glossy Reflection Overlay */}
+            <div 
+              className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/25 to-transparent rounded-t-full mx-2 mt-1"
+              style={{ filter: 'blur(1px)' }}
+            />
+          </div>
+        </div>
+
+        {/* The children (ValueDisplay) */}
+        <div className="relative z-20 w-full">
+          {children}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="relative w-full flex flex-col items-center justify-center"
@@ -301,7 +352,7 @@ export function JackpotTierCard({
         }}
       >
         <JackpotLabel imagePath={defaultLabelImage} scale={scale} />
-        <BackgroundContainer bgImage={bgImage} scale={scale}>
+        <BackgroundContainer bgImage={bgImage} tier={tier} scale={scale}>
           <ValueDisplay ore={ore} value={value} odds={odds} scale={scale} />
         </BackgroundContainer>
       </div>
@@ -325,7 +376,7 @@ export function JackpotTierCard({
       }}
     >
       <JackpotLabel imagePath={defaultLabelImage} scale={scale} />
-      <BackgroundContainer bgImage={bgImage} scale={scale}>
+      <BackgroundContainer bgImage={bgImage} tier={tier} scale={scale}>
         <ValueDisplay ore={ore} value={value} odds={odds} scale={scale} />
       </BackgroundContainer>
     </div>
