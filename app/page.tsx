@@ -416,25 +416,25 @@ export default function Home() {
       >
         {/* Drawer Handle Area - Always Fixed at top of drawer */}
         <div 
-          className="w-full h-[48px] flex items-center justify-between px-4 cursor-pointer border-b border-black/10 flex-none"
+          className="w-full h-[48px] flex items-center justify-between px-6 cursor-pointer border-b border-black/10 flex-none"
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
         >
           {/* Left: Selected Info */}
-          <div className="flex flex-col items-start min-w-[60px]">
-            <span className="text-[9px] font-black text-black/40 uppercase leading-none mb-1">Selected</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Selected:</span>
             <span className="text-xs font-black text-black/60 leading-none">{selectedSquares.size}</span>
           </div>
 
-          <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center px-4">
             <div className="w-12 h-1.5 bg-black/20 rounded-full mb-1"></div>
-            <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em]">
+            <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em] whitespace-nowrap">
               {isDrawerOpen ? 'CLOSE CONTROLS' : 'OPEN CONTROLS'}
             </span>
           </div>
 
           {/* Right: Round Info */}
-          <div className="flex flex-col items-end min-w-[60px]">
-            <span className="text-[9px] font-black text-black/40 uppercase leading-none mb-1">Round</span>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Round:</span>
             <span className="text-xs font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
           </div>
         </div>
