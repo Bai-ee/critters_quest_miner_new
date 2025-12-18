@@ -3,6 +3,7 @@ import { lamportsToSol, getWinningSquare } from '@/lib/accounts';
 import { Round } from '@/lib/types';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState, useRef } from 'react';
+import gsap from 'gsap';
 
 interface GridProps {
   round: Round;
@@ -16,6 +17,51 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
   const [winnerSquareIndex, setWinnerSquareIndex] = useState<number | null>(null);
   const [persistedWinner, setPersistedWinner] = useState<number | null>(null);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const hasAnimatedRef = useRef(false);
+  const [animationPhase, setAnimationPhase] = useState<'initial' | 'animating' | 'completed'>('initial');
+
+  // Animate grid cards on load
+  useEffect(() => {
+    if (gridRef.current && !hasAnimatedRef.current) {
+      const cards = gridRef.current.children;
+      const cardsArray = Array.from(cards).filter(el => !el.classList.contains('col-span-5'));
+      
+      if (cardsArray.length > 0) {
+        setAnimationPhase('animating');
+        
+        // Set container perspective for 3D effect
+        gsap.set(gridRef.current, { perspective: 1000 });
+        
+        // Animate cards in from off-screen
+        gsap.fromTo(cardsArray, 
+          { 
+            opacity: 0, 
+            y: 100, 
+            rotationX: 0,
+            transformOrigin: "center bottom",
+            scale: 1
+          },
+          {
+            opacity: 1,
+            y: 0,
+            rotationX: 0,
+            scale: 1,
+            duration: 0,
+            delay: 3, // Start immediately to ensure overlap
+            stagger: 0.05,
+            ease: "power2.out",
+            onComplete: () => {
+              setAnimationPhase('completed');
+            },
+            clearProps: "transform,rotationX,transformOrigin,scale"
+          }
+        );
+        
+        hasAnimatedRef.current = true;
+      }
+    }
+  }, [round.deployed]); // Re-run if deployed data changes, hasAnimatedRef ensures it only plays once
 
   // Calculate winning square if round is finalized
   const winningSquare = getWinningSquare(round.slotHash);
@@ -70,7 +116,7 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
   const maxDeployed = Math.max(...round.deployed.map(d => Number(d)));
 
   return (
-    <div className="grid grid-cols-5 gap-1 sm:gap-2">
+    <div ref={gridRef} className="grid grid-cols-5 gap-1 sm:gap-2">
       {round.deployed.map((lamports, index) => {
         const sol = lamportsToSol(lamports);
         const miners = round.count[index];
@@ -102,7 +148,9 @@ export function Grid({ round, selectedSquares, toggleSquare }: GridProps) {
               backgroundRepeat: 'no-repeat',
               border: 'none',
               boxShadow: 'none',
-              backgroundColor: 'transparent'
+              backgroundColor: 'transparent',
+              // Initially hidden, visible during animation (GSAP handles it), and kept visible after
+              opacity: animationPhase === 'initial' ? 0 : 1,
             }}
           >
             <div className="relative h-full flex flex-col p-1 sm:p-3">

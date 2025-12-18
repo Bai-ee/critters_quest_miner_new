@@ -205,7 +205,7 @@ export const ANIMATION_CONFIG = {
   },
   slotMachine: {
     totalDuration: 0.75, // Total animation duration in seconds
-    delay: 0.25, // Delay before animation starts
+    delay: 0.2, // Small delay for visual clarity
     startChar: '-', // Character to show before animation
     spinCount: 100, // Base number of spins per digit
     spinCountIncrement: 20, // Additional spins per digit position

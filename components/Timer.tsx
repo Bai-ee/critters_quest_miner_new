@@ -40,15 +40,17 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
     setIsExpired(seconds <= 0);
   }, [currentSlot, endSlot, startSlot]);
 
-  const [progress, setProgress] = useState(100);
+  const [progress, setProgress] = useState(0); // Start at 0 for intro animation
+  const [targetProgress, setTargetProgress] = useState(100);
+  const [hasAnimated, setHasAnimated] = useState(false);
 
-  // Calculate initial time and progress
+  // Calculate initial time and target progress
   useEffect(() => {
     if (startSlot && currentSlot < startSlot) {
       setNotStarted(true);
       setTimeLeft(0);
       setIsExpired(false);
-      setProgress(100);
+      setTargetProgress(100);
       return;
     }
 
@@ -58,7 +60,7 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
       setNotStarted(true);
       setTimeLeft(0);
       setIsExpired(false);
-      setProgress(100);
+      setTargetProgress(100);
       return;
     }
 
@@ -66,15 +68,26 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
     setTimeLeft(seconds);
     setIsExpired(seconds <= 0);
 
-    // Calculate progress percentage based on slots
+    // Calculate target progress percentage based on slots
     if (startSlot && endSlot) {
       const totalSlots = Number(endSlot - startSlot);
       const slotsRemaining = Number(endSlot - currentSlot);
       if (totalSlots > 0) {
-        setProgress(Math.min(100, Math.max(0, (slotsRemaining / totalSlots) * 100)));
+        setTargetProgress(Math.min(100, Math.max(0, (slotsRemaining / totalSlots) * 100)));
       }
     }
   }, [currentSlot, endSlot, startSlot]);
+
+  // Intro animation on load
+  useEffect(() => {
+    if (!hasAnimated && targetProgress > 0) {
+      // Start intro animation immediately on mount
+      setProgress(targetProgress);
+      setHasAnimated(true);
+    } else if (hasAnimated) {
+      setProgress(targetProgress);
+    }
+  }, [targetProgress, hasAnimated]);
 
   // Countdown every second and update progress
   useEffect(() => {
@@ -85,12 +98,12 @@ export function Timer({ endSlot, currentSlot, startSlot }: TimerProps) {
         const newTime = Math.max(0, prev - 1);
         if (newTime === 0) {
           setIsExpired(true);
-          setProgress(0);
+          setTargetProgress(0);
         } else if (startSlot && endSlot) {
           // Approximate progress update every second
           const totalSeconds = Number(endSlot - startSlot) * 0.4;
           if (totalSeconds > 0) {
-            setProgress((newTime / totalSeconds) * 100);
+            setTargetProgress((newTime / totalSeconds) * 100);
           }
         }
         return newTime;

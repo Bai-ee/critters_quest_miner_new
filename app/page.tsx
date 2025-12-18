@@ -154,24 +154,12 @@ export default function Home() {
 
       {/* Mining items gradient image at top - scrolls with page */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
-        <div className="absolute flex items-start justify-center gap-0" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
-          {/* Left Placeholder */}
-          <div style={{ 
-            backgroundColor: '#FFB84A', 
-            width: '8%',
-            minWidth: '80px',
-            minHeight: '40px', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            padding: '4px', 
-            border: '2px solid black', 
-            borderRadius: '8px',
-            marginTop: '-5px',
-            marginRight: '8px'
-          }}>
-            <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">PLACEHOLDER</span>
+        <div className="absolute flex items-start justify-center gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 0 }}>
+          {/* Left: Wallet Button (Replaced Placeholder) */}
+          <div className="sm:w-[10%] flex items-center justify-center" style={{ width: '8%', marginTop: '-5px' }}>
+            <WalletButton 
+              className="mr-0 mt-0" 
+            />
           </div>
           <img 
             src="/img/miner_logo.png" 
@@ -263,14 +251,8 @@ export default function Home() {
               </h1>
             </div>
 
-            {/* Right: Balances + Wallet */}
+            {/* Right: Balances + Wallet - REMOVED small redundant wallet */}
             <div className="flex-1 flex items-center justify-end gap-2" style={{ background: 'transparent' }}>
-              {connected && publicKey && (
-                <div className="px-2 py-1 hidden sm:block" style={{ background: 'transparent' }}>
-                  <span className="text-xs font-bold text-cq-gold">{solBalance.toFixed(2)} SOL</span>
-                </div>
-              )}
-              <WalletButton />
             </div>
           </div>
         </div>
