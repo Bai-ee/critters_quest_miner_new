@@ -477,8 +477,8 @@ export default function Home() {
 
               {/* Right Side: Increment Controls (Pushed right) */}
               <div className="flex-1 flex items-center justify-end gap-4">
-                <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-xl">+</GlossyButton>
-                <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-xl">-</GlossyButton>
+                <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-3xl">+</GlossyButton>
+                <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-3xl">-</GlossyButton>
               </div>
             </div>
           </div>
