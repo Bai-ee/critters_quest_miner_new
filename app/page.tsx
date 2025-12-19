@@ -371,12 +371,63 @@ export default function Home() {
       {/* Mining items gradient image at top - scrolls with page */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
         <div className="absolute flex items-start justify-center gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, width: '100%', maxWidth: '100vw' }}>
-          {/* Left: Wallet Button (Replaced Placeholder) */}
-          <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '-5px', marginLeft: '-8px' }}>
-            <WalletButton 
-              className="mr-0 mt-0" 
-              width="75%"
-            />
+          {/* Left: Wallet Button or Connected Wallet UI (same SOL pill as right but with big wallet image) */}
+          <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '2px', marginLeft: '-8px' }}>
+            {connected ? (
+              <div className="relative w-full">
+                <img 
+                  src="/img/sol_amount.png" 
+                  alt="Wallet Balance Background" 
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    display: 'block',
+                  }}
+                />
+                {/* Big wallet image replacing SOL logo */}
+                <div className="absolute left-1 top-1/2 -translate-y-1/2 pointer-events-none" style={{ width: '40px', height: '40px', marginLeft: '-16px' }}>
+                  <img 
+                    src="/img/Attached_wallet.png" 
+                    alt="Wallet" 
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                    }}
+                  />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '23px' }}>
+                  <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none mt-[3px] whitespace-nowrap overflow-hidden">
+                    {(() => {
+                      const formatted = solBalance.toFixed(2);
+                      // For values >= 1, show up to 4 digits before decimal (e.g., 9999.99)
+                      // For values < 1, show "SOL 0.XX"
+                      let amountText = '';
+                      if (solBalance >= 1) {
+                        const wholePart = Math.floor(solBalance).toString();
+                        const decimalPart = formatted.split('.')[1];
+                        // Limit to 4 digits for whole part
+                        const displayWhole = wholePart.length > 4 ? wholePart.slice(0, 4) : wholePart;
+                        amountText = `${displayWhole}.${decimalPart}`;
+                      } else {
+                        amountText = formatted;
+                      }
+                      return (
+                        <>
+                          <span style={{ opacity: 0.3 }}>SOL </span>
+                          <span>{amountText}</span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <WalletButton 
+                className="mr-0 mt-0" 
+                width="75%"
+              />
+            )}
           </div>
           <img 
             src="/img/miner_logo.png" 
