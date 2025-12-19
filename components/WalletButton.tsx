@@ -16,8 +16,8 @@ export const WalletButton = ({ className = "sm:mr-0 sm:mt-0", width = "100%" }: 
   const [showModal, setShowModal] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
+    // Don't call preventDefault on button clicks - it's not needed and can cause passive listener issues
 
     if (connected) {
       // If connected, show custom modal with options

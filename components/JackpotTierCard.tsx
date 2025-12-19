@@ -15,16 +15,24 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
   const isScaled = scale < 1;
   
   // Format numbers for display
-  const formatValue = (num: number) => {
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
-    return num.toFixed(2);
+  const formatQuest = (num: number) => {
+    // Format as whole numbers only, padded to 6 digits: 000000
+    return Math.floor(num).toString().padStart(6, '0');
+  };
+
+  const formatSol = (num: number) => {
+    // Format as 0000.00 (4 digits before decimal, 2 after)
+    const whole = Math.floor(num);
+    const decimal = (num - whole).toFixed(2).slice(1); // Get .XX part
+    return whole.toString().padStart(4, '0') + decimal;
   };
 
   // Base dimensions that we scale manually to avoid transform gaps
-  const baseHeight = isScaled ? 40 : 72;
+  const baseHeight = isScaled ? 40 : 60;
   const fontSizeMain = isScaled ? 'text-[14px]' : 'text-[24px] sm:text-[32px]';
   const fontSizeLabel = isScaled ? 'text-[8px]' : 'text-[10px]';
   const oddsFontSize = isScaled ? 'text-[8px]' : 'text-[18px]';
+  const oddsValueFontSize = isScaled ? 'text-[8px]' : 'text-[10px]';
 
   // Tier-specific neon gradients (restored from latest known state)
   const gradients = {
@@ -56,7 +64,7 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
           marginTop: isScaled ? '8px' : '15px',
           background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
           padding: isScaled ? '2px' : '4px',
-          borderRadius: '12px',
+          borderRadius: '13px',
           boxShadow: isScaled ? '0 4px 10px rgba(0,0,0,0.4)' : '0 10px 25px rgba(0,0,0,0.6)',
         }}
       >
@@ -72,10 +80,17 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
           {/* Glossy Overlay */}
           <div className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
 
-          {/* Centered Content Layout: QUEST - ODDS - SOL */}
+          {/* Centered Content Layout: QUEST - SOL (with divider) */}
           <div 
-            className="relative z-10 flex items-center justify-between w-full px-2 sm:px-6 gap-1 sm:gap-4"
-            style={{ transform: isScaled ? 'translateY(3px)' : 'none' }}
+            className={`relative z-10 flex items-center justify-center w-full gap-1 sm:gap-4 ${
+              isScaled && (tier === 'MAJOR' || tier === 'MINOR')
+                ? 'pl-1 pr-4 sm:pl-2 sm:pr-6' // Reduced left padding, more right padding
+                : 'px-2 sm:px-6' // Default symmetric padding
+            }`}
+            style={{ 
+              transform: isScaled ? 'translateY(3px)' : 'none',
+              marginTop: isScaled ? '0px' : '6px'
+            }}
           >
             
             {/* Left: QUEST Value */}
@@ -90,24 +105,52 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
                   className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] truncate`}
                   style={{ overflow: 'visible' }}
                 >
-                  <AnimatedNumber value={formatValue(ore)} />
+                  <AnimatedNumber value={formatQuest(ore)} />
                 </div>
               </div>
             </div>
 
+            {/* Center: Divider Line */}
+            <div className="h-full border-l border-white/10 min-w-[1px]"></div>
+
             {/* Center: ODDS */}
-            <div className={`flex flex-col items-center justify-center px-2 ${!isScaled ? 'border-x border-white/10 min-w-[45px] sm:min-w-[60px]' : 'min-w-0'}`}>
+            <div 
+              className={`flex flex-col items-center justify-center px-2 ${!isScaled ? 'border-x border-white/10 min-w-[45px] sm:min-w-[60px]' : 'min-w-0'}`}
+              style={!isScaled ? { gap: '0px', height: '34px', paddingBottom: '7px' } : {}}
+            >
               {!isScaled && (
-                <span className="text-[13px] font-black text-white/90 uppercase leading-[1] tracking-tighter">ODDS</span>
+                <span 
+                  className="text-[10px] font-black text-white/90 uppercase leading-[1] tracking-tighter"
+                  style={{ paddingTop: '19px' }}
+                >
+                  ODDS
+                </span>
               )}
-              <div className={`${oddsFontSize} font-black text-white/90 leading-[1] whitespace-nowrap`}>
+              <div 
+                className={`${oddsFontSize} font-black text-white/90 leading-[1] whitespace-nowrap`}
+                style={!isScaled ? { 
+                  verticalAlign: 'top', 
+                  height: 'fit-content', 
+                  lineHeight: '10px',
+                  marginBottom: '3px'
+                } : {}}
+              >
                 {isScaled ? (
                   <div className="flex flex-col items-center scale-90 sm:scale-100">
                     <span className="leading-none">{odds.split('/')[0]}/</span>
                     <span className="leading-none">{odds.split('/')[1]}</span>
                   </div>
                 ) : (
-                  <span className="drop-shadow-sm">{odds}</span>
+                  <span 
+                    className="drop-shadow-sm"
+                    style={{ 
+                      fontSize: '10px', 
+                      marginBottom: '8px', 
+                      paddingBottom: '7px' 
+                    }}
+                  >
+                    {odds}
+                  </span>
                 )}
               </div>
             </div>
@@ -124,7 +167,7 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
                   className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] truncate`}
                   style={{ overflow: 'visible' }}
                 >
-                  <AnimatedNumber value={formatValue(sol)} />
+                  <AnimatedNumber value={formatSol(sol)} />
                 </div>
               </div>
             </div>

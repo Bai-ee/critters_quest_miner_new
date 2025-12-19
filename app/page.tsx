@@ -415,18 +415,18 @@ export default function Home() {
       </div>
 
       {/* BOTTOM CONTROL BAR - Sticky */}
+      {/* MINE/Increment UI - Always at bottom when squares selected */}
       <div 
         className="fixed bottom-0 left-0 right-0 z-40 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out"
         style={{ 
           backgroundColor: '#FFB84A',
           boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          height: isDrawerOpen ? 'auto' : (selectedSquares.size > 0 ? '110px' : '68px'),
+          height: selectedSquares.size > 0 ? '128px' : '68px', // 48px handle + 60px MINE bar + 20px padding
           paddingBottom: '20px',
           bottom: 0,
-          maxHeight: isDrawerOpen ? '85vh' : 'auto'
         }}
       >
-        {/* Drawer Handle Area - Always Fixed at top of drawer */}
+        {/* Drawer Handle Area - Always visible at top */}
         <div 
           className="w-full h-[48px] grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 cursor-pointer border-b border-black/10 flex-none"
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
@@ -451,49 +451,64 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Expandable Content Area */}
-        <div className="w-full flex flex-col h-full overflow-visible">
-          {/* Contextual MINE Action Bar - Revealed when squares selected */}
-          <div 
-            className={`w-full border-b border-black/5 flex-none transition-all duration-500 ease-in-out ${
-              selectedSquares.size > 0 ? 'h-[42px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
-            }`}
-          >
-            <div className="max-w-xl mx-auto grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-4 h-full">
-              {/* Left Side: Cost & Amt */}
-              <div className="flex items-center justify-start gap-4 min-w-0">
-                <div className="w-[60px] flex flex-col items-start justify-center flex-none">
-                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Cost</span>
-                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
-                </div>
-                <div className="w-[45px] flex flex-col items-start justify-center flex-none">
-                  <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Amt</span>
-                  <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{amount}</span>
-                </div>
+        {/* MINE Action Bar - Fixed at bottom when squares selected */}
+        <div 
+          className={`w-full border-b border-black/5 flex-none transition-all duration-500 ease-in-out ${
+            selectedSquares.size > 0 ? 'h-[60px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="max-w-xl mx-auto grid grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 items-center px-4 h-full">
+            {/* Left Side: Cost & Amt - Side by side */}
+            <div className="flex items-center justify-start gap-2 sm:gap-3 flex-none">
+              <div className="flex flex-col items-start justify-center flex-none">
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Cost</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
               </div>
-
-              {/* Center: MINE Button */}
-              <div className="flex justify-center px-2">
-                <GlossyButton
-                  onClick={handleDeploy}
-                  size="md"
-                  variant="success"
-                  className="min-w-[110px] !py-1 !text-lg"
-                >
-                  MINE
-                </GlossyButton>
-              </div>
-
-              {/* Right Side: Increment Controls */}
-              <div className="flex items-center justify-end gap-2 min-w-0">
-                <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-3xl">+</GlossyButton>
-                <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-3xl">-</GlossyButton>
+              <div className="flex flex-col items-start justify-center flex-none">
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Amt</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{amount}</span>
               </div>
             </div>
-          </div>
 
-          {/* Full Menu Content */}
-          <div className={`max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8 transition-opacity duration-300 overflow-visible ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            {/* Center: MINE Button */}
+            <div className="flex justify-center px-2">
+              <GlossyButton
+                onClick={handleDeploy}
+                size="md"
+                variant="success"
+                className="min-w-[110px] !py-1 !text-lg"
+              >
+                MINE
+              </GlossyButton>
+            </div>
+
+            {/* Right Side: Increment Controls */}
+            <div className="flex items-center justify-end gap-2 flex-none">
+              <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-3xl">+</GlossyButton>
+              <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-3xl">-</GlossyButton>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Controls Drawer - Expands upward from above the bottom bar */}
+      <div 
+        className="fixed left-0 right-0 z-30 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out overflow-hidden"
+        style={{ 
+          backgroundColor: '#FFB84A',
+          boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
+          bottom: selectedSquares.size > 0 ? '128px' : '68px', // Position above the bottom bar (48px handle + 60px MINE bar + 20px padding)
+          height: isDrawerOpen 
+            ? `calc(100vh - ${selectedSquares.size > 0 ? '128px' : '68px'} - 100px)` // Account for bottom bar + top margin
+            : '0px',
+          maxHeight: isDrawerOpen 
+            ? `calc(100vh - ${selectedSquares.size > 0 ? '128px' : '68px'} - 100px)` 
+            : '0px',
+        }}
+      >
+        {/* Full Menu Content - Scrollable */}
+        <div className={`w-full h-full overflow-y-auto overflow-x-visible transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
             <MainControl
               round={round}
               miner={miner}

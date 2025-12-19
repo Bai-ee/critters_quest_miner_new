@@ -257,7 +257,8 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                             <span className="text-xs text-gray-400">COST:</span>
                             <span className="text-sm font-bold text-cq-gold">{(amount * selectedSquares.size).toFixed(4)}</span>
                         </div>
-                        <GlossyButton
+                        {/* MINE Button - Commented out from expanded controls (using bottom bar MINE button instead) */}
+                        {/* <GlossyButton
                             onClick={handleDeploy}
                             disabled={!publicKey || deploying || selectedSquares.size === 0 || solBalance < (amount * selectedSquares.size + 0.01)}
                             size="lg"
@@ -265,7 +266,7 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
                             className="w-full sm:w-auto min-w-[220px]"
                         >
                             {deploying ? 'DEPLOYING...' : 'MINE'}
-                        </GlossyButton>
+                        </GlossyButton> */}
                     </div>
                 </>
             )}
