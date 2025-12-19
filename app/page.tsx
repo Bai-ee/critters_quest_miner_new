@@ -8,6 +8,7 @@ import { GlossyButton } from '@/components/GlossyButton';
 import { RoundResults } from '@/components/RoundResults';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { HowTo } from '@/components/HowTo';
+import { StakingPanel } from '@/components/StakingPanel';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
@@ -19,6 +20,170 @@ import { CALCULATIONS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 import gsap from 'gsap';
 
+// Monster Animation Component
+function SlimeAnimation() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<gsap.core.Tween | null>(null);
+
+  // Available monster gifs in the monsters folder
+  // slime_IDLE_LEFT_WS.gif is 250x200, all others are 200px wide
+  const availableMonsters = [
+    '/img/monsters/slime_IDLE_LEFT_WS.gif',
+    '/img/monsters/rock_monter.gif',
+    '/img/monsters/Shroom.gif',
+    '/img/monsters/goblin_1.gif',
+    '/img/monsters/goblin_2.gif',
+    '/img/monsters/goblin_3.gif',
+  ];
+
+  // Get monster width based on filename (75% of original, then increased by 25% = 93.75% of original)
+  const getMonsterWidth = (monsterPath: string) => {
+    if (monsterPath.includes('slime_IDLE_LEFT_WS.gif')) {
+      return 250 * 0.75 * 1.25; // slime: 250px -> 187.5px -> 234.375px
+    }
+    return 200 * 0.75 * 1.25; // others: 200px -> 150px -> 187.5px
+  };
+
+  useEffect(() => {
+    if (!containerRef.current || availableMonsters.length === 0) return;
+
+    const container = containerRef.current;
+    let isAnimating = false; // Track if a monster is currently animating
+    let timeoutId: NodeJS.Timeout | null = null;
+    let currentDirection: 'right-to-left' | 'left-to-right' = 'right-to-left'; // Track current direction
+
+    const animateNextMonster = () => {
+      // Don't start a new monster if one is already animating
+      if (isAnimating) {
+        console.log('Monster already animating, skipping...');
+        return;
+      }
+
+      // Select a random monster
+      const randomIndex = Math.floor(Math.random() * availableMonsters.length);
+      const randomMonster = availableMonsters[randomIndex];
+      const monsterWidth = getMonsterWidth(randomMonster);
+      
+      // Alternate direction
+      const direction = currentDirection;
+      currentDirection = currentDirection === 'right-to-left' ? 'left-to-right' : 'right-to-left';
+      
+      console.log('Selected monster:', randomMonster, 'width:', monsterWidth, 'direction:', direction, 'from', availableMonsters.length, 'available');
+
+      // Mark that we're now animating
+      isAnimating = true;
+
+      // Create a new monster element (increased by 25% from previous size)
+      const monsterDiv = document.createElement('div');
+      monsterDiv.className = 'absolute';
+      monsterDiv.style.cssText = `
+        top: calc(50% + 15px);
+        transform: translateY(-50%);
+        height: 112.5px;
+        width: ${monsterWidth}px;
+      `;
+
+      const img = document.createElement('img');
+      img.src = randomMonster;
+      img.alt = 'Walking Monster';
+      // Flip horizontally if going left to right
+      img.style.cssText = `
+        height: 100%;
+        width: 100%;
+        display: block;
+        object-fit: contain;
+        transform: ${direction === 'left-to-right' ? 'scaleX(-1)' : 'none'};
+      `;
+
+      monsterDiv.appendChild(img);
+      container.appendChild(monsterDiv);
+
+      // Set initial position based on direction
+      if (direction === 'right-to-left') {
+        // Start off-screen to the right
+        gsap.set(monsterDiv, {
+          x: '100vw',
+        });
+        // Animate across the page from right to left
+        animationRef.current = gsap.to(monsterDiv, {
+          x: `-${monsterWidth}px`, // Move completely off-screen to the left
+          duration: 12,
+          ease: 'none',
+          onComplete: () => {
+            // Remove the element after animation completes
+            if (container.contains(monsterDiv)) {
+              container.removeChild(monsterDiv);
+            }
+            // Mark animation as complete
+            isAnimating = false;
+            // Wait 2 seconds, then animate next random monster
+            timeoutId = setTimeout(() => {
+              animateNextMonster();
+            }, 2000);
+          },
+        });
+      } else {
+        // Start off-screen to the left
+        gsap.set(monsterDiv, {
+          x: `-${monsterWidth}px`,
+        });
+        // Animate across the page from left to right
+        animationRef.current = gsap.to(monsterDiv, {
+          x: '100vw', // Move completely off-screen to the right
+          duration: 12,
+          ease: 'none',
+          onComplete: () => {
+            // Remove the element after animation completes
+            if (container.contains(monsterDiv)) {
+              container.removeChild(monsterDiv);
+            }
+            // Mark animation as complete
+            isAnimating = false;
+            // Wait 2 seconds, then animate next random monster
+            timeoutId = setTimeout(() => {
+              animateNextMonster();
+            }, 2000);
+          },
+        });
+      }
+    };
+
+    // Start the first monster after a small delay
+    timeoutId = setTimeout(() => {
+      animateNextMonster();
+    }, 500);
+
+    return () => {
+      // Clear any pending timeouts
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      // Cleanup: remove all monster elements
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+      // Kill any running animations
+      if (animationRef.current) {
+        animationRef.current.kill();
+      }
+      // Reset animation flag
+      isAnimating = false;
+    };
+  }, []);
+
+  return (
+    <div 
+      ref={containerRef}
+      className="fixed top-0 left-0 right-0 pointer-events-none"
+      style={{
+        width: '100%',
+        height: '120px',
+        zIndex: 0, // Behind mining items (zIndex: 1)
+        overflow: 'hidden',
+      }}
+    />
+  );
+}
 
 export default function Home() {
   const { board, round, previousRound, currentSlot, loading, error, lastUpdate, miner, automation } = useRoundData();
@@ -368,57 +533,108 @@ export default function Home() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(116,253,231,0.1)_0%,transparent_70%)]"></div>
       </div>
 
+      {/* Slime walking animation */}
+      <SlimeAnimation />
+
       {/* Mining items gradient image at top - scrolls with page */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
-        <div className="absolute flex items-start justify-center gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, width: '100%', maxWidth: '100vw' }}>
+        <div className="absolute flex items-start justify-between gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, width: '100%', maxWidth: '100vw', paddingLeft: '8px', paddingRight: '8px' }}>
           {/* Left: Wallet Button or Connected Wallet UI (same SOL pill as right but with big wallet image) */}
-          <div className="flex-none flex items-center justify-center" style={{ width: 'clamp(80px, 22vw, 110px)', marginTop: '2px', marginLeft: '-8px' }}>
+          <div className="flex-1 flex items-center justify-start" style={{ marginTop: '2px', width: '100%' }}>
             {connected ? (
-              <div className="relative w-full">
-                <img 
-                  src="/img/sol_amount.png" 
-                  alt="Wallet Balance Background" 
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
-                  }}
-                />
-                {/* Big wallet image replacing SOL logo */}
-                <div className="absolute left-1 top-1/2 -translate-y-1/2 pointer-events-none" style={{ width: '40px', height: '40px', marginLeft: '-16px' }}>
-                  <img 
-                    src="/img/Attached_wallet.png" 
-                    alt="Wallet" 
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
+              <div className="relative w-full overflow-visible" style={{
+                background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+                padding: '2px',
+                borderRadius: '13px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                minHeight: '36px',
+              }}>
+                {/* Inner Content Area with Neutral Gradient */}
+                <div className="relative w-full h-full overflow-visible flex items-center justify-center" style={{
+                  background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
+                  borderRadius: '11px',
+                  boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
+                  minHeight: '32px',
+                  padding: '6px 12px',
+                }}>
+                  {/* Glossy Overlay */}
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none"
+                    style={{ 
+                      borderTopLeftRadius: '10px',
+                      borderTopRightRadius: '10px'
                     }}
                   />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '23px' }}>
-                  <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none mt-[3px] whitespace-nowrap overflow-hidden">
-                    {(() => {
-                      const formatted = solBalance.toFixed(2);
-                      // For values >= 1, show up to 4 digits before decimal (e.g., 9999.99)
-                      // For values < 1, show "SOL 0.XX"
-                      let amountText = '';
-                      if (solBalance >= 1) {
-                        const wholePart = Math.floor(solBalance).toString();
-                        const decimalPart = formatted.split('.')[1];
-                        // Limit to 4 digits for whole part
-                        const displayWhole = wholePart.length > 4 ? wholePart.slice(0, 4) : wholePart;
-                        amountText = `${displayWhole}.${decimalPart}`;
-                      } else {
-                        amountText = formatted;
-                      }
-                      return (
-                        <>
-                          <span style={{ opacity: 0.3 }}>SOL </span>
-                          <span>{amountText}</span>
-                        </>
-                      );
-                    })()}
+                  {/* Wallet image (using unconnected wallet image) */}
+                  <div className="absolute left-1 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ width: '34px', height: '40px', marginLeft: '1px' }}>
+                    <img 
+                      src="/img/wallet.png" 
+                      alt="Wallet" 
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                      }}
+                    />
+                  </div>
+                  {/* Content area - accounting for wallet logo width (34px + 1px margin + 4px left padding = ~39px) */}
+                  <div className="absolute inset-0 flex items-center pointer-events-none z-10" style={{ 
+                    left: '39px', 
+                    right: '8px', 
+                    paddingBottom: '2px',
+                    top: 'calc(50% + 2px)',
+                    transform: 'translateY(-50%)',
+                    display: 'flex',
+                    alignContent: 'center',
+                  }}>
+                    <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none whitespace-nowrap" style={{ 
+                      flex: '1 1 auto', 
+                      minWidth: '0px',
+                      display: 'flex',
+                      alignContent: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      {(() => {
+                        const formatted = solBalance.toFixed(2);
+                        // For values >= 1, show up to 4 digits before decimal (e.g., 9999.99)
+                        // For values < 1, show "SOL 0.XX"
+                        let amountText = '';
+                        if (solBalance >= 1) {
+                          const wholePart = Math.floor(solBalance).toString();
+                          const decimalPart = formatted.split('.')[1];
+                          // Limit to 4 digits for whole part
+                          const displayWhole = wholePart.length > 4 ? wholePart.slice(0, 4) : wholePart;
+                          amountText = `${displayWhole}.${decimalPart}`;
+                        } else {
+                          amountText = formatted;
+                        }
+                        return (
+                          <>
+                            <span style={{ opacity: 0.3 }}>SOL </span>
+                            <span>{amountText}</span>
+                          </>
+                        );
+                      })()}
+                    </div>
+                    {/* Red bubble with black X */}
+                    <div className="flex items-center justify-center" style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgb(239, 68, 68)',
+                      flexShrink: 0,
+                      marginTop: '0',
+                      paddingTop: '0',
+                    }}>
+                      <span className="text-black" style={{ 
+                        paddingBottom: '1.75px',
+                        fontSize: '13px',
+                        lineHeight: '1',
+                        display: 'block',
+                        fontFamily: '"Comic Sans MS", cursive',
+                        fontWeight: 'normal',
+                      }}>×</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -442,20 +658,46 @@ export default function Home() {
             }}
           />
           {/* Right: SOL and QUEST Balances */}
-          <div className="flex-none flex flex-col gap-2" style={{ width: 'clamp(80px, 22vw, 110px)', marginRight: '2px' }}>
-            <div className="relative">
-              <img 
-                src="/img/sol_amount.png" 
-                alt="SOL Balance Background" 
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  display: 'block',
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '21px' }}>
-                <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none mt-[3px]">
-                  <AnimatedNumber value={solBalance.toFixed(2).padStart(7, '0')} />
+          <div className="flex-1 flex flex-col gap-2 items-end" style={{ marginTop: '2px', width: '100%' }}>
+            <div className="relative w-full overflow-visible" style={{
+              background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+              padding: '2px',
+              borderRadius: '13px',
+              boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+              minHeight: '36px',
+            }}>
+              {/* Inner Content Area with Neutral Gradient */}
+              <div className="relative w-full h-full overflow-visible flex items-center justify-center" style={{
+                background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
+                borderRadius: '11px',
+                boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
+                minHeight: '32px',
+                padding: '6px 12px',
+              }}>
+                {/* Glossy Overlay */}
+                <div 
+                  className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none"
+                  style={{ 
+                    borderTopLeftRadius: '10px',
+                    borderTopRightRadius: '10px'
+                  }}
+                />
+                {/* SOL icon image */}
+                <div className="absolute left-1 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ width: '25px', height: '40px', marginLeft: '1px' }}>
+                  <img 
+                    src="/img/sol.png" 
+                    alt="SOL" 
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                    }}
+                  />
+                </div>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1 z-10" style={{ paddingLeft: '21px', top: 'calc(50% + 2px)', transform: 'translateY(-50%)' }}>
+                  <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none">
+                    <AnimatedNumber value={solBalance.toFixed(2).padStart(7, '0')} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -661,12 +903,19 @@ export default function Home() {
           
           {/* Round Results Section - Below Mining Section */}
           <div ref={roundResultsRef} className="mt-6">
-            <RoundResults 
-              round={previousRound || round} 
-              miner={miner} 
+            <RoundResults
+              round={previousRound || round}
+              miner={miner}
             />
           </div>
-          
+
+          {/* Staking Panel - Below Round Results */}
+          {connected && (
+            <div className="mt-6">
+              <StakingPanel />
+            </div>
+          )}
+
           <HowTo />
         </div>
       </div>

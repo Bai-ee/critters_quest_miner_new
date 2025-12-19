@@ -63,7 +63,7 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
           height: `${baseHeight}px`,
           marginTop: isScaled ? '8px' : '15px',
           background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
-          padding: isScaled ? '2px' : '4px',
+          padding: '2px',
           borderRadius: '13px',
           boxShadow: isScaled ? '0 4px 10px rgba(0,0,0,0.4)' : '0 10px 25px rgba(0,0,0,0.6)',
         }}
