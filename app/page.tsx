@@ -573,6 +573,30 @@ export default function Home() {
           )}
         </div>
 
+        {/* Total Deployed Placeholder - Above miner tiles */}
+        <div className="w-full max-w-[min(92vw,520px)] mx-auto relative z-30 mb-2" style={{ overflow: 'visible', marginTop: '-13px' }}>
+          <div className="bg-black/20 border border-black/30 rounded-lg px-4 py-2 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">Total Deployed</span>
+              <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
+                {round?.totalDeployed ? lamportsToSol(round.totalDeployed).toFixed(4) : '0.0000'} SOL
+              </span>
+            </div>
+            <div className="flex flex-col items-end">
+              <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">Total You Deployed</span>
+              <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
+                {miner ? (() => {
+                  let total = 0;
+                  for (let i = 0; i < 25; i++) {
+                    total += lamportsToSol(miner.deployed[i]);
+                  }
+                  return total.toFixed(4);
+                })() : '0.0000'} SOL
+              </span>
+            </div>
+          </div>
+        </div>
+
         <div className="w-full max-w-[min(92vw,520px)] relative z-30" style={{ overflow: 'visible' }}>
           <div className="mt-0" style={{ overflow: 'visible' }}>
             <Grid
@@ -612,13 +636,13 @@ export default function Home() {
         <div 
           className="w-full h-[48px] grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 border-b border-black/10 flex-none"
         >
-          {/* Left: Selected Info */}
-          <div className="flex items-center gap-1.5 min-w-0 justify-start">
-            <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">
+          {/* Left: Selected Info - Value on top, label on bottom */}
+          <div className="flex flex-col items-start justify-center min-w-0">
+            <span className="text-xs font-black text-black/60 leading-none">
               <span className="text-[8px]">x</span>
-              <span className="text-xs font-black text-black/60 leading-none">{selectedSquares.size}</span>
-              <span> Selected</span>
+              {selectedSquares.size}
             </span>
+            <span className="text-[10px] font-black text-black/40 uppercase leading-none">Selected</span>
           </div>
 
           {/* Center: Manual/Auto Switch - Inset tab style with sliding indicator */}
@@ -683,10 +707,10 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Right: Round Info - Back to current round */}
-          <div className="flex items-center gap-1.5 min-w-0 justify-end">
-            <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Round:</span>
+          {/* Right: Round Info - Value on top, label on bottom */}
+          <div className="flex flex-col items-end justify-center min-w-0">
             <span className="text-xs font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
+            <span className="text-[10px] font-black text-black/40 uppercase leading-none">Round</span>
           </div>
         </div>
 
@@ -749,7 +773,7 @@ export default function Home() {
                   onClick={handleDeploy}
                   size="md"
                   variant="success"
-                  className="!w-[110px] !py-1 !text-lg !min-h-[40px]"
+                  className="!w-[73px] !py-1 !text-lg !min-h-[40px]"
                   disabled={selectedSquares.size === 0 || automationLoading}
                 >
                   MINE
@@ -759,7 +783,7 @@ export default function Home() {
                   onClick={handleDisableAutomation}
                   size="md"
                   variant="danger"
-                  className="!w-[110px] !py-1 !text-base !min-h-[40px]"
+                  className="!w-[73px] !py-1 !text-base !min-h-[40px]"
                   disabled={automationLoading}
                 >
                   {automationLoading ? 'CANCELING...' : 'CANCEL'}
@@ -769,7 +793,7 @@ export default function Home() {
                   onClick={handleSetupAutomation}
                   size="md"
                   variant="success"
-                  className="!w-[110px] !py-1 !text-xs whitespace-nowrap !min-h-[40px]"
+                  className="!w-[73px] !py-1 !text-xs whitespace-nowrap !min-h-[40px]"
                   disabled={selectedSquares.size === 0 || automationLoading || solBalance < ((amount * selectedSquares.size) + executorFee) * rounds}
                 >
                   {automationLoading ? 'ENABLING...' : 'AUTO MINE'}
@@ -777,16 +801,15 @@ export default function Home() {
               )}
             </div>
 
-            {/* Between MINE and + / -: ROUNDS Display */}
-            <div className="absolute right-[90px] flex flex-col items-start justify-center">
-              <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">ROUNDS</span>
-              <span className={`text-sm font-black leading-none ${mode === 'auto' ? 'text-[rgb(120,63,4)]' : 'text-[rgb(120,63,4)]/30'}`}>
-                {mode === 'auto' ? rounds.toString().padStart(2, '0') : '--'}
-              </span>
-            </div>
-
-            {/* Right Side: Increment Controls for Rounds */}
+            {/* Right Side: ROUNDS Display and Increment Controls */}
             <div className={`absolute right-4 flex items-center justify-end gap-2 ${mode === 'manual' ? 'pointer-events-none' : ''}`}>
+              {/* ROUNDS Display - Closer to increment buttons */}
+              <div className="flex flex-col items-end justify-center mr-1">
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">RND#</span>
+                <span className={`text-sm font-black leading-none ${mode === 'auto' ? 'text-[rgb(120,63,4)]' : 'text-[rgb(120,63,4)]/30'}`}>
+                  {mode === 'auto' ? rounds.toString().padStart(2, '0') : '--'}
+                </span>
+              </div>
               <div className={mode === 'manual' ? 'opacity-30' : 'opacity-100'}>
                 <GlossyButton 
                   onClick={incrementRounds} 
