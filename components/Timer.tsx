@@ -71,11 +71,15 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
     setIsExpired(seconds <= 0);
 
     // Calculate target progress percentage based on slots
+    // Progress bar visible portion starts at 17%, so 0% time = 17% width, 100% time = 100% width
     if (startSlot && endSlot) {
       const totalSlots = Number(endSlot - startSlot);
       const slotsRemaining = Number(endSlot - currentSlot);
       if (totalSlots > 0) {
-        setTargetProgress(Math.min(100, Math.max(0, (slotsRemaining / totalSlots) * 100)));
+        const timeRemainingPercent = Math.min(100, Math.max(0, (slotsRemaining / totalSlots) * 100));
+        // Map: 100% time → 100% width, 0% time → 17% width
+        const visualProgress = 17 + (timeRemainingPercent / 100) * (100 - 17);
+        setTargetProgress(Math.min(100, Math.max(17, visualProgress)));
       }
     }
   }, [currentSlot, endSlot, startSlot]);
@@ -100,12 +104,15 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
         const newTime = Math.max(0, prev - 1);
         if (newTime === 0) {
           setIsExpired(true);
-          setTargetProgress(0);
+          setTargetProgress(17); // 0% time = 17% width (left edge of visible portion)
         } else if (startSlot && endSlot) {
           // Approximate progress update every second
           const totalSeconds = Number(endSlot - startSlot) * 0.4;
           if (totalSeconds > 0) {
-            setTargetProgress((newTime / totalSeconds) * 100);
+            const timeRemainingPercent = (newTime / totalSeconds) * 100;
+            // Map: 100% time → 100% width, 0% time → 17% width
+            const visualProgress = 17 + (timeRemainingPercent / 100) * (100 - 17);
+            setTargetProgress(Math.min(100, Math.max(17, visualProgress)));
           }
         }
         return newTime;
@@ -127,35 +134,54 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
     return `${minutes}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Dynamic styles based on progress
+  // Calculate actual time remaining percentage (0-100%) for color thresholds
+  // Progress width is mapped to 17-100%, but we need actual time % for colors
+  const getActualTimePercent = () => {
+    if (notStarted || isExpired) return 0;
+    if (startSlot && endSlot) {
+      const totalSlots = Number(endSlot - startSlot);
+      const slotsRemaining = Number(endSlot - currentSlot);
+      if (totalSlots > 0) {
+        return Math.min(100, Math.max(0, (slotsRemaining / totalSlots) * 100));
+      }
+    }
+    // Fallback: calculate from progress width (reverse mapping)
+    // progress = 17 + (timePercent / 100) * 83
+    // timePercent = ((progress - 17) / 83) * 100
+    return Math.min(100, Math.max(0, ((progress - 17) / 83) * 100));
+  };
+
+  const actualTimePercent = getActualTimePercent();
+
+  // Dynamic styles based on actual time remaining percentage
   const getProgressBackground = () => {
     if (notStarted || isExpired) {
       // Darker green gradient matching button success state
       return 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)';
     }
-    if (progress > 50) return 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)';
-    if (progress > 20) return 'linear-gradient(180deg, #FFEFBA 0%, #f97316 20%, #ea580c 60%, #9a3412 100%)'; // Orange theme
+    if (actualTimePercent > 50) return 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)';
+    if (actualTimePercent > 20) return 'linear-gradient(180deg, #FFEFBA 0%, #f97316 20%, #ea580c 60%, #9a3412 100%)'; // Orange theme
     return 'linear-gradient(180deg, #FF9999 0%, #ef4444 20%, #b91c1c 60%, #7f1d1d 100%)'; // Red theme
   };
 
   const getGlowIntensity = () => {
     if (isExpired || notStarted) return '0 0 15px rgba(82, 212, 59, 0.6)'; // Green glow when inactive
-    if (progress > 50) return 'none';
-    if (progress > 20) return '0 0 10px #f97316';
+    if (actualTimePercent > 50) return 'none';
+    if (actualTimePercent > 20) return '0 0 10px #f97316';
     return '0 0 20px #ef4444, 0 0 30px #ef4444';
   };
 
   const getAnimationSpeed = () => {
     if (isExpired || notStarted) return '2s'; // Slow rocking when not active
-    if (progress > 50) return '1s';
-    if (progress > 20) return '0.5s';
+    if (actualTimePercent > 50) return '1s';
+    if (actualTimePercent > 20) return '0.5s';
     return '0.2s';
   };
 
   const getRotationIntensity = () => {
     if (isExpired || notStarted) return '3deg'; // Subtle rock when inactive
-    if (progress > 50) return '5deg';
-    if (progress > 20) return '8deg';
+    if (actualTimePercent > 50) return '5deg';
+    if (actualTimePercent > 20) return '8deg';
     return '12deg';
   };
 

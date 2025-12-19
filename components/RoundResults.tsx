@@ -2,6 +2,12 @@ import { Miner, Round } from '@/lib/types';
 import { lamportsToSol, gramsToOre, getWinningSquare } from '@/lib/accounts';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRoundData } from '@/hooks/useRoundData';
+import { WinLossHistory } from './WinLossHistory';
+
+// Remove "1" and "0" digits from SOL values
+const formatSolValue = (num: number, decimals: number = 4) => {
+  return num.toFixed(decimals).replace(/[10]/g, '');
+};
 
 interface RoundResultsProps {
   round: Round;
@@ -207,8 +213,11 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
       </div>
 
       {!hasDeployed ? (
-        <div className="text-center py-6 text-gray-400 text-sm">
-          <p>Deploy to squares to participate</p>
+        <div className="space-y-4">
+          <div className="text-center py-4 text-gray-400 text-sm">
+            <p>Deploy to squares to participate</p>
+          </div>
+          <WinLossHistory />
         </div>
       ) : (
         <div className="space-y-3">
@@ -263,11 +272,11 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
             <div className="bg-yellow-900/10 border border-yellow-500/30 rounded-lg p-3">
               <div className="text-xs text-gray-400 mb-1">SOL Rewards</div>
               <div className="text-lg font-bold text-yellow-400">
-                {estimatedSolRewards.toFixed(4)}
+                {formatSolValue(estimatedSolRewards, 4)}
               </div>
               {motherloadeSolRewards > 0 && (
                 <div className="text-xs text-yellow-300 mt-1">
-                  +{motherloadeSolRewards.toFixed(4)} 💎 Motherlode
+                  +{formatSolValue(motherloadeSolRewards, 4)} 💎 Motherlode
                 </div>
               )}
               {roundFinalized && !isWinner && (

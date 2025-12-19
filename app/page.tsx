@@ -6,7 +6,6 @@ import { Motherlode } from '@/components/Motherlode';
 import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
 import { GlossyButton } from '@/components/GlossyButton';
-import { Modal } from '@/components/Modal';
 import { RoundResults } from '@/components/RoundResults';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { HowTo } from '@/components/HowTo';
@@ -15,7 +14,7 @@ import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { useDeployToSquares } from '@/lib/instrucionsHooks';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CALCULATIONS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 
@@ -29,14 +28,52 @@ export default function Home() {
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [lastShownRoundId, setLastShownRoundId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const roundResultsRef = useRef<HTMLDivElement>(null);
+  const hasAutoScrolledRef = useRef(false);
+
+  // Check if user participated in the round (either current or previous)
+  const userParticipated = miner && (
+    (previousRound && miner.roundId.toString() === previousRound.id.toString()) ||
+    (round && miner.roundId.toString() === round.id.toString())
+  ) && miner.deployed.some(deploy => deploy > 0n);
+
+  // Check if timer has expired (round ended)
+  const timerExpired = board && currentSlot && board.endSlot && currentSlot >= board.endSlot;
+
+  // Reset auto-scroll flag when a new round starts
+  useEffect(() => {
+    if (round && round.id.toString() !== lastShownRoundId && !timerExpired) {
+      hasAutoScrolledRef.current = false;
+    }
+  }, [round, lastShownRoundId, timerExpired]);
 
   useEffect(() => {
-    // Show modal when previousRound is updated (round just completed)
-    if (previousRound && previousRound.id.toString() !== lastShownRoundId) {
-      setIsResultsModalOpen(true);
+    // When previousRound is updated (round just completed) or timer expires
+    const roundJustCompleted = previousRound && previousRound.id.toString() !== lastShownRoundId;
+    const shouldScroll = (roundJustCompleted || timerExpired) && userParticipated && !hasAutoScrolledRef.current;
+    
+    if (roundJustCompleted) {
       setLastShownRoundId(previousRound.id.toString());
     }
-  }, [previousRound, lastShownRoundId]);
+    
+    // Auto-scroll to results on mobile if user participated and round ended
+    if (shouldScroll && roundResultsRef.current) {
+      // Check if mobile (iOS or Chrome mobile)
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
+                      (typeof window !== 'undefined' && window.innerWidth < 768);
+      
+      if (isMobile) {
+        // Small delay to ensure DOM is updated
+        setTimeout(() => {
+          roundResultsRef.current?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+          hasAutoScrolledRef.current = true;
+        }, 500);
+      }
+    }
+  }, [previousRound, lastShownRoundId, userParticipated, timerExpired]);
 
   // Get token balance
   const { balance: tokenBalance } = useTokenBalance({
@@ -411,6 +448,14 @@ export default function Home() {
           </div>
           
           <HowTo />
+          
+          {/* Round Results Section - Under Mining Section */}
+          <div ref={roundResultsRef} className="mt-6">
+            <RoundResults 
+              round={previousRound || round} 
+              miner={miner} 
+            />
+          </div>
         </div>
       </div>
 
@@ -523,26 +568,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Round Results Modal - Pops up on round completion */}
-      <Modal
-        isOpen={isResultsModalOpen}
-        onClose={() => setIsResultsModalOpen(false)}
-        title="Round Results"
-        size="lg"
-      >
-        <RoundResults 
-          round={previousRound || round} 
-          miner={miner} 
-        />
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={() => setIsResultsModalOpen(false)}
-            className="cq-button-primary px-8 py-3 text-lg font-bold text-black"
-          >
-            CONTINUE MINING
-          </button>
-        </div>
-      </Modal>
     </main>
   );
 }
