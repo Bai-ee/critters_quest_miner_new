@@ -3,6 +3,9 @@ import { lamportsToSol, gramsToOre, getWinningSquare } from '@/lib/accounts';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRoundData } from '@/hooks/useRoundData';
 import { WinLossHistory } from './WinLossHistory';
+import { useCheckpoint, useClaimSol, useClaimOre, useClaimAll } from '@/lib/instrucionsHooks';
+import { GlossyButton } from './GlossyButton';
+import { bigIntToNumber } from '@/lib/formatters';
 
 // Remove "1" and "0" digits from SOL values
 const formatSolValue = (num: number, decimals: number = 4) => {
@@ -126,7 +129,29 @@ function calculateEstimatedRewards(round: Round, miner: Miner | null): {
 
 export function RoundResults({ round, miner }: RoundResultsProps) {
   const { publicKey } = useWallet();
-  const { previousRound } = useRoundData();
+  const { previousRound, round: currentRound } = useRoundData();
+  const { checkpoint } = useCheckpoint();
+  const { claimSol } = useClaimSol();
+  const { claimOre } = useClaimOre();
+  const { claimAll } = useClaimAll();
+
+  const handleCheckpoint = async () => {
+    if (!publicKey || !miner || !currentRound) return;
+    try {
+      await checkpoint();
+    } catch (error) {
+      console.error('Checkpoint failed:', error);
+    }
+  };
+
+  const handleClaimAll = async () => {
+    if (!publicKey || !miner) return;
+    try {
+      await claimAll();
+    } catch (error) {
+      console.error('Claim all failed:', error);
+    }
+  };
 
   // Use previousRound if available (shows finalized results), otherwise use current round
   const displayRound = previousRound || round;
@@ -184,28 +209,27 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
 
   const getMotherlodeTierName = (tier: number) => {
     switch (tier) {
-      case 1: return 'MINOR 🥉';
-      case 2: return 'MAJOR 🥈';
-      case 3: return 'GRAND 🥇';
+      case 1: return 'MINOR';
+      case 2: return 'MAJOR';
+      case 3: return 'GRAND';
       default: return 'None';
     }
   };
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-700">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-bold flex items-center gap-2">
-          <span>📊</span>
+    <div className="bg-[#FFB84A]/20 backdrop-blur-sm rounded-xl p-4 border-2 border-[rgb(120,63,4)]/30" style={{ boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-black uppercase text-[rgb(120,63,4)]">
           {isPreviousRound ? `Round #${displayRound.id.toString()} Results` : 'Your Results'}
         </h2>
         <div className="flex items-center gap-2">
           {isPreviousRound && (
-            <span className="text-xs px-2 py-1 rounded bg-purple-900/30 text-purple-400 border border-purple-500/50">
+            <span className="text-[10px] px-2 py-1 rounded bg-black/20 text-black/60 border border-black/30 font-black uppercase">
               Previous
             </span>
           )}
           {roundFinalized && (
-            <span className="text-xs px-2 py-1 rounded bg-green-900/30 text-green-400 border border-green-500/50">
+            <span className="text-[10px] px-2 py-1 rounded bg-black/20 text-black/60 border border-black/30 font-black uppercase">
               Finalized
             </span>
           )}
@@ -214,7 +238,7 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
 
       {!hasDeployed ? (
         <div className="space-y-4">
-          <div className="text-center py-4 text-gray-400 text-sm">
+          <div className="text-center py-4 text-black/60 text-sm font-black uppercase">
             <p>Deploy to squares to participate</p>
           </div>
           <WinLossHistory />
@@ -223,22 +247,22 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
         <div className="space-y-3">
           {/* Winner Status */}
           {roundFinalized && (
-            <div className={`p-3 rounded-lg border ${
+            <div className={`p-3 rounded-lg border-2 ${
               isWinner
-                ? 'bg-green-900/20 border-green-500/50'
-                : 'bg-gray-900/50 border-gray-600/50'
+                ? 'bg-white/20 border-[rgb(35,116,13)]/50'
+                : 'bg-black/10 border-black/20'
             }`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-gray-400">Winning Square</div>
-                  <div className="text-lg font-bold text-white">
+                  <div className="text-[10px] text-black/60 font-black uppercase">Winning Square</div>
+                  <div className="text-lg font-black text-[rgb(120,63,4)]">
                     #{winningSquare + 1}
                   </div>
                 </div>
                 {isWinner ? (
-                  <span className="text-green-400 font-semibold text-sm">🎉 Winner!</span>
+                  <span className="text-[rgb(35,116,13)] font-black text-sm uppercase">Winner</span>
                 ) : (
-                  <span className="text-gray-500 text-sm">Not a winner</span>
+                  <span className="text-black/40 text-sm font-black uppercase">Not a winner</span>
                 )}
               </div>
             </div>
@@ -246,18 +270,18 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
 
           {/* Lottery Outcome */}
           {roundFinalized && isPreviousRound && (
-            <div className="bg-purple-900/10 border border-purple-500/30 rounded-lg p-3">
+            <div className="bg-black/10 border-2 border-black/20 rounded-lg p-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs text-gray-400">Lottery Outcome</div>
-                  <div className="text-sm font-bold text-purple-300">
+                  <div className="text-[10px] text-black/60 font-black uppercase">Lottery Outcome</div>
+                  <div className="text-sm font-black text-[rgb(120,63,4)] uppercase">
                     {getLotteryOutcomeName(lotteryOutcome)}
                   </div>
                 </div>
                 {hasMotherlode && (
                   <div className="text-right">
-                    <div className="text-xs text-gray-400">Motherlode Hit</div>
-                    <div className="text-sm font-bold text-yellow-300">
+                    <div className="text-[10px] text-black/60 font-black uppercase">Motherlode Hit</div>
+                    <div className="text-sm font-black text-[rgb(120,63,4)] uppercase">
                       {getMotherlodeTierName(motherlodeTier)}
                     </div>
                   </div>
@@ -266,37 +290,75 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
             </div>
           )}
 
-          {/* Rewards Summary */}
+          {/* REWARDS Section */}
+          <div className="bg-white/20 border-2 border-[rgb(120,63,4)]/30 rounded-lg p-3">
+            <div className="text-[10px] font-black text-[rgb(120,63,4)]/60 uppercase mb-2">REWARDS</div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-black/60 uppercase">SOL:</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)]">
+                  {miner?.rewardsSol ? lamportsToSol(miner.rewardsSol).toFixed(4) : '0.0000'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-black/60 uppercase">Unrefined $QUEST:</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)]">
+                  {miner?.rewardsOre ? gramsToOre(miner.rewardsOre).toFixed(2) : '0.00'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-black/60 uppercase">Refined $QUEST:</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)]">
+                  {miner?.refinedOre ? gramsToOre(miner.refinedOre).toFixed(2) : '0.00'}
+                </span>
+              </div>
+            </div>
+            {miner && (miner.rewardsSol > 0n || miner.rewardsOre > 0n) && (
+              <div className="mt-3 pt-3 border-t border-black/20">
+                <GlossyButton
+                  onClick={handleClaimAll}
+                  size="sm"
+                  variant="success"
+                  className="w-full !py-2 !text-xs"
+                  disabled={!publicKey}
+                >
+                  CLAIM ALL
+                </GlossyButton>
+              </div>
+            )}
+          </div>
+
+          {/* Estimated Round Rewards Summary */}
           <div className="grid grid-cols-2 gap-3">
             {/* SOL Rewards */}
-            <div className="bg-yellow-900/10 border border-yellow-500/30 rounded-lg p-3">
-              <div className="text-xs text-gray-400 mb-1">SOL Rewards</div>
-              <div className="text-lg font-bold text-yellow-400">
+            <div className="bg-white/20 border-2 border-[rgb(120,63,4)]/30 rounded-lg p-3">
+              <div className="text-[10px] font-black text-black/60 uppercase mb-1">SOL Rewards</div>
+              <div className="text-lg font-black text-[rgb(120,63,4)]">
                 {formatSolValue(estimatedSolRewards, 4)}
               </div>
               {motherloadeSolRewards > 0 && (
-                <div className="text-xs text-yellow-300 mt-1">
-                  +{formatSolValue(motherloadeSolRewards, 4)} 💎 Motherlode
+                <div className="text-[10px] text-black/60 mt-1 font-black uppercase">
+                  +{formatSolValue(motherloadeSolRewards, 4)} Motherlode
                 </div>
               )}
               {roundFinalized && !isWinner && (
-                <div className="text-xs text-gray-500 mt-1">Not eligible</div>
+                <div className="text-[10px] text-black/40 mt-1 font-black uppercase">Not eligible</div>
               )}
             </div>
 
             {/* QUEST Rewards */}
-            <div className="bg-orange-900/10 border border-orange-500/30 rounded-lg p-3">
-              <div className="text-xs text-gray-400 mb-1">QUEST Rewards</div>
-              <div className="text-lg font-bold text-orange-400">
+            <div className="bg-white/20 border-2 border-[rgb(120,63,4)]/30 rounded-lg p-3">
+              <div className="text-[10px] font-black text-black/60 uppercase mb-1">QUEST Rewards</div>
+              <div className="text-lg font-black text-[rgb(120,63,4)]">
                 {estimatedQuestRewards.toFixed(2)}
               </div>
               {motherlodeOreRewards > 0 && (
-                <div className="text-xs text-orange-300 mt-1">
-                  +{motherlodeOreRewards.toFixed(2)} 💎 Motherlode
+                <div className="text-[10px] text-black/60 mt-1 font-black uppercase">
+                  +{motherlodeOreRewards.toFixed(2)} Motherlode
                 </div>
               )}
               {roundFinalized && isWinner && (
-                <div className="text-xs text-green-400 mt-1">
+                <div className="text-[10px] text-[rgb(35,116,13)] mt-1 font-black uppercase">
                   {lotteryOutcome === 0 ? 'Split' : lotteryOutcome === 1 ? '50% Split' : '50% Split'}
                 </div>
               )}
@@ -304,21 +366,36 @@ export function RoundResults({ round, miner }: RoundResultsProps) {
           </div>
 
           {/* Your Deployment */}
-          <div className="bg-gray-900/50 border border-gray-600/50 rounded-lg p-3">
-            <div className="text-xs text-gray-400 mb-2">Your Deployment</div>
+          <div className="bg-black/10 border-2 border-black/20 rounded-lg p-3">
+            <div className="text-[10px] font-black text-black/60 uppercase mb-2">Your Deployment</div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-300">Total Deployed:</span>
-              <span className="font-bold text-white">{userTotalDeployed.toFixed(4)} SOL</span>
+              <span className="text-black/60 font-black uppercase">Total Deployed:</span>
+              <span className="font-black text-[rgb(120,63,4)]">{userTotalDeployed.toFixed(4)} SOL</span>
             </div>
             {roundFinalized && (
               <div className="flex items-center justify-between text-sm mt-1">
-                <span className="text-gray-300">On Winner:</span>
-                <span className={`font-bold ${isWinner ? 'text-green-400' : 'text-gray-500'}`}>
+                <span className="text-black/60 font-black uppercase">On Winner:</span>
+                <span className={`font-black ${isWinner ? 'text-[rgb(35,116,13)]' : 'text-black/40'}`}>
                   {userDeployedOnWinner.toFixed(4)} SOL
                 </span>
               </div>
             )}
           </div>
+
+          {/* Checkpoint Button */}
+          {miner && currentRound && miner.checkpointId < miner.roundId && miner.roundId < currentRound.id && (
+            <div className="pt-2">
+              <GlossyButton
+                onClick={handleCheckpoint}
+                size="sm"
+                variant="primary"
+                className="w-full !py-2 !text-xs"
+                disabled={!publicKey}
+              >
+                CHECKPOINT
+              </GlossyButton>
+            </div>
+          )}
         </div>
       )}
     </div>

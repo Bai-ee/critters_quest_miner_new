@@ -12,6 +12,7 @@ import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { useDeployToSquares, useAutomation } from '@/lib/instrucionsHooks';
+import { lamportsToSol } from '@/lib/accounts';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect, useRef } from 'react';
 import { CALCULATIONS } from '@/lib/constants';
@@ -407,7 +408,18 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            <div className="relative">
+            {/* Next Round and Amount to Win - Placeholder */}
+            <div className="flex flex-col gap-1">
+              <div className="text-[8px] sm:text-[9px] font-black text-black uppercase leading-none">
+                Next Round: #{board?.roundId ? (BigInt(board.roundId) + 1n).toString() : '0'}
+              </div>
+              <div className="text-[8px] sm:text-[9px] font-black text-black uppercase leading-none">
+                To Win: {round?.totalWinnings ? lamportsToSol(round.totalWinnings).toFixed(4) : '0.0000'} SOL
+              </div>
+            </div>
+            
+            {/* QUEST Balance - Commented out */}
+            {/* <div className="relative">
               <img 
                 src="/img/quest_amount.png" 
                 alt="QUEST Balance Background" 
@@ -422,7 +434,7 @@ export default function Home() {
                   <AnimatedNumber value={Math.floor(tokenBalance).toString().padStart(5, '0')} />
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
         {board?.endSlot && currentSlot && (
