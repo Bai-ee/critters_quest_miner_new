@@ -711,8 +711,8 @@ export default function Home() {
               </div>
             </div>
             
-            {/* QUEST Balance - Commented out */}
-            {/* <div className="relative">
+            {/* QUEST Balance */}
+            <div className="relative">
               <img 
                 src="/img/quest_amount.png" 
                 alt="QUEST Balance Background" 
@@ -724,10 +724,10 @@ export default function Home() {
               />
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '21px' }}>
                 <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none mt-[3px]">
-                  <AnimatedNumber value={Math.floor(tokenBalance).toString().padStart(5, '0')} />
+                  <AnimatedNumber value={(tokenBalance || 1.34).toFixed(2).padStart(7, '0')} />
                 </div>
               </div>
-            </div> */}
+            </div>
           </div>
         </div>
         {board?.endSlot && currentSlot && (
@@ -868,7 +868,7 @@ export default function Home() {
 
         {/* Total Deployed Placeholder - Above miner tiles */}
         <div className="w-full max-w-[min(92vw,520px)] mx-auto relative z-30 mb-2" style={{ overflow: 'visible', marginTop: '-13px' }}>
-          <div className="bg-black/20 border border-black/30 rounded-lg px-4 py-2 flex items-center justify-between">
+          <div className="px-4 py-2 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">Total Deployed</span>
               <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
@@ -877,7 +877,10 @@ export default function Home() {
             </div>
             <div className="flex flex-col items-end">
               <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">Total You Deployed</span>
-              <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
+              <span className="text-sm font-black leading-none" style={{ 
+                color: '#00ff00',
+                textShadow: '0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00'
+              }}>
                 {miner ? (() => {
                   let total = 0;
                   for (let i = 0; i < 25; i++) {
@@ -892,13 +895,14 @@ export default function Home() {
 
         <div className="w-full max-w-[min(92vw,520px)] relative z-30" style={{ overflow: 'visible' }}>
           <div className="mt-0" style={{ overflow: 'visible' }}>
-            <Grid
-              round={round}
-              miner={miner}
-              currentSlot={currentSlot}
-              selectedSquares={selectedSquares}
-              toggleSquare={toggleSquare}
-            />
+              <Grid
+                round={round}
+                miner={miner}
+                currentSlot={currentSlot}
+                selectedSquares={selectedSquares}
+                toggleSquare={toggleSquare}
+                deployAmount={amount}
+              />
           </div>
           
           {/* Round Results Section - Below Mining Section */}
@@ -940,9 +944,8 @@ export default function Home() {
           <div className="flex flex-col items-start justify-center min-w-0">
             <span className="text-xs font-black text-black/60 leading-none">
               <span className="text-[8px]">x</span>
-              {selectedSquares.size}
+              {selectedSquares.size} TILES SELECTED
             </span>
-            <span className="text-[10px] font-black text-black/40 uppercase leading-none">Selected</span>
           </div>
 
           {/* Center: Manual/Auto Switch - Inset tab style with sliding indicator */}
@@ -954,16 +957,16 @@ export default function Home() {
               height: '32px',
             }}
           >
-            {/* Sliding indicator - Green gooey style when active */}
+            {/* Sliding indicator - Black for both manual and auto */}
             <div
               ref={switchIndicatorRef}
               className="absolute top-1 left-1 rounded-full"
               style={{
                 width: 'calc(50% - 4px)',
                 height: 'calc(100% - 8px)',
-                background: 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)',
-                border: '2px solid rgb(35,116,13)',
-                boxShadow: '0 2px 0 rgb(35,116,13)',
+                background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 50%, #1a1a1a 100%)',
+                border: '2px solid rgb(0,0,0)',
+                boxShadow: '0 2px 0 rgb(0,0,0)',
                 zIndex: 1,
                 transform: mode === 'manual' ? 'translateX(0)' : 'translateX(100%)',
               }}

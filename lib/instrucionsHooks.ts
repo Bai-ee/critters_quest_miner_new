@@ -12,6 +12,9 @@ import {
   createCheckpointInstruction,
   createClaimSolInstruction,
   createClaimOreInstruction,
+  createStakeDepositInstruction,
+  createStakeWithdrawInstruction,
+  createStakeClaimYieldInstruction,
 } from './instructions';
 import { fetchBoard, fetchMiner } from './accounts';
 import { bigIntToNumber } from './formatters';
@@ -328,4 +331,76 @@ export function useAutomation() {
   };
 
   return { setupAutomation, disableAutomation };
+}
+
+/**
+ * Hook for depositing QUEST tokens into staking
+ */
+export function useStakeDeposit() {
+  const { connection } = useConnection();
+  const { publicKey, sendTransaction } = useWallet();
+
+  const deposit = async (amount: number) => {
+    if (!publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    const amountGrams = BigInt(Math.floor(amount * 1e9));
+    const instruction = createStakeDepositInstruction(publicKey, amountGrams, publicKey);
+    const transaction = new Transaction().add(instruction);
+
+    const signature = await sendTransaction(transaction, connection);
+    await connection.confirmTransaction(signature, 'confirmed');
+    return signature;
+  };
+
+  return { deposit };
+}
+
+/**
+ * Hook for withdrawing QUEST tokens from staking
+ */
+export function useStakeWithdraw() {
+  const { connection } = useConnection();
+  const { publicKey, sendTransaction } = useWallet();
+
+  const withdraw = async (amount: number) => {
+    if (!publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    const amountGrams = BigInt(Math.floor(amount * 1e9));
+    const instruction = createStakeWithdrawInstruction(publicKey, amountGrams);
+    const transaction = new Transaction().add(instruction);
+
+    const signature = await sendTransaction(transaction, connection);
+    await connection.confirmTransaction(signature, 'confirmed');
+    return signature;
+  };
+
+  return { withdraw };
+}
+
+/**
+ * Hook for claiming SOL yield from staking
+ */
+export function useStakeClaimYield() {
+  const { connection } = useConnection();
+  const { publicKey, sendTransaction } = useWallet();
+
+  const claimYield = async (amount: number) => {
+    if (!publicKey) {
+      throw new Error('Wallet not connected');
+    }
+
+    const amountLamports = BigInt(Math.floor(amount * 1e9));
+    const instruction = createStakeClaimYieldInstruction(publicKey, amountLamports);
+    const transaction = new Transaction().add(instruction);
+
+    const signature = await sendTransaction(transaction, connection);
+    await connection.confirmTransaction(signature, 'confirmed');
+    return signature;
+  };
+
+  return { claimYield };
 }

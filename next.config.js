@@ -1,14 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Exclude the critters_quest_miner-main folder from build
-  webpack: (config) => {
-    config.watchOptions = {
-      ...config.watchOptions,
-      ignored: ['**/critters_quest_miner-main/**'],
-    };
-    return config;
-  },
+  // Turbopack config to exclude the critters_quest_miner-main folder
+  turbopack: {},
 };
 
 module.exports = nextConfig;

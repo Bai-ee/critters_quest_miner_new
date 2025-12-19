@@ -11,6 +11,7 @@ interface GridProps {
   currentSlot: bigint;
   selectedSquares: Set<number>;
   toggleSquare: (index: number) => void;
+  deployAmount?: number;
 }
 
 // List of available mining item images for the back of the cards
@@ -25,7 +26,7 @@ const MINING_ITEMS = [
   'Seep.png', 'Shimmerwood.png'
 ];
 
-export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare }: GridProps) {
+export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare, deployAmount = 0 }: GridProps) {
   const { publicKey } = useWallet();
   const [showWinner, setShowWinner] = useState(false);
   const [winnerSquareIndex, setWinnerSquareIndex] = useState<number | null>(null);
@@ -281,7 +282,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare 
                   )}
 
                   {/* Center Item Image */}
-                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden" style={{ transform: 'translateY(-5px)' }}>
                     <img 
                       src="/img/treasure_chest_closed.gif"
                       alt="Treasure Chest"
@@ -340,11 +341,13 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare 
                   </div>
 
                   {/* Bottom Info Row (SOL values - moved up inside bezel) */}
-                  <div className="absolute bottom-[13cqw] left-0 right-0 w-full flex flex-col justify-center items-center px-1 gap-[1cqw]">
-                    {/* User's SOL value (on top) */}
-                    <div className="text-[9cqw] font-bold text-black whitespace-nowrap bg-white/50 px-[2cqw] rounded">
-                      {userSol.toFixed(4)} SOL
-                    </div>
+                  <div className="absolute bottom-[13cqw] left-0 right-0 w-full flex flex-col justify-start items-start px-1 gap-[1cqw]">
+                    {/* User's SOL value (on top) - only show if tile is selected, with preview of deploy amount */}
+                    {isChosen && (
+                      <div className="text-[22cqw] font-bold text-white whitespace-nowrap bg-white/50 px-[2cqw] rounded" style={{ textAlign: 'left' }}>
+                        {(userSol + (isSelected ? deployAmount : 0)).toString()}
+                      </div>
+                    )}
                     {/* Total SOL value (below) */}
                     <div className="text-[15cqw] font-bold text-black whitespace-nowrap bg-white/40 px-[2cqw] rounded">
                       {sol.toFixed(4)} SOL

@@ -29,6 +29,7 @@ const SEEDS = {
   TREASURY: Buffer.from('treasury'),
   ROUND: Buffer.from('round'),
   BOARD: Buffer.from('board'),
+  STAKE: Buffer.from('stake'),
 } as const;
 
 /**
@@ -40,6 +41,9 @@ const DISCRIMINATORS = {
   CHECKPOINT: 2,
   CLAIM_SOL: 3,
   CLAIM_ORE: 4,
+  STAKE_DEPOSIT: 10,
+  STAKE_WITHDRAW: 11,
+  STAKE_CLAIM_YIELD: 12,
 } as const;
 
 /**
@@ -61,6 +65,18 @@ export function getAutomationPDA(authority: PublicKey): PublicKey {
 export function getMinerPDA(authority: PublicKey): PublicKey {
   const [pda] = PublicKey.findProgramAddressSync(
     [SEEDS.MINER, authority.toBuffer()],
+    new PublicKey(CONSTANTS.PROGRAM_ID)
+  );
+  return pda;
+}
+
+/**
+ * Get the Stake PDA for a given authority
+ * Seeds: ["stake", authority]
+ */
+export function getStakePDA(authority: PublicKey): PublicKey {
+  const [pda] = PublicKey.findProgramAddressSync(
+    [SEEDS.STAKE, authority.toBuffer()],
     new PublicKey(CONSTANTS.PROGRAM_ID)
   );
   return pda;
@@ -483,4 +499,145 @@ export async function sendClaimOreTransaction(
   transaction.feePayer = signer;
 
   return 'Transaction created - needs wallet signature';
+}
+
+/**
+ * Helper function to write a u64 value in little-endian format
+ */
+function writeU64LE(data: Buffer, value: bigint, offset: number) {
+  const low = Number(value & 0xffffffffn);
+  const high = Number((value >> 32n) & 0xffffffffn);
+  data.writeUInt32LE(low, offset);
+  data.writeUInt32LE(high, offset + 4);
+}
+
+/**
+ * Create a Stake Deposit instruction
+ *
+ * Deposits QUEST tokens into the staking pool.
+ *
+ * @param signer - The transaction signer
+ * @param amount - Amount of QUEST tokens to stake (in grams/lamports)
+ * @param payer - The payer for account creation (defaults to signer)
+ * @returns TransactionInstruction
+ */
+export function createStakeDepositInstruction(
+  signer: PublicKey,
+  amount: bigint,
+  payer: PublicKey = signer
+): TransactionInstruction {
+  const stakePDA = getStakePDA(signer);
+  const treasuryPDA = getTreasuryPDA();
+
+  const senderTokenAccount = getAssociatedTokenAddress(
+    signer,
+    PROGRAM_ADDRESSES.ORE_MINT
+  );
+  const stakeTokenAccount = getAssociatedTokenAddress(
+    stakePDA,
+    PROGRAM_ADDRESSES.ORE_MINT
+  );
+  const data = Buffer.alloc(1 + 8);
+  data.writeUInt8(DISCRIMINATORS.STAKE_DEPOSIT, 0);
+  writeU64LE(data, amount, 1);
+
+  return new TransactionInstruction({
+    keys: [
+      { pubkey: signer, isSigner: true, isWritable: true },
+      { pubkey: payer, isSigner: true, isWritable: true },
+      { pubkey: PROGRAM_ADDRESSES.ORE_MINT, isSigner: false, isWritable: false },
+      { pubkey: senderTokenAccount, isSigner: false, isWritable: true },
+      { pubkey: stakePDA, isSigner: false, isWritable: true },
+      { pubkey: stakeTokenAccount, isSigner: false, isWritable: true },
+      { pubkey: treasuryPDA, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: PROGRAM_ADDRESSES.TOKEN_PROGRAM, isSigner: false, isWritable: false },
+      {
+        pubkey: PROGRAM_ADDRESSES.ASSOCIATED_TOKEN_PROGRAM,
+        isSigner: false,
+        isWritable: false,
+      },
+    ],
+    programId: new PublicKey(CONSTANTS.PROGRAM_ID),
+    data,
+  });
+}
+
+/**
+ * Create a Stake Withdraw instruction
+ *
+ * Withdraws QUEST tokens from the staking pool.
+ *
+ * @param signer - The transaction signer
+ * @param amount - Amount of QUEST tokens to withdraw (in grams/lamports)
+ * @returns TransactionInstruction
+ */
+export function createStakeWithdrawInstruction(
+  signer: PublicKey,
+  amount: bigint
+): TransactionInstruction {
+  const stakePDA = getStakePDA(signer);
+  const treasuryPDA = getTreasuryPDA();
+
+  const recipientTokenAccount = getAssociatedTokenAddress(
+    signer,
+    PROGRAM_ADDRESSES.ORE_MINT
+  );
+  const stakeTokenAccount = getAssociatedTokenAddress(
+    stakePDA,
+    PROGRAM_ADDRESSES.ORE_MINT
+  );
+  const data = Buffer.alloc(1 + 8);
+  data.writeUInt8(DISCRIMINATORS.STAKE_WITHDRAW, 0);
+  writeU64LE(data, amount, 1);
+
+  return new TransactionInstruction({
+    keys: [
+      { pubkey: signer, isSigner: true, isWritable: true },
+      { pubkey: PROGRAM_ADDRESSES.ORE_MINT, isSigner: false, isWritable: false },
+      { pubkey: recipientTokenAccount, isSigner: false, isWritable: true },
+      { pubkey: stakePDA, isSigner: false, isWritable: true },
+      { pubkey: stakeTokenAccount, isSigner: false, isWritable: true },
+      { pubkey: treasuryPDA, isSigner: false, isWritable: true },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: PROGRAM_ADDRESSES.TOKEN_PROGRAM, isSigner: false, isWritable: false },
+      {
+        pubkey: PROGRAM_ADDRESSES.ASSOCIATED_TOKEN_PROGRAM,
+        isSigner: false,
+        isWritable: false,
+      },
+    ],
+    programId: new PublicKey(CONSTANTS.PROGRAM_ID),
+    data,
+  });
+}
+
+/**
+ * Create a Stake Claim Yield instruction
+ *
+ * Claims SOL yield rewards from staking.
+ *
+ * @param signer - The transaction signer
+ * @param amount - Amount of SOL to claim (in lamports)
+ * @returns TransactionInstruction
+ */
+export function createStakeClaimYieldInstruction(
+  signer: PublicKey,
+  amount: bigint
+): TransactionInstruction {
+  const stakePDA = getStakePDA(signer);
+  const treasuryPDA = getTreasuryPDA();
+  const data = Buffer.alloc(1 + 8);
+  data.writeUInt8(DISCRIMINATORS.STAKE_CLAIM_YIELD, 0);
+  writeU64LE(data, amount, 1);
+
+  return new TransactionInstruction({
+    keys: [
+      { pubkey: signer, isSigner: true, isWritable: true },
+      { pubkey: stakePDA, isSigner: false, isWritable: true },
+      { pubkey: treasuryPDA, isSigner: false, isWritable: true },
+    ],
+    programId: new PublicKey(CONSTANTS.PROGRAM_ID),
+    data,
+  });
 }

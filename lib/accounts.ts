@@ -520,6 +520,41 @@ export function getStakePDA(authority: PublicKey): PublicKey {
 }
 
 /**
+ * Helper: Decode a Q64.64 fixed-point number from 16 bytes
+ */
+function decodeNumericQ64_64LE(bytes: Uint8Array): bigint {
+  if (bytes.length !== 16) {
+    throw new Error(`Invalid Numeric length: ${bytes.length}`);
+  }
+  let v = 0n;
+  for (let i = 0; i < 16; i++) {
+    v |= BigInt(bytes[i] ?? 0) << (8n * BigInt(i));
+  }
+  return v;
+}
+
+const Q64 = 1n << 64n;
+
+/**
+ * Compute claimable lamports from staking rewards
+ * @param stake - The user's Stake account
+ * @param treasury - The Treasury account
+ * @returns Total claimable lamports (including pending rewards)
+ */
+export function computeStakeClaimableLamports(stake: Stake, treasury: Treasury): bigint {
+  const stakeFactor = decodeNumericQ64_64LE(stake.rewardsFactor);
+  const treasuryFactor = decodeNumericQ64_64LE(treasury.stakeRewardsFactor);
+
+  const diff = treasuryFactor - stakeFactor;
+  if (diff <= 0n) {
+    return stake.rewards;
+  }
+
+  const pending = (diff * stake.balance) / Q64;
+  return stake.rewards + pending;
+}
+
+/**
  * Fetch and deserialize the Stake account for a given authority
  * Structure matches: api/src/state/stake.rs
  *
