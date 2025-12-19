@@ -339,11 +339,17 @@ Subtle hover effect with warm cream text
 ```
 Uses: `--grid-tile-bg`, `--grid-tile-border`, `--grid-tile-shadow` with warm brown gradient
 
-**Selected Square:**
+**Selected/Mined Square (December 2024 Update):**
 ```tsx
 <div className="cq-slot-tile cq-slot-tile-selected">
+  {/* Green glossy bubble replaces miner count */}
+</div>
 ```
-Pulsing gold glow using `--grid-hover-glow` and `--gold` accent
+- Green gradient: `linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)`
+- Border: `rgb(35,116,13)`
+- White text with drop shadow
+- Glossy overlay effects (top highlight, bottom subtle highlight)
+- Shake animation when timer is running: `animate-shake` (0.3s ease-in-out infinite)
 
 **Winner Square:**
 ```tsx
@@ -357,17 +363,40 @@ Strong gold glow using `--grid-win-glow` and `--winner-glow` with sparkle animat
 ```
 Same base styling, appears darker due to empty content
 
-### Jackpot Strip Pattern
+### Jackpot Card Pattern (December 2024 Update)
 
+**GRAND Card:**
 ```tsx
-<div className="cq-jackpot-strip px-3 py-2">
-  <div className="flex items-center justify-between">
-    <span className="text-xs text-gray-400 font-medium uppercase">LABEL</span>
-    <span className="cq-jackpot-number text-sm">VALUE</span>
-  </div>
+<JackpotTierCard
+  tier="GRAND"
+  ore={data.grand.ore}
+  sol={data.grand.sol}
+  odds="1/2500"
+  bgImage="/img/grand_award_bg.png"
+  labelImage="/img/grand_winner_label.png"
+  scale={1}
+/>
+```
+- Full-width, centered "QUEST - ODDS - SOL" layout
+- Large values with `coin.png` and `solana_logo.png` images next to values
+- Height: 72px (non-scaled)
+- Gradient: `linear-gradient(180deg, #4A002E 0%, #FF00A0 50%, #4A002E 100%)`
+- Gold bezel: `linear-gradient(180deg, #FFD700 0%, #B8860B 100%)`
+
+**MAJOR/MINOR Cards:**
+```tsx
+<div className="flex flex-row w-full gap-[2px]">
+  <JackpotTierCard tier="MAJOR" scale={0.9} />
+  <JackpotTierCard tier="MINOR" scale={0.9} />
 </div>
 ```
-Uses warm gold gradient background with animated shine effect and gold text glow
+- Side-by-side (50% width each, 2px gap)
+- Scaled down (0.9), height: 40px
+- Smaller text (1/4 smaller than GRAND)
+- Two-line odds format
+- Small QUEST/SOL logos next to values
+- MAJOR gradient: `linear-gradient(180deg, #0A004A 0%, #0077FF 50%, #0A004A 100%)`
+- MINOR gradient: `linear-gradient(180deg, #002E1A 0%, #00A364 50%, #002E1A 100%)`
 
 ### Gradient Backgrounds
 

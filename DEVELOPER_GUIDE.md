@@ -297,8 +297,16 @@ See `lib/animations/README.md` for complete documentation and examples.
 
 **Key Props:**
 - `round: Round` - Grid data (read-only)
+- `miner?: Miner | null` - User's miner account (for on-chain state)
+- `currentSlot: bigint` - Current slot (for timer detection)
 - `selectedSquares: Set<number>` - Selection state
 - `toggleSquare: (index: number) => void` - Selection handler
+
+**Recent Changes (December 2024):**
+- Selection state persistence: Cards show green bubble if selected OR already mined on-chain
+- Green glossy indicator bubble replaces miner count when chosen (matches `GlossyButton` success variant)
+- Shake animation when card is chosen AND timer is running
+- Timer detection: Checks if round is finalized (has `slotHash`) to determine if timer is running
 
 #### `components/MainControl.tsx` - Deploy/Claim Controls
 **Your Role:** Button styling, form layouts, validation messages, loading states
@@ -316,6 +324,12 @@ See `lib/animations/README.md` for complete documentation and examples.
 **Your Role:** Visual countdown display, progress bar, styling
 **Don't Touch:** Time calculation logic (but you can adjust display format)
 
+**Recent Changes (December 2024):**
+- Restored to glossy green capsule style
+- Dynamic progress bar with color changes (green → orange → red)
+- Stopwatch image with ticking animation
+- Glossy overlay matching button style
+
 #### `components/Stats.tsx` - Round Statistics
 **Your Role:** Card styling, layout, visual hierarchy
 **Don't Touch:** Calculation logic
@@ -325,8 +339,35 @@ See `lib/animations/README.md` for complete documentation and examples.
 **Don't Touch:** Reward calculation logic (lines 15-119)
 
 #### `components/Motherlode.tsx` - Jackpot Display
-**Your Role:** Tier card styling, gradients, animations
+**Your Role:** Tier card styling, gradients, animations, layout spacing
 **Don't Touch:** Data fetching (uses `useRoundData` hook)
+
+**Recent Changes (December 2024):**
+- GRAND card: Full-width, centered "QUEST - ODDS - SOL" layout with images
+- MAJOR/MINOR cards: Side-by-side (50% width each, 2px gap), scaled down
+- Container spacing: `marginTop: '-82px'` for Motherlode, `marginTop: '-12px'` for MAJOR/MINOR
+- All containers use `overflow: visible` to prevent clipping
+
+#### `components/JackpotTierCard.tsx` - Individual Jackpot Card
+**Your Role:** Card styling, responsive scaling, layout, icon placement
+**Don't Touch:** Data calculation (receives props from parent)
+
+**Recent Changes (December 2024):**
+- Centered "Asset - Odds - Asset" layout for all tiers
+- GRAND: Large values with QUEST/SOL images next to values
+- MAJOR/MINOR: Scaled down (0.9), smaller text, two-line odds format
+- Tier-specific neon gradients with gold bezel
+- Glossy overlay effects
+
+#### `components/WalletButton.tsx` - Wallet Connection
+**Your Role:** Button styling, modal UI, user experience
+**Don't Touch:** Wallet adapter integration (uses `@solana/wallet-adapter-react`)
+
+**Recent Changes (December 2024):**
+- Custom image-based button UI
+- Custom modal for connected wallet options (Change Wallet, Disconnect)
+- Uses hidden `WalletMultiButton` for wallet selection
+- Modal z-index set to `9999` for visibility
 
 #### `components/RoundsTable.tsx` - History Table
 **Your Role:** Table styling, responsive design, tab UI
@@ -765,6 +806,37 @@ A: Yes, but only UI features. Blockchain features require program changes.
 
 ---
 
-**Last Updated:** 2024
+---
+
+## 🎨 Recent UI Enhancements (December 2024)
+
+### Wallet Connection System
+- Custom wallet button with image-based UI
+- Custom modal for connected wallet options
+- Uses hidden `WalletMultiButton` for wallet selection
+- Modal z-index: `9999` for visibility
+
+### Jackpot Cards Layout
+- GRAND: Full-width, centered "QUEST - ODDS - SOL" layout with images
+- MAJOR/MINOR: Side-by-side (50% width each, 2px gap), scaled down
+- Tier-specific neon gradients with gold bezel
+- Responsive scaling using container queries
+
+### Mining Grid Selection State
+- Green glossy indicator bubble for selected/mined cards
+- Selection state persists during and after deployment
+- Shake animation when chosen and timer is running
+- Unified state: UI selection OR on-chain deployment
+
+### Glossy Button Theme
+- Restored glossy button component with three variants
+- GSAP-powered hover animations
+- Used throughout UI for consistent styling
+
+See `FRONTEND_CONTEXT.md` for complete details on recent changes.
+
+---
+
+**Last Updated:** December 2024
 **Maintained By:** Development Team
 

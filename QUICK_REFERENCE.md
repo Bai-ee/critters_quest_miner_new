@@ -105,9 +105,13 @@ const { publicKey, connected } = useWallet();
 ```tsx
 import { useButtonAnimation } from '@/hooks/useAnimation';
 import { Modal } from '@/components/Modal';
+import { GlossyButton } from '@/components/GlossyButton';
 
 // Button with animations
 const { buttonRef, handleMouseEnter, handleMouseLeave } = useButtonAnimation();
+
+// Glossy Button (December 2024)
+<GlossyButton variant="success" size="md">Button Text</GlossyButton>
 
 // Modal
 <Modal isOpen={isOpen} onClose={onClose} title="Title">Content</Modal>
@@ -122,10 +126,17 @@ import { playClickSound, playSuccessSound } from '@/lib/animations';
 playClickSound(); // Play sound
 ```
 
+### Shake Animation (December 2024)
+```tsx
+// Applied to chosen cards when timer is running
+className={`${isChosen && isTimerRunning ? 'animate-shake' : ''}`}
+```
+
 ## 📚 Full Docs
 
-- **Developer Guide**: `DEVELOPER_GUIDE.md`
-- **Style Guide**: `STYLE_GUIDE.md`
-- **Design Context**: `DESIGN_CONTEXT.md`
-- **Animation System**: `lib/animations/README.md`
+- **Frontend Context**: `FRONTEND_CONTEXT.md` ⭐ **START HERE** - Complete overview of recent changes
+- **Developer Guide**: `DEVELOPER_GUIDE.md` - Architecture and development guide
+- **Style Guide**: `STYLE_GUIDE.md` - Detailed styling patterns
+- **Design Context**: `DESIGN_CONTEXT.md` - Design philosophy and goals
+- **Animation System**: `lib/animations/README.md` - Animation documentation
 
