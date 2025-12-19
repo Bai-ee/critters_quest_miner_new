@@ -36,3 +36,7 @@ scripts/automation-keypair.json
 
 # cursor
 .cursor/
+
+# temporary/unused directories
+critters_quest_miner-main/
+critters_quest_miner-main-updated-logic.zip
