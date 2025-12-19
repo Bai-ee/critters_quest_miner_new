@@ -9,6 +9,7 @@
 6. [Style Guide](#style-guide)
 7. [What NOT to Touch](#what-not-to-touch)
 8. [Common Patterns](#common-patterns)
+9. [Recent Updates & Changelog](#recent-updates--changelog)
 
 ---
 
@@ -837,6 +838,19 @@ See `FRONTEND_CONTEXT.md` for complete details on recent changes.
 
 ---
 
-**Last Updated:** December 2024
+## 📝 Recent Updates & Changelog
+
+For detailed information about recent code updates, UI changes, bug fixes, and deployment history, see **[CHANGELOG.md](./CHANGELOG.md)**.
+
+The changelog includes:
+- UI/UX improvements and styling updates
+- Component modifications and new features
+- Animation enhancements
+- Bug fixes and performance improvements
+- Deployment information
+
+---
+
+**Last Updated:** December 19, 2025
 **Maintained By:** Development Team
 
