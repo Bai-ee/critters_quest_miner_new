@@ -1,7 +1,6 @@
 'use client';
 
 import { Grid } from '@/components/Grid';
-import { MainControl } from '@/components/MainControl';
 import { Motherlode } from '@/components/Motherlode';
 import { Timer } from '@/components/Timer';
 import { WalletButton } from '@/components/WalletButton';
@@ -12,11 +11,12 @@ import { HowTo } from '@/components/HowTo';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
-import { useDeployToSquares } from '@/lib/instrucionsHooks';
+import { useDeployToSquares, useAutomation } from '@/lib/instrucionsHooks';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect, useRef } from 'react';
 import { CALCULATIONS } from '@/lib/constants';
 import toast from 'react-hot-toast';
+import gsap from 'gsap';
 
 
 export default function Home() {
@@ -24,10 +24,10 @@ export default function Home() {
   const { connected, publicKey } = useWallet();
   const { balance: solBalance } = useSolBalance();
   const { deploy } = useDeployToSquares();
+  const { setupAutomation, disableAutomation } = useAutomation();
 
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [lastShownRoundId, setLastShownRoundId] = useState<string | null>(null);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const roundResultsRef = useRef<HTMLDivElement>(null);
   const hasAutoScrolledRef = useRef(false);
 
@@ -85,6 +85,17 @@ export default function Home() {
   // Shared state for square selection
   const [selectedSquares, setSelectedSquares] = useState<Set<number>>(new Set());
   const [amount, setAmount] = useState<number>(0.01);
+  const [rounds, setRounds] = useState<number>(10);
+  const [mode, setMode] = useState<'manual' | 'auto'>('manual');
+  const [automationLoading, setAutomationLoading] = useState(false);
+  const switchContainerRef = useRef<HTMLDivElement>(null);
+  const switchIndicatorRef = useRef<HTMLDivElement>(null);
+  const previousModeRef = useRef<'manual' | 'auto' | null>(null);
+  const mainButtonRef = useRef<HTMLDivElement>(null);
+  
+  // Automation settings
+  const executorFee = 0.001;
+  const executorAddress = '3ukWjMXrQnNmuiJqCszcnftBhZuuYfmsxgYMmjeysn4x';
 
   const toggleSquare = (index: number) => {
     const newSelected = new Set(selectedSquares);
@@ -123,12 +134,133 @@ export default function Home() {
     setSelectedSquares(new Set(randomSquares));
   }
 
-  const incrementAmount = () => {
-    setAmount(prev => +(prev + 0.001).toFixed(3));
+  // Commented out for now - may return to this later
+  // const incrementAmount = () => {
+  //   setAmount(prev => +(prev + 0.001).toFixed(3));
+  // };
+
+  // const decrementAmount = () => {
+  //   setAmount(prev => Math.max(0.001, +(prev - 0.001).toFixed(3)));
+  // };
+
+  // Increment/decrement rounds for auto play
+  const incrementRounds = () => {
+    setRounds(prev => prev + 1);
   };
 
-  const decrementAmount = () => {
-    setAmount(prev => Math.max(0.001, +(prev - 0.001).toFixed(3)));
+  const decrementRounds = () => {
+    setRounds(prev => Math.max(1, prev - 1));
+  };
+
+  // Set rounds to 2 when auto is selected
+  useEffect(() => {
+    if (mode === 'auto') {
+      setRounds(2);
+    }
+  }, [mode]);
+
+  // Set mode to auto if automation exists
+  useEffect(() => {
+    if (automation) {
+      setMode('auto');
+    }
+  }, [automation]);
+
+  // Animate switch indicator sliding left to right (smooth ease, no bounce)
+  useEffect(() => {
+    if (switchIndicatorRef.current && switchContainerRef.current) {
+      const isManual = mode === 'manual';
+      const containerWidth = switchContainerRef.current.offsetWidth;
+      const indicatorWidth = containerWidth / 2;
+      const targetX = isManual ? 0 : indicatorWidth;
+
+      // Animate the indicator sliding with smooth ease
+      gsap.to(switchIndicatorRef.current, {
+        x: targetX,
+        duration: 0.3,
+        ease: 'power2.inOut',
+      });
+    }
+
+    // Animate main button bounce when mode changes
+    if (previousModeRef.current !== null && previousModeRef.current !== mode && mainButtonRef.current) {
+      const button = mainButtonRef.current.querySelector('button');
+      if (button) {
+        // Bounce effect: scale down then up with bounce
+        gsap.to(button, {
+          scale: 0.9,
+          duration: 0.15,
+          ease: 'power2.in',
+          onComplete: () => {
+            gsap.to(button, {
+              scale: 1,
+              duration: 0.3,
+              ease: 'back.out(1.7)',
+            });
+          }
+        });
+      }
+    }
+
+    previousModeRef.current = mode;
+  }, [mode]);
+
+  const handleSetupAutomation = async () => {
+    if (!publicKey) {
+      toast.error('Please connect your wallet');
+      return;
+    }
+
+    if (selectedSquares.size === 0) {
+      toast.error('Please select at least one square');
+      return;
+    }
+
+    try {
+      setAutomationLoading(true);
+
+      // Calculate deposit based on rounds
+      // Cost per round = (amount per square × number of squares) + executor fee
+      const squareCount = selectedSquares.size;
+      const costPerRound = (amount * squareCount) + executorFee;
+      const depositAmount = costPerRound * rounds;
+
+      // Enable automation - executor will handle deployments
+      const signature = await setupAutomation(
+        executorAddress,
+        amount,
+        depositAmount,
+        executorFee,
+        'preferred',
+        Array.from(selectedSquares)
+      );
+
+      toast.success(`Automation enabled! ${signature.slice(0, 8)}...${signature.slice(-8)}`);
+      clearSelection(); // Clear selection after successful setup
+    } catch (error) {
+      console.error('Setup automation failed:', error);
+      toast.error(`Setup failed: ${error}`);
+    } finally {
+      setAutomationLoading(false);
+    }
+  };
+
+  const handleDisableAutomation = async () => {
+    if (!publicKey) {
+      toast.error('Please connect your wallet');
+      return;
+    }
+
+    try {
+      setAutomationLoading(true);
+      const signature = await disableAutomation();
+      toast.success(`Automation disabled! ${signature.slice(0, 8)}...${signature.slice(-8)}`);
+    } catch (error) {
+      console.error('Disable automation failed:', error);
+      toast.error(`Disable failed: ${error}`);
+    } finally {
+      setAutomationLoading(false);
+    }
   };
 
   const handleDeploy = async () => {
@@ -228,13 +360,6 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-cq-bg-0 text-white flex flex-col" style={{ overflowX: 'hidden' }}>
-      {/* Drawer Backdrop for Mobile */}
-      {isDrawerOpen && (
-        <div 
-          className="fixed inset-0 z-30 sm:hidden bg-black/20 backdrop-blur-[2px]"
-          onClick={() => setIsDrawerOpen(false)}
-        />
-      )}
 
       {/* Background layers */}
       <div className="fixed inset-0 -z-10">
@@ -447,15 +572,15 @@ export default function Home() {
             />
           </div>
           
-          <HowTo />
-          
-          {/* Round Results Section - Under Mining Section */}
+          {/* Round Results Section - Below Mining Section */}
           <div ref={roundResultsRef} className="mt-6">
             <RoundResults 
               round={previousRound || round} 
               miner={miner} 
             />
           </div>
+          
+          <HowTo />
         </div>
       </div>
 
@@ -471,26 +596,83 @@ export default function Home() {
           bottom: 0,
         }}
       >
-        {/* Drawer Handle Area - Always visible at top */}
+        {/* Info Bar - Always visible at top */}
         <div 
-          className="w-full h-[48px] grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 cursor-pointer border-b border-black/10 flex-none"
-          onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+          className="w-full h-[48px] grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 border-b border-black/10 flex-none"
         >
           {/* Left: Selected Info */}
-          <div className="flex items-center gap-1.5 min-w-0 mt-[10px] justify-start">
-            <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Selected:</span>
-            <span className="text-xs font-black text-black/60 leading-none">{selectedSquares.size}</span>
-          </div>
-
-          <div className="flex flex-col items-center justify-center px-4">
-            <div className="w-12 h-1.5 bg-black/20 rounded-full mb-1"></div>
-            <span className="text-[10px] font-black text-black/40 uppercase tracking-[0.2em] whitespace-nowrap">
-              {isDrawerOpen ? 'CLOSE CONTROLS' : 'OPEN CONTROLS'}
+          <div className="flex items-center gap-1.5 min-w-0 justify-start">
+            <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">
+              <span className="text-[8px]">x</span>
+              <span className="text-xs font-black text-black/60 leading-none">{selectedSquares.size}</span>
+              <span> Selected</span>
             </span>
           </div>
 
-          {/* Right: Round Info */}
-          <div className="flex items-center gap-1.5 min-w-0 mt-[10px] justify-end">
+          {/* Center: Manual/Auto Switch - Inset tab style with sliding indicator */}
+          <div 
+            ref={switchContainerRef}
+            className="relative flex items-center bg-black/20 rounded-full p-1"
+            style={{
+              minWidth: '140px',
+              height: '32px',
+            }}
+          >
+            {/* Sliding indicator - Green gooey style when active */}
+            <div
+              ref={switchIndicatorRef}
+              className="absolute top-1 left-1 rounded-full"
+              style={{
+                width: 'calc(50% - 4px)',
+                height: 'calc(100% - 8px)',
+                background: 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)',
+                border: '2px solid rgb(35,116,13)',
+                boxShadow: '0 2px 0 rgb(35,116,13)',
+                zIndex: 1,
+                transform: mode === 'manual' ? 'translateX(0)' : 'translateX(100%)',
+              }}
+            >
+              {/* Glossy overlay */}
+              <div 
+                className="absolute top-1 left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
+                style={{ filter: 'blur(1px)' }}
+              />
+              <div 
+                className="absolute bottom-1.5 left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
+                style={{ filter: 'blur(2px)' }}
+              />
+            </div>
+
+            {/* Text labels */}
+            <button
+              onClick={() => {
+                if (!automation) {
+                  setMode('manual');
+                }
+              }}
+              className="relative z-10 flex-1 h-full flex items-center justify-center text-[11px] sm:text-[13px] font-black uppercase transition-colors duration-300 rounded-full"
+              style={{
+                color: mode === 'manual' ? '#ffffff' : 'rgba(0,0,0,0.4)',
+                textShadow: mode === 'manual' ? '0 2px 2px rgba(0,0,0,0.8)' : 'none',
+              }}
+              disabled={!!automation}
+            >
+              MANUAL
+            </button>
+            <button
+              onClick={() => setMode('auto')}
+              className="relative z-10 flex-1 h-full flex items-center justify-center text-[11px] sm:text-[13px] font-black uppercase transition-colors duration-300 rounded-full"
+              style={{
+                color: mode === 'auto' ? '#ffffff' : 'rgba(0,0,0,0.4)',
+                textShadow: mode === 'auto' ? '0 2px 2px rgba(0,0,0,0.8)' : 'none',
+              }}
+            >
+              {mode === 'auto' ? 'AUTO' : 'AUTO MINE'}
+            </button>
+          </div>
+
+          {/* Right: Round Info - Back to current round */}
+          <div className="flex items-center gap-1.5 min-w-0 justify-end">
             <span className="text-[10px] font-black text-black/40 uppercase whitespace-nowrap">Round:</span>
             <span className="text-xs font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
           </div>
@@ -502,71 +684,124 @@ export default function Home() {
             selectedSquares.size > 0 ? 'h-[60px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
           }`}
         >
-          <div className="max-w-xl mx-auto grid grid-cols-[auto_1fr_auto] gap-2 sm:gap-4 items-center px-4 h-full">
-            {/* Left Side: Cost & Amt - Side by side */}
-            <div className="flex items-center justify-start gap-2 sm:gap-3 flex-none">
-              <div className="flex flex-col items-start justify-center flex-none">
-                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Cost</span>
-                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{(amount * selectedSquares.size).toFixed(3)}</span>
+          <div className="max-w-xl mx-auto relative flex items-center justify-center px-4 h-full">
+            {/* Left Side: Deploy Amount Input and Total */}
+            <div className="absolute left-4 flex items-center gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none">
+                  Deploy Amt:
+                </label>
+                <input
+                  type="number"
+                  step="0.001"
+                  min="0.001"
+                  value={amount}
+                  onChange={(e) => {
+                    const inputValue = e.target.value;
+                    // Allow empty string for editing
+                    if (inputValue === '') {
+                      setAmount(0);
+                      return;
+                    }
+                    const value = parseFloat(inputValue);
+                    if (!isNaN(value) && value >= 0) {
+                      setAmount(value);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate and set minimum on blur
+                    const value = parseFloat(e.target.value);
+                    if (isNaN(value) || value < 0.001) {
+                      setAmount(0.001);
+                    }
+                  }}
+                  className="text-sm font-black text-[rgb(120,63,4)] bg-white/20 border border-[rgb(120,63,4)]/30 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[rgb(120,63,4)]/50"
+                  style={{ width: '50px', borderRadius: '11px' }}
+                />
               </div>
-              <div className="flex flex-col items-start justify-center flex-none">
-                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Amt</span>
-                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">{amount}</span>
+              <div className="flex flex-col items-start justify-center">
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">Total</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
+                  {mode === 'manual' 
+                    ? (amount * selectedSquares.size).toFixed(3)
+                    : (((amount * selectedSquares.size) + executorFee) * rounds).toFixed(3)
+                  }
+                </span>
               </div>
             </div>
 
-            {/* Center: MINE Button */}
-            <div className="flex justify-center px-2">
-              <GlossyButton
-                onClick={handleDeploy}
-                size="md"
-                variant="success"
-                className="min-w-[110px] !py-1 !text-lg"
-              >
-                MINE
-              </GlossyButton>
+            {/* Center: MINE/AUTO MINE/CANCEL Button - Dynamic based on mode */}
+            <div className="flex justify-center" ref={mainButtonRef}>
+              {mode === 'manual' ? (
+                <GlossyButton
+                  onClick={handleDeploy}
+                  size="md"
+                  variant="success"
+                  className="!w-[110px] !py-1 !text-lg !min-h-[40px]"
+                  disabled={selectedSquares.size === 0 || automationLoading}
+                >
+                  MINE
+                </GlossyButton>
+              ) : automation ? (
+                <GlossyButton
+                  onClick={handleDisableAutomation}
+                  size="md"
+                  variant="danger"
+                  className="!w-[110px] !py-1 !text-base !min-h-[40px]"
+                  disabled={automationLoading}
+                >
+                  {automationLoading ? 'CANCELING...' : 'CANCEL'}
+                </GlossyButton>
+              ) : (
+                <GlossyButton
+                  onClick={handleSetupAutomation}
+                  size="md"
+                  variant="success"
+                  className="!w-[110px] !py-1 !text-xs whitespace-nowrap !min-h-[40px]"
+                  disabled={selectedSquares.size === 0 || automationLoading || solBalance < ((amount * selectedSquares.size) + executorFee) * rounds}
+                >
+                  {automationLoading ? 'ENABLING...' : 'AUTO MINE'}
+                </GlossyButton>
+              )}
             </div>
 
-            {/* Right Side: Increment Controls */}
-            <div className="flex items-center justify-end gap-2 flex-none">
-              <GlossyButton onClick={incrementAmount} size="icon" variant="success" className="!w-8 !h-8 !text-3xl">+</GlossyButton>
-              <GlossyButton onClick={decrementAmount} size="icon" variant="danger" className="!w-8 !h-8 !text-3xl">-</GlossyButton>
+            {/* Between MINE and + / -: ROUNDS Display */}
+            <div className="absolute right-[90px] flex flex-col items-start justify-center">
+              <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">ROUNDS</span>
+              <span className={`text-sm font-black leading-none ${mode === 'auto' ? 'text-[rgb(120,63,4)]' : 'text-[rgb(120,63,4)]/30'}`}>
+                {mode === 'auto' ? rounds.toString().padStart(2, '0') : '--'}
+              </span>
+            </div>
+
+            {/* Right Side: Increment Controls for Rounds */}
+            <div className={`absolute right-4 flex items-center justify-end gap-2 ${mode === 'manual' ? 'pointer-events-none' : ''}`}>
+              <div className={mode === 'manual' ? 'opacity-30' : 'opacity-100'}>
+                <GlossyButton 
+                  onClick={incrementRounds} 
+                  size="icon" 
+                  variant="success" 
+                  className="!w-6 !h-6 !text-xl"
+                  disabled={mode === 'manual'}
+                >
+                  +
+                </GlossyButton>
+              </div>
+              <div className={mode === 'manual' ? 'opacity-30' : 'opacity-100'}>
+                <GlossyButton 
+                  onClick={decrementRounds} 
+                  size="icon" 
+                  variant="danger" 
+                  className="!w-6 !h-6 !text-xl"
+                  disabled={mode === 'manual'}
+                >
+                  -
+                </GlossyButton>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Controls Drawer - Expands upward from above the bottom bar */}
-      <div 
-        className="fixed left-0 right-0 z-30 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out overflow-hidden"
-        style={{ 
-          backgroundColor: '#FFB84A',
-          boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          bottom: selectedSquares.size > 0 ? '128px' : '68px', // Position above the bottom bar (48px handle + 60px MINE bar + 20px padding)
-          height: isDrawerOpen 
-            ? `calc(100vh - ${selectedSquares.size > 0 ? '128px' : '68px'} - 100px)` // Account for bottom bar + top margin
-            : '0px',
-          maxHeight: isDrawerOpen 
-            ? `calc(100vh - ${selectedSquares.size > 0 ? '128px' : '68px'} - 100px)` 
-            : '0px',
-        }}
-      >
-        {/* Full Menu Content - Scrollable */}
-        <div className={`w-full h-full overflow-y-auto overflow-x-visible transition-opacity duration-300 ${isDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
-            <MainControl
-              round={round}
-              miner={miner}
-              selectedSquares={selectedSquares}
-              selectAll={selectAll}
-              clearSelection={clearSelection}
-              randomSelection={randomSelection}
-              solBalance={solBalance}
-              automation={automation}
-            />
-          </div>
-        </div>
-      </div>
 
     </main>
   );

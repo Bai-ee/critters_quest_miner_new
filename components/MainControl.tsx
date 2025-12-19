@@ -15,9 +15,11 @@ interface MainControlProps {
     randomSelection: () => void;
     solBalance: number;
     automation: Automation | null;
+    rounds?: number;
+    setRounds?: (rounds: number) => void;
 }
 
-export function MainControl({ round, miner, selectedSquares, selectAll, clearSelection, randomSelection, solBalance, automation }: MainControlProps) {
+export function MainControl({ round, miner, selectedSquares, selectAll, clearSelection, randomSelection, solBalance, automation, rounds: roundsProp, setRounds: setRoundsProp }: MainControlProps) {
     const { checkpoint } = useCheckpoint();
     const { deploy } = useDeployToSquares();
     const { claimSol } = useClaimSol();
@@ -32,9 +34,13 @@ export function MainControl({ round, miner, selectedSquares, selectAll, clearSel
     const { setupAutomation, disableAutomation } = useAutomation();
 
     const [mode, setMode] = useState<'manual' | 'auto'>('manual');
-    const [rounds, setRounds] = useState(10);
+    const [roundsState, setRoundsState] = useState(10);
     const [executorFee, setExecutorFee] = useState(0.001);
     const [executorAddress, setExecutorAddress] = useState('3ukWjMXrQnNmuiJqCszcnftBhZuuYfmsxgYMmjeysn4x');
+
+    // Use prop if provided, otherwise use internal state
+    const rounds = roundsProp !== undefined ? roundsProp : roundsState;
+    const setRounds = setRoundsProp || setRoundsState;
 
     // Set mode to auto if automation exists
     useEffect(() => {

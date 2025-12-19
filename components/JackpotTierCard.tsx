@@ -16,15 +16,15 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
   
   // Format numbers for display
   const formatQuest = (num: number) => {
-    // Format as whole numbers only, padded to 6 digits: 000000
-    return Math.floor(num).toString().padStart(6, '0');
+    // Format as whole numbers only, padded to 5 digits: 00000 (removed first 0)
+    return Math.floor(num).toString().padStart(5, '0');
   };
 
   const formatSol = (num: number) => {
-    // Format as 0000.00 (4 digits before decimal, 2 after)
+    // Format as 000.00 (3 digits before decimal, 2 after - removed first 0)
     const whole = Math.floor(num);
     const decimal = (num - whole).toFixed(2).slice(1); // Get .XX part
-    return whole.toString().padStart(4, '0') + decimal;
+    return whole.toString().padStart(3, '0') + decimal;
   };
 
   // Base dimensions that we scale manually to avoid transform gaps
@@ -73,19 +73,25 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
           className="w-full h-full relative overflow-visible flex items-center justify-center"
           style={{
             background: gradients[tier],
-            borderRadius: '8px',
+            borderRadius: '11px',
             boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
           }}
         >
           {/* Glossy Overlay */}
-          <div className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+          <div 
+            className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none"
+            style={{ 
+              borderTopLeftRadius: '10px',
+              borderTopRightRadius: '10px'
+            }}
+          />
 
           {/* Centered Content Layout: QUEST - SOL (with divider) */}
           <div 
             className={`relative z-10 flex items-center justify-center w-full gap-1 sm:gap-4 ${
               isScaled && (tier === 'MAJOR' || tier === 'MINOR')
-                ? 'pl-1 pr-4 sm:pl-2 sm:pr-6' // Reduced left padding, more right padding
-                : 'px-2 sm:px-6' // Default symmetric padding
+                ? '' // No padding for MAJOR/MINOR
+                : 'px-2 sm:px-6' // Default symmetric padding for GRAND
             }`}
             style={{ 
               transform: isScaled ? 'translateY(3px)' : 'none',
@@ -116,7 +122,7 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
             {/* Center: ODDS */}
             <div 
               className={`flex flex-col items-center justify-center px-2 ${!isScaled ? 'border-x border-white/10 min-w-[45px] sm:min-w-[60px]' : 'min-w-0'}`}
-              style={!isScaled ? { gap: '0px', height: '34px', paddingBottom: '7px' } : {}}
+              style={!isScaled ? { gap: '0px', height: '34px', paddingBottom: '12px' } : { width: '0px' }}
             >
               {!isScaled && (
                 <span 

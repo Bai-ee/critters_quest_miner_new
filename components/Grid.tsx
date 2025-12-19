@@ -165,6 +165,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare 
         }
       `}</style>
       {round.deployed.map((lamports, index) => {
+        // Total SOL deployed on this square (from all users)
         const sol = lamportsToSol(lamports);
         const miners = round.count[index];
         const isSelected = selectedSquares.has(index);
@@ -174,6 +175,12 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare 
                         miner.roundId.toString() === round.id.toString() && 
                         miner.deployed && 
                         miner.deployed[index] > BigInt(0);
+        
+        // User's SOL deployed on this square
+        const userSol = miner && 
+                       miner.roundId.toString() === round.id.toString() && 
+                       miner.deployed ? 
+                       lamportsToSol(miner.deployed[index]) : 0;
         
         // Final chosen state is either selected in UI or already mined on-chain
         const isChosen = isSelected || hasMined;
@@ -248,12 +255,19 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare 
 
                 {/* Miner count circle (Top Right - aligned with card number) */}
                 <div 
-                  className={`absolute top-[14cqw] right-[15cqw] min-w-[22cqw] h-[22cqw] rounded-full border flex items-center justify-center z-30 shadow-sm px-1 overflow-hidden transition-all duration-200`}
+                  className={`absolute top-[14cqw] right-[15cqw] rounded-full border flex items-center justify-center z-30 shadow-sm px-1 overflow-hidden transition-all duration-200`}
                   style={{
+                    width: '22cqw',
+                    height: '22cqw',
+                    aspectRatio: '1',
                     background: isChosen 
                       ? 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)' 
-                      : 'white',
-                    borderColor: isChosen ? 'rgb(35,116,13)' : 'black',
+                      : 'linear-gradient(180deg, #FFEFBA 0%, #f97316 20%, #ea580c 60%, #9a3412 100%)',
+                    borderColor: isChosen ? 'rgb(35,116,13)' : 'rgb(154,52,18)',
+                    minWidth: '22cqw',
+                    minHeight: '22cqw',
+                    maxWidth: '22cqw',
+                    maxHeight: '22cqw',
                   }}
                 >
                   {isChosen && (
@@ -270,14 +284,33 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare 
                       />
                     </>
                   )}
-                  <span className={`text-[11cqw] font-bold leading-none z-10 ${isChosen ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]' : 'text-black'}`}>
+                  {!isChosen && (
+                    <>
+                      {/* Glossy Overlay - Top Highlight (for yellow/orange) */}
+                      <div 
+                        className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
+                        style={{ filter: 'blur(0.5cqw)' }}
+                      />
+                      {/* Glossy Overlay - Bottom Subtle Highlight (for yellow/orange) */}
+                      <div 
+                        className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
+                        style={{ filter: 'blur(1cqw)' }}
+                      />
+                    </>
+                  )}
+                  <span className={`text-[11cqw] font-bold leading-none z-10 ${isChosen ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]' : 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]'}`}>
                     {miners.toString()}
                   </span>
                 </div>
 
-                {/* Bottom Info Row (SOL value - moved up inside bezel) */}
-                <div className="absolute bottom-[13cqw] left-0 right-0 w-full flex justify-center items-center px-1">
-                  <div className="text-[10cqw] font-bold text-black whitespace-nowrap bg-white/40 px-[2cqw] rounded">
+                {/* Bottom Info Row (SOL values - moved up inside bezel) */}
+                <div className="absolute bottom-[13cqw] left-0 right-0 w-full flex flex-col justify-center items-center px-1 gap-[1cqw]">
+                  {/* User's SOL value (on top) */}
+                  <div className="text-[9cqw] font-bold text-black whitespace-nowrap bg-white/50 px-[2cqw] rounded">
+                    {userSol.toFixed(4)} SOL
+                  </div>
+                  {/* Total SOL value (below) */}
+                  <div className="text-[15cqw] font-bold text-black whitespace-nowrap bg-white/40 px-[2cqw] rounded">
                     {sol.toFixed(4)} SOL
                   </div>
                 </div>
