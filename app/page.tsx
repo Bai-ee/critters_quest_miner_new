@@ -805,11 +805,12 @@ export default function Home() {
           <div className="mt-0" style={{ overflow: 'visible' }}>
               <Grid
                 round={round}
+                miner={miner}
+                currentSlot={currentSlot || 0n}
                 selectedSquares={selectedSquares}
                 toggleSquare={toggleSquare}
-                enableWinnerEffects={winnerKnown && resultsShown}
-                randomAnimationEnabled={false}
-                winnerSquareOverride={displayedWinningSquare}
+                deployAmount={amount}
+                timerExpired={timerExpired}
               />
           </div>
           
