@@ -44,13 +44,13 @@ export function Motherlode({ endSlot, currentSlot, startSlot }: MotherlodeProps)
             sol={data.grand.sol}
             odds="1/2500"
             bgImage="/img/grand_award_bg.png"
-            labelImage="/img/grand_winner_label.png"
+            labelImage="/img/pick_lucky_square.png"
             scale={1}
           />
         </div>
 
         {/* MAJOR and MINOR - Side by Side with 2px gap */}
-        <div className="flex flex-row w-full gap-[2px]" style={{ marginTop: '-12px', overflow: 'visible' }}>
+        <div className="flex flex-row w-full gap-[2px]" style={{ marginTop: '-9px', overflow: 'visible' }}>
           <div className="flex-1 min-w-0" style={{ overflow: 'visible' }}>
             <JackpotTierCard
               tier="MAJOR"

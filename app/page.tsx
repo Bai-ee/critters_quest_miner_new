@@ -703,15 +703,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            {/* Next Round and Amount to Win - Placeholder */}
-            <div className="flex flex-col gap-1">
-              <div className="text-[8px] sm:text-[9px] font-black text-black uppercase leading-none">
-                Next Round: #{board?.roundId ? (BigInt(board.roundId) + 1n).toString() : '0'}
-              </div>
-              <div className="text-[8px] sm:text-[9px] font-black text-black uppercase leading-none">
-                To Win: {round?.totalWinnings ? lamportsToSol(round.totalWinnings).toFixed(4) : '0.0000'} SOL
-              </div>
-            </div>
             
             {/* QUEST Balance */}
             {/* <div className="relative">
@@ -733,16 +724,65 @@ export default function Home() {
           </div>
         </div>
         {board?.endSlot && currentSlot && (
-          <div className="absolute top-[90px]" style={{ left: '50%', transform: 'translateX(-50%)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="absolute top-[90px]" style={{ left: '50%', transform: 'translateX(-50%)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            {/* Square with pill border style - Left */}
+            {/* <div 
+              style={{
+                background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+                padding: '2px',
+                borderRadius: '13px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                width: '113px',
+                height: '113px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div 
+                style={{
+                  background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
+                  borderRadius: '11px',
+                  boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
+                  width: '100%',
+                  height: '100%',
+                }}
+              />
+            </div> */}
+            {/* GIF - Centered */}
             <img 
-              src="/img/pickaxe_front.gif" 
-              alt="Pickaxe" 
-              className="h-[133px] sm:h-[133px] sm:mt-[50px] md:h-[133px]"
+              src="/img/open_treasure_hirez.gif" 
+              alt="Treasure Chest Open" 
+              className="h-[181px] sm:h-[181px] md:h-[181px]"
               style={{
                 width: 'auto',
-                marginTop:'-50px'
+                marginTop: '-65px'
               }}
             />
+            {/* Square with pill border style - Right */}
+            {/* <div 
+              style={{
+                background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+                padding: '2px',
+                borderRadius: '13px',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                width: '113px',
+                height: '113px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <div 
+                style={{
+                  background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
+                  borderRadius: '11px',
+                  boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
+                  width: '100%',
+                  height: '100%',
+                }}
+              />
+            </div> */}
           </div>
         )}
         <img 
@@ -870,26 +910,22 @@ export default function Home() {
 
         {/* Total Deployed Placeholder - Above miner tiles */}
         <div className="w-full max-w-[min(92vw,520px)] mx-auto relative z-30 mb-2" style={{ overflow: 'visible', marginTop: '-13px' }}>
-          <div className="px-4 py-2 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">Total Deployed</span>
-              <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
-                {round?.totalDeployed ? lamportsToSol(round.totalDeployed).toFixed(4) : '0.0000'} SOL
-              </span>
-            </div>
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">Total You Deployed</span>
+          <div className="px-4 py-2 flex items-center justify-start w-full text-center">
+            <div className="flex flex-col flex-1">
+              <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">This Round</span>
               <span className="text-sm font-black leading-none" style={{ 
                 color: '#00ff00',
                 textShadow: '0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00'
               }}>
-                {miner ? (() => {
-                  let total = 0;
-                  for (let i = 0; i < 25; i++) {
-                    total += lamportsToSol(miner.deployed[i]);
-                  }
-                  return total.toFixed(4);
-                })() : '0.0000'} SOL
+                {round?.totalDeployed ? lamportsToSol(round.totalDeployed).toFixed(4) : '0.0000'} SOL
+              </span>
+            </div>
+            <div className="flex flex-col items-center justify-start flex-1">
+              <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">Next Round</span>
+              <span className="text-sm font-black leading-none" style={{ 
+                color: 'rgba(79, 52, 33, 1)'
+              }}>
+                {round?.totalWinnings ? Math.floor(lamportsToSol(round.totalWinnings)).toString().padStart(5, '0') : '00000'} QUEST
               </span>
             </div>
           </div>
@@ -904,6 +940,7 @@ export default function Home() {
                 selectedSquares={selectedSquares}
                 toggleSquare={toggleSquare}
                 deployAmount={amount}
+                timerExpired={timerExpired}
               />
           </div>
           

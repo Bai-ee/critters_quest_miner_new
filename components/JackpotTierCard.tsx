@@ -14,25 +14,26 @@ interface JackpotTierCardProps {
 export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, scale = 1 }: JackpotTierCardProps) {
   const isScaled = scale < 1;
   
-  // Format numbers for display
+  // Format numbers for display - minimum digits required
   const formatQuest = (num: number) => {
-    // Format as whole numbers only, padded to 5 digits: 00000 (removed first 0)
-    return Math.floor(num).toString().padStart(5, '0');
+    // Format as whole numbers only, no padding
+    return Math.floor(num).toString();
   };
 
   const formatSol = (num: number) => {
-    // Format as 000.00 (3 digits before decimal, 2 after - removed first 0)
+    // Format with minimum digits, 2 decimal places
     const whole = Math.floor(num);
     const decimal = (num - whole).toFixed(2).slice(1); // Get .XX part
-    return whole.toString().padStart(3, '0') + decimal;
+    return whole.toString() + decimal;
   };
 
   // Base dimensions that we scale manually to avoid transform gaps
   const baseHeight = isScaled ? 40 : 60;
-  const fontSizeMain = isScaled ? 'text-[14px]' : 'text-[24px] sm:text-[32px]';
-  const fontSizeLabel = isScaled ? 'text-[8px]' : 'text-[10px]';
-  const oddsFontSize = isScaled ? 'text-[8px]' : 'text-[18px]';
-  const oddsValueFontSize = isScaled ? 'text-[8px]' : 'text-[10px]';
+  // Increase font sizes by 1/5 (20%)
+  const fontSizeMain = isScaled ? 'text-[17px]' : 'text-[29px] sm:text-[38px]';
+  const fontSizeLabel = isScaled ? 'text-[10px]' : 'text-[12px]';
+  const oddsFontSize = isScaled ? 'text-[10px]' : 'text-[22px]';
+  const oddsValueFontSize = isScaled ? 'text-[10px]' : 'text-[12px]';
 
   // Tier-specific neon gradients (restored from latest known state)
   const gradients = {
@@ -101,80 +102,63 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
             
             {/* Left: QUEST Value */}
             <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <img 
-                  src="/img/coin.png" 
-                  alt="QUEST" 
-                  className={`${tier === 'GRAND' ? (isScaled ? 'h-4 sm:h-6' : 'h-6 sm:h-10') : (isScaled ? 'h-2 sm:h-3' : 'h-3 sm:h-5')} w-auto opacity-90`} 
-                />
+              <div className="flex items-center gap-1 sm:gap-2 justify-center">
+                <span 
+                  className={`${tier === 'GRAND' ? (isScaled ? 'text-[8px]' : 'text-[10px]') : oddsFontSize} font-black text-white/90 uppercase leading-[1]`}
+                >
+                  QUEST
+                </span>
                 <div 
-                  className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] truncate`}
-                  style={{ overflow: 'visible' }}
+                  className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]`}
+                  style={{ overflow: 'visible', textAlign: 'center' }}
                 >
                   <AnimatedNumber value={formatQuest(ore)} />
                 </div>
               </div>
             </div>
 
-            {/* Center: Divider Line */}
-            <div className="h-full border-l border-white/10 min-w-[1px]"></div>
+            {/* Center: Divider Line - only show for GRAND */}
+            {tier === 'GRAND' && (
+              <>
+                <div className="h-full border-l border-white/10 min-w-[1px]"></div>
 
-            {/* Center: ODDS */}
-            <div 
-              className={`flex flex-col items-center justify-center px-2 ${!isScaled ? 'border-x border-white/10 min-w-[45px] sm:min-w-[60px]' : 'min-w-0'}`}
-              style={!isScaled ? { gap: '0px', height: '34px', paddingBottom: '12px' } : { width: '0px' }}
-            >
-              {!isScaled && (
-                <span 
-                  className="text-[10px] font-black text-white/90 uppercase leading-[1] tracking-tighter"
-                  style={{ paddingTop: '19px' }}
+                {/* Center: GRAND JACKPOT */}
+                <div 
+                  className={`flex flex-col items-center justify-center px-2 ${!isScaled ? 'border-x border-white/10 min-w-[45px] sm:min-w-[60px]' : 'min-w-0'}`}
+                  style={!isScaled ? { gap: '0px', height: '34px', paddingBottom: '12px', textAlign: 'center', verticalAlign: 'middle' } : { width: '0px' }}
                 >
-                  ODDS
-                </span>
-              )}
-              <div 
-                className={`${oddsFontSize} font-black text-white/90 leading-[1] whitespace-nowrap`}
-                style={!isScaled ? { 
-                  verticalAlign: 'top', 
-                  height: 'fit-content', 
-                  lineHeight: '10px',
-                  marginBottom: '3px'
-                } : {}}
-              >
-                {isScaled ? (
-                  <div className="flex flex-col items-center scale-90 sm:scale-100">
-                    <span className="leading-none">{odds.split('/')[0]}/</span>
-                    <span className="leading-none">{odds.split('/')[1]}</span>
-                  </div>
-                ) : (
-                  <span 
-                    className="drop-shadow-sm"
-                    style={{ 
-                      fontSize: '10px', 
-                      marginBottom: '8px', 
-                      paddingBottom: '7px' 
-                    }}
+                  <div 
+                    className={`${tier === 'GRAND' ? (isScaled ? 'text-[8px]' : 'text-[10px]') : oddsFontSize} font-black text-white/90 leading-[1]`}
+                    style={!isScaled ? { 
+                      verticalAlign: 'top', 
+                      height: 'fit-content', 
+                      lineHeight: '10px',
+                      marginBottom: '3px'
+                    } : {}}
                   >
-                    {odds}
-                  </span>
-                )}
-              </div>
-            </div>
+                    <div className="flex flex-col items-center scale-90 sm:scale-100">
+                      <span className="leading-none" style={{ marginTop: '20px' }}>GRAND</span>
+                      <span className="leading-none">JACKPOT</span>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Right: SOL Value */}
             <div className="flex-1 flex flex-col items-center justify-center min-w-0">
-              <div className="flex items-center gap-1 sm:gap-2">
-                <img 
-                  src="/img/solana_logo.png" 
-                  alt="SOL" 
-                  className={`${tier === 'GRAND' ? (isScaled ? 'h-2.5 sm:h-4' : 'h-4 sm:h-7') : (isScaled ? 'h-1.5 sm:h-2' : 'h-2 sm:h-3.5')} w-auto opacity-90`} 
-                />
+              <div className="flex items-center gap-1 sm:gap-2 justify-center">
                 <div 
-                  className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] truncate`}
-                  style={{ overflow: 'visible' }}
+                  className={`${fontSizeMain} font-black text-white leading-none drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]`}
+                  style={{ overflow: 'visible', textAlign: 'center' }}
                 >
                   <AnimatedNumber value={formatSol(sol)} />
                 </div>
+                <span 
+                  className={`${tier === 'GRAND' ? (isScaled ? 'text-[8px]' : 'text-[10px]') : oddsFontSize} font-black text-white/90 uppercase leading-[1]`}
+                >
+                  SOL
+                </span>
               </div>
             </div>
 

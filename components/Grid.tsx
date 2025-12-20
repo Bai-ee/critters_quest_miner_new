@@ -13,6 +13,7 @@ interface GridProps {
   selectedSquares: Set<number>;
   toggleSquare: (index: number) => void;
   deployAmount?: number;
+  timerExpired?: boolean;
 }
 
 // List of available mining item images for the back of the cards
@@ -27,7 +28,7 @@ const MINING_ITEMS = [
   'Seep.png', 'Shimmerwood.png'
 ];
 
-export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare, deployAmount = 0 }: GridProps) {
+export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare, deployAmount = 0, timerExpired = false }: GridProps) {
   const { publicKey } = useWallet();
   const [showWinner, setShowWinner] = useState(false);
   const [winnerSquareIndex, setWinnerSquareIndex] = useState<number | null>(null);
@@ -214,6 +215,20 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
     }
   }, [winningSquare, persistedWinner]);
 
+  // Auto-scroll to winning card when timer expires
+  useEffect(() => {
+    if (timerExpired && winnerSquareIndex !== null && cardRefs.current[winnerSquareIndex]) {
+      // Small delay to ensure DOM is updated
+      setTimeout(() => {
+        cardRefs.current[winnerSquareIndex]?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'center'
+        });
+      }, 300);
+    }
+  }, [timerExpired, winnerSquareIndex]);
+
   // Cleanup on unmount only
   useEffect(() => {
     return () => {
@@ -279,7 +294,9 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
             style={{ 
               transformStyle: 'preserve-3d',
               perspective: '1000px',
-              containerType: 'inline-size' // Enable container queries for scaling
+              containerType: 'inline-size', // Enable container queries for scaling
+              overflow: isWinner ? 'visible' : 'visible',
+              zIndex: isWinner ? 50 : 'auto'
             }}
             onClick={handleCardClick}
           >
@@ -299,7 +316,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
               <div 
                 className={`
                   absolute inset-0 w-full h-full flex flex-col
-                  ${isWinner ? 'scale-110 z-20' : isChosen ? 'scale-105 z-10' : ''}
+                  ${isWinner ? 'z-20' : isChosen ? 'scale-105 z-10' : ''}
                   ${isChosen && isTimerRunning ? 'animate-shake' : ''}
                 `}
                 style={{
@@ -311,10 +328,11 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
                   zIndex: 2,
+                  transform: isWinner ? 'scale(2)' : undefined,
                   transition: animationPhase === 'completed' ? 'transform 0.2s ease, box-shadow 0.2s ease' : 'none',
                   color: 'black',
                   position: 'relative',
-                  overflow: 'hidden'
+                  overflow: 'visible'
                 }}
               >
                 {/* Inner content area with card background */}
@@ -325,50 +343,19 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                     borderRadius: '11px'
                   }}
                 >
-                  {/* Glossy Overlay - Top Highlight */}
-                  <div 
-                    className="absolute top-0 left-[10%] right-[10%] h-[45%] bg-white/40 rounded-full pointer-events-none z-20"
-                    style={{
-                      filter: 'blur(2px)',
-                      transform: 'translateY(-20%)'
-                    }}
-                  />
-                  
-                  {/* Glossy Overlay - Middle Subtle Highlight */}
-                  <div 
-                    className="absolute top-[30%] left-[15%] right-[15%] h-[25%] bg-white/25 rounded-full pointer-events-none z-20"
-                    style={{
-                      filter: 'blur(3px)'
-                    }}
-                  />
-                  
-                  {/* Glossy Overlay - Bottom Subtle Highlight */}
-                  <div 
-                    className="absolute bottom-[10%] left-[20%] right-[20%] h-[20%] bg-white/15 rounded-full pointer-events-none z-20"
-                    style={{
-                      filter: 'blur(4px)'
-                    }}
-                  />
                   {/* Card number badge (Top Left - tucked inside bezel) */}
                   <div className="absolute text-[10cqw] font-mono font-bold text-white z-30 opacity-70" style={{ top: '3px', left: '7px' }}>
                     #{index + 1}
                   </div>
 
-                  {/* Winner indicator */}
-                  {isWinner && (
-                    <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
-                      <div className="text-[30cqw] animate-bounce text-black">👑</div>
-                    </div>
-                  )}
-
                   {/* Center Item Image Container */}
                   <div className="relative w-full h-full flex items-center justify-center overflow-visible" style={{ transform: 'translateY(-5px)' }}>
-                    {/* Chest Image - hide when tile is selected */}
-                    {!isChosen && (
+                    {/* Chest Image - show open when winner, closed otherwise */}
+                    {(!isChosen || isWinner) && (
                       <img 
-                        src="/img/treasure_chest_closed.gif"
+                        src={(winningSquare !== null && index === winningSquare) || isWinner ? "/img/open_treasure_hirez.gif" : "/img/treasure_chest_closed.gif"}
                         alt="Treasure Chest"
-                        className="w-[64%] h-[64%] object-contain opacity-80 relative"
+                        className={`object-contain opacity-80 relative ${(winningSquare !== null && index === winningSquare) || isWinner ? 'w-[192%] h-[192%]' : 'w-[64%] h-[64%]'}`}
                       />
                     )}
                     
@@ -392,34 +379,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                         transform: 'translate(-50%, -50%)',
                       }}
                     >
-                      {isChosen && (
-                        <>
-                          {/* Glossy Overlay - Top Highlight */}
-                          <div 
-                            className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
-                            style={{ filter: 'blur(0.5cqw)' }}
-                          />
-                          {/* Glossy Overlay - Bottom Subtle Highlight */}
-                          <div 
-                            className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
-                            style={{ filter: 'blur(1cqw)' }}
-                          />
-                        </>
-                      )}
-                      {!isChosen && (
-                        <>
-                          {/* Glossy Overlay - Top Highlight (for yellow/orange) */}
-                          <div 
-                            className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
-                            style={{ filter: 'blur(0.5cqw)' }}
-                          />
-                          {/* Glossy Overlay - Bottom Subtle Highlight (for yellow/orange) */}
-                          <div 
-                            className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
-                            style={{ filter: 'blur(1cqw)' }}
-                          />
-                        </>
-                      )}
                       <span className={`text-[11cqw] font-bold leading-none z-10 ${isChosen ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]' : 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]'}`}>
                         {miners.toString()}
                       </span>
@@ -442,16 +401,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                           paddingRight: '8px',
                         }}
                       >
-                        {/* Glossy Overlay - Top Highlight */}
-                        <div 
-                          className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
-                          style={{ filter: 'blur(0.5cqw)' }}
-                        />
-                        {/* Glossy Overlay - Bottom Subtle Highlight */}
-                        <div 
-                          className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
-                          style={{ filter: 'blur(1cqw)' }}
-                        />
                         <span className="relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
                           {(userSol + (isSelected ? deployAmount : 0)).toString()}
                         </span>
@@ -468,16 +417,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                         marginBottom: '2px',
                       }}
                     >
-                      {/* Glossy Overlay - Top Highlight */}
-                      <div 
-                        className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
-                        style={{ filter: 'blur(0.5cqw)' }}
-                      />
-                      {/* Glossy Overlay - Bottom Subtle Highlight */}
-                      <div 
-                        className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
-                        style={{ filter: 'blur(1cqw)' }}
-                      />
                       <div className="relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] flex items-center gap-1">
                         <img 
                           src="/img/solana_logo.png" 
@@ -516,33 +455,8 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                     borderRadius: '11px'
                   }}
                 >
-                  {/* Glossy Overlay - Top Highlight */}
-                  <div 
-                    className="absolute top-0 left-[10%] right-[10%] h-[45%] bg-white/40 rounded-full pointer-events-none z-20"
-                    style={{
-                      filter: 'blur(2px)',
-                      transform: 'translateY(-20%)'
-                    }}
-                  />
-                  
-                  {/* Glossy Overlay - Middle Subtle Highlight */}
-                  <div 
-                    className="absolute top-[30%] left-[15%] right-[15%] h-[25%] bg-white/25 rounded-full pointer-events-none z-20"
-                    style={{
-                      filter: 'blur(3px)'
-                    }}
-                  />
-                  
-                  {/* Glossy Overlay - Bottom Subtle Highlight */}
-                  <div 
-                    className="absolute bottom-[10%] left-[20%] right-[20%] h-[20%] bg-white/15 rounded-full pointer-events-none z-20"
-                    style={{
-                      filter: 'blur(4px)'
-                    }}
-                  />
-                  
                   <img 
-                    src="/img/treasure_chest_closed.gif"
+                    src={(winningSquare !== null && index === winningSquare) || isWinner ? "/img/open_treasure_hirez.gif" : "/img/treasure_chest_closed.gif"}
                     alt="Treasure Chest"
                     className="w-[64%] h-[64%] object-contain filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)] z-10 relative"
                   />
@@ -552,12 +466,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
           </div>
         );
       })}
-
-      {!publicKey && (
-        <div className="col-span-5 text-xs text-black text-center py-2 mt-2">
-          ⚠️ Connect your wallet to deploy
-        </div>
-      )}
     </div>
   );
 }
