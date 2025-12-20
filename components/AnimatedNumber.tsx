@@ -93,6 +93,3 @@ export function AnimatedNumber({
   );
 }
 
-
-
-

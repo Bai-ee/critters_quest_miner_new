@@ -9,8 +9,10 @@ import { Connection, clusterApiUrl } from '@solana/web3.js';
  * - QuickNode: https://quicknode.com
  * - Alchemy: https://alchemy.com
  */
+// Note: This static connection is kept for backward compatibility
+// But hooks should use useConnection() from wallet adapter for consistency
 export const connection = new Connection(
-  process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl('mainnet-beta'),
+  process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl('devnet'),
   'confirmed'
 );
 

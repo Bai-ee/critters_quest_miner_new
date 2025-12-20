@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { connection, getCurrentSlot } from '@/lib/solana';
+import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { fetchBoard, fetchMiner, fetchRound, getBoardPDA, getMinerPDA, getRoundPDA, gramsToOre, getTreasuryPDA, fetchTreasury, fetchAutomation, getAutomationPDA } from '@/lib/accounts';
 import type { Board, Round, Miner, Treasury, Automation } from '@/lib/types';
 import { PublicKey, AccountInfo } from '@solana/web3.js';
-import { useWallet } from '@solana/wallet-adapter-react';
 
 export function useRoundData() {
+  const { connection } = useConnection();
   const { publicKey } = useWallet();
   const [board, setBoard] = useState<Board | null>(null);
   const [round, setRound] = useState<Round | null>(null);
@@ -30,7 +30,7 @@ export function useRoundData() {
       console.error('Error fetching board:', err);
       throw err;
     }
-  }, []);
+  }, [connection]);
 
   // Fetch Round data (called initially and when Round account changes)
   const fetchRoundData = useCallback(async (roundId: bigint) => {
@@ -43,7 +43,7 @@ export function useRoundData() {
       console.error('Error fetching round:', err);
       throw err;
     }
-  }, []);
+  }, [connection]);
 
   // Fetch Miner data (called initially and when Miner account changes)
   const fetchMinerData = useCallback(async (walletPublicKey: PublicKey) => {
@@ -55,7 +55,7 @@ export function useRoundData() {
       console.error('Error fetching miner:', err);
       throw err;
     }
-  }, []);
+  }, [connection]);
 
 
   // Initial data fetch
@@ -77,8 +77,9 @@ export function useRoundData() {
           console.error('Error fetching initial treasury:', err);
         }
 
-        // Get current slot
-        const slot = await getCurrentSlot();
+        // Get current slot with retry
+        const { getSlotWithRetry } = await import('@/lib/rpcHelpers');
+        const slot = await getSlotWithRetry(connection, 'confirmed');
         setCurrentSlot(BigInt(slot));
 
       } catch (err) {
@@ -89,19 +90,17 @@ export function useRoundData() {
     };
 
     init();
-  }, [fetchBoardData, fetchRoundData]);
+  }, [fetchBoardData, fetchRoundData, connection]);
 
   // WebSocket subscription to Board account
   useEffect(() => {
     if (!board) return;
 
     const boardPDA = getBoardPDA();
-    console.log('📡 Subscribing to Board account:', boardPDA.toString());
 
     const subscriptionId = connection.onAccountChange(
       boardPDA,
       async (accountInfo) => {
-        console.log('🔔 Board account changed!');
 
         try {
           // Parse the new board data
@@ -119,7 +118,6 @@ export function useRoundData() {
 
           // If round changed, fetch new round data and keep previous round
           if (newBoard.roundId !== board.roundId) {
-            console.log('🔄 Round changed! Fetching new round data...');
             // Save current round as previous round before fetching new one
             if (round) {
               setPreviousRound(round);
@@ -127,7 +125,6 @@ export function useRoundData() {
               try {
                 const oldRoundData = await fetchRound(connection, board.roundId);
                 setPreviousRound(oldRoundData);
-                console.log('📜 Previous round saved with slotHash:', oldRoundData.slotHash);
               } catch (err) {
                 console.error('Error fetching previous round:', err);
               }
@@ -150,22 +147,19 @@ export function useRoundData() {
     );
 
     return () => {
-      console.log('🔌 Unsubscribing from Board account');
       connection.removeAccountChangeListener(subscriptionId);
     };
-  }, [board, fetchRoundData]);
+  }, [board, fetchRoundData, connection]);
 
   // WebSocket subscription to Round account
   useEffect(() => {
     if (!board) return;
 
     const roundPDA = getRoundPDA(board.roundId);
-    console.log('📡 Subscribing to Round account:', roundPDA.toString());
 
     const subscriptionId = connection.onAccountChange(
       roundPDA,
       async (accountInfo) => {
-        console.log('🔔 Round account changed!');
 
         try {
           // Parse the new round data
@@ -239,19 +233,22 @@ export function useRoundData() {
     );
 
     return () => {
-      console.log('🔌 Unsubscribing from Round account');
       connection.removeAccountChangeListener(subscriptionId);
     };
-  }, [board]);
+  }, [board, connection]);
 
   // Update current slot every second
   useEffect(() => {
     const updateSlot = async () => {
       try {
-        const slot = await getCurrentSlot();
+        const { getSlotWithRetry } = await import('@/lib/rpcHelpers');
+        const slot = await getSlotWithRetry(connection, 'confirmed');
         setCurrentSlot(BigInt(slot));
-      } catch (err) {
-        console.error('Error fetching slot:', err);
+      } catch (err: any) {
+        // Don't spam console with 403 errors, just log once
+        if (!err?.message?.includes('403') && !err?.message?.includes('Access forbidden')) {
+          console.error('Error fetching slot:', err);
+        }
       }
     };
 
@@ -262,7 +259,7 @@ export function useRoundData() {
     const interval = setInterval(updateSlot, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [connection]);
 
   // WebSocket subscription to Miner account
   useEffect(() => {
@@ -276,17 +273,13 @@ export function useRoundData() {
     fetchMinerData(publicKey);
 
     const minerPDA = getMinerPDA(publicKey);
-    console.log('📡 Subscribing to Miner account:', minerPDA.toString());
 
     const subscriptionId = connection.onAccountChange(
       minerPDA,
       async (accountInfo) => {
-        console.log('🔔 Miner account changed!');
-
         try {
           // Check if account was closed (empty data)
           if (accountInfo.data.length === 0) {
-            console.log('🔴 Miner account closed');
             setMiner(null);
             return;
           }
@@ -383,11 +376,6 @@ export function useRoundData() {
           };
 
           setMiner(newMiner);
-          console.log('✅ Miner data updated:', {
-            rewardsSol: newMiner.rewardsSol.toString(),
-            rewardsOre: newMiner.rewardsOre.toString(),
-            lifetimeRewardsSol: newMiner.lifetimeRewardsSol.toString(),
-          });
         } catch (err) {
           console.error('Error parsing Miner update:', err);
         }
@@ -396,10 +384,9 @@ export function useRoundData() {
     );
 
     return () => {
-      console.log('🔌 Unsubscribing from Miner account');
       connection.removeAccountChangeListener(subscriptionId);
     };
-  }, [publicKey, fetchMinerData]);
+  }, [publicKey, fetchMinerData, connection]);
 
   // WebSocket subscription to Automation account
   useEffect(() => {
@@ -422,17 +409,13 @@ export function useRoundData() {
     fetchAutomationData();
 
     const automationPDA = getAutomationPDA(publicKey);
-    console.log('📡 Subscribing to Automation account:', automationPDA.toString());
 
     const subscriptionId = connection.onAccountChange(
       automationPDA,
       async (accountInfo) => {
-        console.log('🔔 Automation account changed!');
-
         try {
           // Check if account was closed (empty data)
           if (accountInfo.data.length === 0) {
-            console.log('🔴 Automation account closed');
             setAutomation(null);
             return;
           }
@@ -480,10 +463,6 @@ export function useRoundData() {
           };
 
           setAutomation(newAutomation);
-          console.log('✅ Automation data updated:', {
-            balance: newAutomation.balance.toString(),
-            amount: newAutomation.amount.toString(),
-          });
         } catch (err) {
           console.error('Error parsing Automation update:', err);
           // Account might have been closed
@@ -494,28 +473,22 @@ export function useRoundData() {
     );
 
     return () => {
-      console.log('🔌 Unsubscribing from Automation account');
       connection.removeAccountChangeListener(subscriptionId);
     };
-  }, [publicKey]);
+  }, [publicKey, connection]);
 
   // WebSocket subscription to Treasury PDA account to track motherlode
   useEffect(() => {
     const treasuryPDA = getTreasuryPDA();
 
-    console.log('📡 Subscribing to Treasury PDA account:', treasuryPDA.toString());
-
     const subscriptionId = connection.onAccountChange(
       treasuryPDA,
       async (accountInfo) => {
-        console.log('🔔 Treasury PDA account changed!');
-
         try {
           // Fetch full Treasury data when account changes
           const treasuryData = await fetchTreasury(connection);
           setTreasury(treasuryData);
           setLastUpdate(new Date());
-          console.log('💰 Treasury updated - Minor:', gramsToOre(treasuryData.motherlodeOreMinor).toFixed(2), 'ORE');
         } catch (err) {
           console.error('Error fetching Treasury update:', err);
         }
@@ -524,10 +497,9 @@ export function useRoundData() {
     );
 
     return () => {
-      console.log('🔌 Unsubscribing from Treasury PDA account');
       connection.removeAccountChangeListener(subscriptionId);
     };
-  }, []); // Empty dependency array - subscribe once on mount
+  }, [connection]);
 
   return {
     board,

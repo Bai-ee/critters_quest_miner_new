@@ -36,8 +36,18 @@ export function useDeployToSquares() {
       throw new Error('Wallet not connected');
     }
 
+    // Validate amount
+    if (!amount || isNaN(amount) || amount <= 0) {
+      throw new Error('Invalid amount: must be a positive number');
+    }
+
     // Convert SOL to lamports
     const amountLamports = BigInt(Math.floor(amount * 1e9));
+    
+    // Validate lamports is positive
+    if (amountLamports <= 0n) {
+      throw new Error('Invalid amount: must be greater than 0');
+    }
 
     // Convert square indices to bitmask
     // Example: [0, 5, 12] -> bitmask with bits 0, 5, and 12 set
@@ -57,8 +67,10 @@ export function useDeployToSquares() {
     const transaction = new Transaction();
 
     if (needCheckpoint) {
-      const targetRoundId = board?.roundId ;
-      const instruction0 = createCheckpointInstruction(publicKey, miner?.roundId ?? targetRoundId);
+      // If checkpoint is needed, checkpoint the miner's current roundId
+      // This brings the miner up to date with the current round
+      const targetRoundId = miner?.roundId ?? (roundId - 1n);
+      const instruction0 = createCheckpointInstruction(publicKey, targetRoundId);
       transaction.add(instruction0);
     }
 
@@ -79,7 +91,7 @@ export function useDeployToSquares() {
     // Wait for confirmation
     await connection.confirmTransaction(signature, 'confirmed');
 
-    console.log('Deploy transaction confirmed:', signature);
+    // console.log('Deploy transaction confirmed:', signature);
     return signature;
   };
 
@@ -115,7 +127,7 @@ export function useCheckpoint() {
     // Wait for confirmation
     await connection.confirmTransaction(signature, 'confirmed');
 
-    console.log('Checkpoint transaction confirmed:', signature);
+    // console.log('Checkpoint transaction confirmed:', signature);
     return signature;
   };
 
@@ -144,7 +156,7 @@ export function useClaimSol() {
     // Wait for confirmation
     await connection.confirmTransaction(signature, 'confirmed');
 
-    console.log('Claim SOL transaction confirmed:', signature);
+    // console.log('Claim SOL transaction confirmed:', signature);
     return signature;
   };
 
@@ -173,7 +185,7 @@ export function useClaimOre() {
     // Wait for confirmation
     await connection.confirmTransaction(signature, 'confirmed');
 
-    console.log('Claim QUEST transaction confirmed:', signature);
+    // console.log('Claim QUEST transaction confirmed:', signature);
     return signature;
   };
 
@@ -207,7 +219,7 @@ export function useClaimAll() {
     // Wait for confirmation
     await connection.confirmTransaction(signature, 'confirmed');
 
-    console.log('Claim QUEST transaction confirmed:', signature);
+    // console.log('Claim QUEST transaction confirmed:', signature);
     return signature;
   };
 
@@ -292,7 +304,7 @@ export function useAutomation() {
     // Wait for confirmation
     await connection.confirmTransaction(signature, 'confirmed');
 
-    console.log('Automation setup successful:', signature);
+    // console.log('Automation setup successful:', signature);
     return signature;
   };
 
@@ -326,16 +338,13 @@ export function useAutomation() {
     // Wait for confirmation
     await connection.confirmTransaction(signature, 'confirmed');
 
-    console.log('Automation disabled:', signature);
+    // console.log('Automation disabled:', signature);
     return signature;
   };
 
   return { setupAutomation, disableAutomation };
 }
 
-/**
- * Hook for depositing QUEST tokens into staking
- */
 export function useStakeDeposit() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
@@ -348,6 +357,7 @@ export function useStakeDeposit() {
     const amountGrams = BigInt(Math.floor(amount * 1e9));
     const instruction = createStakeDepositInstruction(publicKey, amountGrams, publicKey);
     const transaction = new Transaction().add(instruction);
+
     const signature = await sendTransaction(transaction, connection);
     await connection.confirmTransaction(signature, 'confirmed');
     return signature;
@@ -356,9 +366,6 @@ export function useStakeDeposit() {
   return { deposit };
 }
 
-/**
- * Hook for withdrawing QUEST tokens from staking
- */
 export function useStakeWithdraw() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
@@ -371,6 +378,7 @@ export function useStakeWithdraw() {
     const amountGrams = BigInt(Math.floor(amount * 1e9));
     const instruction = createStakeWithdrawInstruction(publicKey, amountGrams);
     const transaction = new Transaction().add(instruction);
+
     const signature = await sendTransaction(transaction, connection);
     await connection.confirmTransaction(signature, 'confirmed');
     return signature;
@@ -379,9 +387,6 @@ export function useStakeWithdraw() {
   return { withdraw };
 }
 
-/**
- * Hook for claiming SOL yield from staking
- */
 export function useStakeClaimYield() {
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
@@ -394,6 +399,7 @@ export function useStakeClaimYield() {
     const amountLamports = BigInt(Math.floor(amount * 1e9));
     const instruction = createStakeClaimYieldInstruction(publicKey, amountLamports);
     const transaction = new Transaction().add(instruction);
+
     const signature = await sendTransaction(transaction, connection);
     await connection.confirmTransaction(signature, 'confirmed');
     return signature;

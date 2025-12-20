@@ -33,10 +33,5 @@ export {
   playWinnerSound,
 } from './sound';
 
-export {
-  createCelebrationParticles,
-  createHoverParticles,
-  createSimpleParticleBurst,
-} from './particles';
-export type { ParticleSystemOptions } from './particles';
+export { springBounceAnimation } from './springBounce';
 

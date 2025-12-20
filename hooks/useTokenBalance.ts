@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { PublicKey } from '@solana/web3.js';
 import { getAccount, getAssociatedTokenAddress } from '@solana/spl-token';
-import { connection } from '@/lib/solana';
+import { useConnection } from '@solana/wallet-adapter-react';
 
 interface UseTokenBalanceProps {
   tokenMint: string | PublicKey | null;
@@ -12,12 +12,13 @@ interface UseTokenBalanceProps {
 }
 
 export function useTokenBalance({ tokenMint, walletAddress, decimals = 9 }: UseTokenBalanceProps) {
+  const { connection } = useConnection();
   const [balance, setBalance] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!tokenMint || !walletAddress || walletAddress === '') {
+    if (!tokenMint || !walletAddress) {
       setBalance(0);
       setError(null);
       return;
@@ -28,16 +29,8 @@ export function useTokenBalance({ tokenMint, walletAddress, decimals = 9 }: UseT
         setLoading(true);
         setError(null);
 
-        let mintPubkey: PublicKey;
-        let walletPubkey: PublicKey;
-
-        try {
-          mintPubkey = typeof tokenMint === 'string' ? new PublicKey(tokenMint) : tokenMint;
-          walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress;
-        } catch (e) {
-          setBalance(0);
-          return;
-        }
+        const mintPubkey = typeof tokenMint === 'string' ? new PublicKey(tokenMint) : tokenMint;
+        const walletPubkey = typeof walletAddress === 'string' ? new PublicKey(walletAddress) : walletAddress;
 
         const tokenAccountAddress = await getAssociatedTokenAddress(
           mintPubkey,
@@ -47,7 +40,15 @@ export function useTokenBalance({ tokenMint, walletAddress, decimals = 9 }: UseT
 
         const tokenAccount = await getAccount(connection, tokenAccountAddress);
         setBalance(Number(tokenAccount.amount) / Math.pow(10, decimals));
-      } catch (err) {
+      } catch (err: any) {
+        // Handle 403 and other RPC errors gracefully
+        if (err?.message?.includes('403') || err?.message?.includes('Access forbidden')) {
+          console.warn('RPC endpoint access restricted for token balance. Consider using a paid RPC provider.');
+          setError('RPC access restricted');
+        } else {
+          console.error('Error fetching token balance:', err);
+          setError(err instanceof Error ? err.message : 'Failed to fetch token balance');
+        }
         setBalance(0);
       } finally {
         setLoading(false);
@@ -61,7 +62,7 @@ export function useTokenBalance({ tokenMint, walletAddress, decimals = 9 }: UseT
     return () => {
       clearInterval(interval);
     };
-  }, [tokenMint, walletAddress]);
+  }, [tokenMint, walletAddress, connection, decimals]);
 
   return { balance, loading, error };
 }

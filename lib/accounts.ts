@@ -1,5 +1,6 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Board, Round, Miner, Stake, Treasury, Automation, CONSTANTS } from './types';
+import { getAccountInfoWithRetry } from './rpcHelpers';
 
 /**
  * PDA seeds matching api/src/consts.rs
@@ -69,7 +70,13 @@ export function getMinerPDA(authority: PublicKey): PublicKey {
  */
 export async function fetchBoard(connection: Connection): Promise<Board> {
   const boardPDA = getBoardPDA();
-  const accountInfo = await connection.getAccountInfo(boardPDA);
+  const accountInfo = await getAccountInfoWithRetry(connection, boardPDA).catch((err: any) => {
+    // If 403 error, provide helpful message
+    if (err?.message?.includes('403') || err?.message?.includes('Access forbidden')) {
+      throw new Error('RPC endpoint access restricted. Please set NEXT_PUBLIC_RPC_URL with a paid RPC provider (Helius, QuickNode, or Alchemy).');
+    }
+    throw err;
+  });
 
   if (!accountInfo) {
     throw new Error('Board account not found');
@@ -117,7 +124,13 @@ export async function fetchRound(
   roundId: bigint
 ): Promise<Round> {
   const roundPDA = getRoundPDA(roundId);
-  const accountInfo = await connection.getAccountInfo(roundPDA);
+  const accountInfo = await getAccountInfoWithRetry(connection, roundPDA).catch((err: any) => {
+    // If 403 error, provide helpful message
+    if (err?.message?.includes('403') || err?.message?.includes('Access forbidden')) {
+      throw new Error('RPC endpoint access restricted. Please set NEXT_PUBLIC_RPC_URL with a paid RPC provider.');
+    }
+    throw err;
+  });
 
   if (!accountInfo) {
     throw new Error(`Round account not found for round ${roundId}`);
@@ -250,7 +263,12 @@ export function getTreasuryPDA(): PublicKey {
  */
 export async function fetchTreasury(connection: Connection): Promise<Treasury> {
   const treasuryPDA = getTreasuryPDA();
-  const accountInfo = await connection.getAccountInfo(treasuryPDA);
+  const accountInfo = await getAccountInfoWithRetry(connection, treasuryPDA).catch((err: any) => {
+    if (err?.message?.includes('403') || err?.message?.includes('Access forbidden')) {
+      throw new Error('RPC endpoint access restricted. Please set NEXT_PUBLIC_RPC_URL with a paid RPC provider.');
+    }
+    throw err;
+  });
 
   if (!accountInfo) {
     throw new Error('Treasury account not found');
@@ -272,6 +290,7 @@ export async function fetchTreasury(connection: Connection): Promise<Treasury> {
   offset += 8;
 
   // 2. buffer_a: u64
+  const bufferA = data.readBigUInt64LE(offset);
   offset += 8;
 
   // 3. motherlode_ore_minor: u64
@@ -307,6 +326,7 @@ export async function fetchTreasury(connection: Connection): Promise<Treasury> {
   offset += 16;
 
   // 11. buffer_b: u64
+  const bufferB = data.readBigUInt64LE(offset);
   offset += 8;
 
   // 12. total_refined: u64
@@ -323,6 +343,7 @@ export async function fetchTreasury(connection: Connection): Promise<Treasury> {
 
   return {
     balance,
+    bufferA,
     motherlodeOreMinor,
     motherlodeOreMajor,
     motherlodeOreGrand,
@@ -331,10 +352,37 @@ export async function fetchTreasury(connection: Connection): Promise<Treasury> {
     motherlodeSolGrand,
     minerRewardsFactor,
     stakeRewardsFactor,
+    bufferB,
     totalRefined,
     totalStaked,
     totalUnclaimed,
   };
+}
+
+const Q64 = 1n << 64n;
+
+export function decodeNumericQ64_64LE(bytes: Uint8Array): bigint {
+  if (bytes.length !== 16) {
+    throw new Error(`Invalid Numeric length: ${bytes.length}`);
+  }
+  let v = 0n;
+  for (let i = 0; i < 16; i++) {
+    v |= BigInt(bytes[i] ?? 0) << (8n * BigInt(i));
+  }
+  return v;
+}
+
+export function computeStakeClaimableLamports(stake: Stake, treasury: Treasury): bigint {
+  const stakeFactor = decodeNumericQ64_64LE(stake.rewardsFactor);
+  const treasuryFactor = decodeNumericQ64_64LE(treasury.stakeRewardsFactor);
+
+  const diff = treasuryFactor - stakeFactor;
+  if (diff <= 0n) {
+    return stake.rewards;
+  }
+
+  const pending = (diff * stake.balance) / Q64;
+  return stake.rewards + pending;
 }
 
 /**
@@ -358,12 +406,14 @@ export function getWinningSquare(slotHash: Uint8Array): number | null {
     return null;
   }
 
-  // Convert first 8 bytes of slot hash to u64 (little-endian)
-  // This mimics how the Rust code generates the RNG value
-  let rng = 0n;
-  for (let i = 0; i < 8; i++) {
-    rng |= BigInt(slotHash[i]) << BigInt(i * 8);
-  }
+  // Match Rust implementation: XOR all 4 u64 chunks from the 32-byte slot hash
+  // Rust code: r1 ^ r2 ^ r3 ^ r4 where each r is u64::from_le_bytes
+  const r1 = slotHash.slice(0, 8).reduce((acc, byte, i) => acc | (BigInt(byte) << BigInt(i * 8)), 0n);
+  const r2 = slotHash.slice(8, 16).reduce((acc, byte, i) => acc | (BigInt(byte) << BigInt(i * 8)), 0n);
+  const r3 = slotHash.slice(16, 24).reduce((acc, byte, i) => acc | (BigInt(byte) << BigInt(i * 8)), 0n);
+  const r4 = slotHash.slice(24, 32).reduce((acc, byte, i) => acc | (BigInt(byte) << BigInt(i * 8)), 0n);
+
+  const rng = r1 ^ r2 ^ r3 ^ r4;
 
   // Calculate winning square: (rng % 25)
   return Number(rng % 25n);
@@ -401,7 +451,14 @@ export async function fetchMiner(
   authority: PublicKey
 ): Promise<Miner | null> {
   const minerPDA = getMinerPDA(authority);
-  const accountInfo = await connection.getAccountInfo(minerPDA);
+  const accountInfo = await getAccountInfoWithRetry(connection, minerPDA).catch((err: any) => {
+    // If 403, log warning but return null (account might not exist or RPC restricted)
+    if (err?.message?.includes('403') || err?.message?.includes('Access forbidden')) {
+      console.warn('RPC access restricted when fetching miner account. Consider using a paid RPC provider.');
+      return null; // Treat as account doesn't exist
+    }
+    throw err;
+  });
 
   if (!accountInfo) {
     // Miner account doesn't exist yet (user hasn't deployed)
@@ -520,41 +577,6 @@ export function getStakePDA(authority: PublicKey): PublicKey {
 }
 
 /**
- * Helper: Decode a Q64.64 fixed-point number from 16 bytes
- */
-function decodeNumericQ64_64LE(bytes: Uint8Array): bigint {
-  if (bytes.length !== 16) {
-    throw new Error(`Invalid Numeric length: ${bytes.length}`);
-  }
-  let v = 0n;
-  for (let i = 0; i < 16; i++) {
-    v |= BigInt(bytes[i] ?? 0) << (8n * BigInt(i));
-  }
-  return v;
-}
-
-const Q64 = 1n << 64n;
-
-/**
- * Compute claimable lamports from staking rewards
- * @param stake - The user's Stake account
- * @param treasury - The Treasury account
- * @returns Total claimable lamports (including pending rewards)
- */
-export function computeStakeClaimableLamports(stake: Stake, treasury: Treasury): bigint {
-  const stakeFactor = decodeNumericQ64_64LE(stake.rewardsFactor);
-  const treasuryFactor = decodeNumericQ64_64LE(treasury.stakeRewardsFactor);
-
-  const diff = treasuryFactor - stakeFactor;
-  if (diff <= 0n) {
-    return stake.rewards;
-  }
-
-  const pending = (diff * stake.balance) / Q64;
-  return stake.rewards + pending;
-}
-
-/**
  * Fetch and deserialize the Stake account for a given authority
  * Structure matches: api/src/state/stake.rs
  *
@@ -567,7 +589,14 @@ export async function fetchStake(
   authority: PublicKey
 ): Promise<Stake | null> {
   const stakePDA = getStakePDA(authority);
-  const accountInfo = await connection.getAccountInfo(stakePDA);
+  const accountInfo = await getAccountInfoWithRetry(connection, stakePDA).catch((err: any) => {
+    // If 403, log warning but return null (account might not exist or RPC restricted)
+    if (err?.message?.includes('403') || err?.message?.includes('Access forbidden')) {
+      console.warn('RPC access restricted when fetching stake account. Consider using a paid RPC provider.');
+      return null; // Treat as account doesn't exist
+    }
+    throw err;
+  });
 
   if (!accountInfo) {
     // Stake account doesn't exist yet (user hasn't staked)
@@ -663,7 +692,14 @@ export async function fetchAutomation(
   authority: PublicKey
 ): Promise<Automation | null> {
   const automationPDA = getAutomationPDA(authority);
-  const accountInfo = await connection.getAccountInfo(automationPDA);
+  const accountInfo = await getAccountInfoWithRetry(connection, automationPDA).catch((err: any) => {
+    // If 403, log warning but return null (account might not exist or RPC restricted)
+    if (err?.message?.includes('403') || err?.message?.includes('Access forbidden')) {
+      console.warn('RPC access restricted when fetching automation account. Consider using a paid RPC provider.');
+      return null; // Treat as account doesn't exist
+    }
+    throw err;
+  });
 
   if (!accountInfo) {
     // Automation account doesn't exist yet

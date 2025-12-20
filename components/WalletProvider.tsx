@@ -14,8 +14,15 @@ interface Props {
 }
 
 export const WalletContextProvider: FC<Props> = ({ children }) => {
-  // Use mainnet-beta for production
-  const endpoint = useMemo(() => process.env.NEXT_PUBLIC_RPC_URL || clusterApiUrl('devnet'), []);
+  // Use devnet for testing, or mainnet-beta for production
+  // Can be overridden with NEXT_PUBLIC_RPC_URL environment variable
+  const endpoint = useMemo(() => {
+    if (process.env.NEXT_PUBLIC_RPC_URL) {
+      return process.env.NEXT_PUBLIC_RPC_URL;
+    }
+    // Default to devnet for testing (can be changed to mainnet-beta for production)
+    return clusterApiUrl('devnet');
+  }, []);
 
   const wallets = useMemo(
     () => [

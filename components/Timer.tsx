@@ -9,9 +9,10 @@ interface TimerProps {
   startSlot?: bigint;
   roundId?: string;
   selectedCount?: number;
+  onExpiredChange?: (expired: boolean) => void;
 }
 
-export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount = 0 }: TimerProps) {
+export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount = 0, onExpiredChange }: TimerProps) {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [isExpired, setIsExpired] = useState(false);
   const [notStarted, setNotStarted] = useState(false);
@@ -41,6 +42,10 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
     setTimeLeft(seconds);
     setIsExpired(seconds <= 0);
   }, [currentSlot, endSlot, startSlot]);
+
+  useEffect(() => {
+    onExpiredChange?.(isExpired);
+  }, [onExpiredChange, isExpired]);
 
   const [progress, setProgress] = useState(0); // Start at 0 for intro animation
   const [targetProgress, setTargetProgress] = useState(100);

@@ -14,7 +14,8 @@ import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
 import { useDeployToSquares, useAutomation } from '@/lib/instrucionsHooks';
-import { lamportsToSol } from '@/lib/accounts';
+import { lamportsToSol, gramsToOre } from '@/lib/accounts';
+import { bigIntToNumber } from '@/lib/formatters';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useState, useEffect, useRef } from 'react';
 import { CALCULATIONS } from '@/lib/constants';
@@ -28,7 +29,6 @@ function SlimeAnimation() {
   const animationRef = useRef<gsap.core.Tween | null>(null);
 
   // Available monster gifs in the monsters folder
-  // slime_IDLE_LEFT_WS.gif is 250x200, all others are 200px wide
   const availableMonsters = [
     '/img/monsters/slime_IDLE_LEFT_WS.gif',
     '/img/monsters/rock_monter.gif',
@@ -38,7 +38,7 @@ function SlimeAnimation() {
     '/img/monsters/goblin_3.gif',
   ];
 
-  // Get monster width based on filename (75% of original, then increased by 25% = 93.75% of original)
+  // Get monster width based on filename
   const getMonsterWidth = (monsterPath: string) => {
     if (monsterPath.includes('slime_IDLE_LEFT_WS.gif')) {
       return 250 * 0.75 * 1.25; // slime: 250px -> 187.5px -> 234.375px
@@ -50,32 +50,24 @@ function SlimeAnimation() {
     if (!containerRef.current || availableMonsters.length === 0) return;
 
     const container = containerRef.current;
-    let isAnimating = false; // Track if a monster is currently animating
+    let isAnimating = false;
     let timeoutId: NodeJS.Timeout | null = null;
-    let currentDirection: 'right-to-left' | 'left-to-right' = 'right-to-left'; // Track current direction
+    let currentDirection: 'right-to-left' | 'left-to-right' = 'right-to-left';
 
     const animateNextMonster = () => {
-      // Don't start a new monster if one is already animating
       if (isAnimating) {
-        console.log('Monster already animating, skipping...');
         return;
       }
 
-      // Select a random monster
       const randomIndex = Math.floor(Math.random() * availableMonsters.length);
       const randomMonster = availableMonsters[randomIndex];
       const monsterWidth = getMonsterWidth(randomMonster);
       
-      // Alternate direction
       const direction = currentDirection;
       currentDirection = currentDirection === 'right-to-left' ? 'left-to-right' : 'right-to-left';
       
-      console.log('Selected monster:', randomMonster, 'width:', monsterWidth, 'direction:', direction, 'from', availableMonsters.length, 'available');
-
-      // Mark that we're now animating
       isAnimating = true;
 
-      // Create a new monster element (increased by 25% from previous size)
       const monsterDiv = document.createElement('div');
       monsterDiv.className = 'absolute';
       monsterDiv.style.cssText = `
@@ -88,7 +80,6 @@ function SlimeAnimation() {
       const img = document.createElement('img');
       img.src = randomMonster;
       img.alt = 'Walking Monster';
-      // Flip horizontally if going left to right
       img.style.cssText = `
         height: 100%;
         width: 100%;
@@ -100,48 +91,37 @@ function SlimeAnimation() {
       monsterDiv.appendChild(img);
       container.appendChild(monsterDiv);
 
-      // Set initial position based on direction
       if (direction === 'right-to-left') {
-        // Start off-screen to the right
         gsap.set(monsterDiv, {
           x: '100vw',
         });
-        // Animate across the page from right to left
         animationRef.current = gsap.to(monsterDiv, {
-          x: `-${monsterWidth}px`, // Move completely off-screen to the left
+          x: `-${monsterWidth}px`,
           duration: 12,
           ease: 'none',
           onComplete: () => {
-            // Remove the element after animation completes
             if (container.contains(monsterDiv)) {
               container.removeChild(monsterDiv);
             }
-            // Mark animation as complete
             isAnimating = false;
-            // Wait 2 seconds, then animate next random monster
             timeoutId = setTimeout(() => {
               animateNextMonster();
             }, 2000);
           },
         });
       } else {
-        // Start off-screen to the left
         gsap.set(monsterDiv, {
           x: `-${monsterWidth}px`,
         });
-        // Animate across the page from left to right
         animationRef.current = gsap.to(monsterDiv, {
-          x: '100vw', // Move completely off-screen to the right
+          x: '100vw',
           duration: 12,
           ease: 'none',
           onComplete: () => {
-            // Remove the element after animation completes
             if (container.contains(monsterDiv)) {
               container.removeChild(monsterDiv);
             }
-            // Mark animation as complete
             isAnimating = false;
-            // Wait 2 seconds, then animate next random monster
             timeoutId = setTimeout(() => {
               animateNextMonster();
             }, 2000);
@@ -150,25 +130,20 @@ function SlimeAnimation() {
       }
     };
 
-    // Start the first monster after a small delay
     timeoutId = setTimeout(() => {
       animateNextMonster();
     }, 500);
 
     return () => {
-      // Clear any pending timeouts
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
-      // Cleanup: remove all monster elements
       while (container.firstChild) {
         container.removeChild(container.firstChild);
       }
-      // Kill any running animations
       if (animationRef.current) {
         animationRef.current.kill();
       }
-      // Reset animation flag
       isAnimating = false;
     };
   }, []);
@@ -180,7 +155,7 @@ function SlimeAnimation() {
       style={{
         width: '100%',
         height: '120px',
-        zIndex: 0, // Behind mining items (zIndex: 1)
+        zIndex: 0,
         overflow: 'hidden',
       }}
     />
@@ -199,7 +174,7 @@ export default function Home() {
   const roundResultsRef = useRef<HTMLDivElement>(null);
   const hasAutoScrolledRef = useRef(false);
 
-  // Check if user participated in the round (either current or previous)
+  // Check if user participated in the round
   const userParticipated = miner && (
     (previousRound && miner.roundId.toString() === previousRound.id.toString()) ||
     (round && miner.roundId.toString() === round.id.toString())
@@ -216,7 +191,6 @@ export default function Home() {
   }, [round, lastShownRoundId, timerExpired]);
 
   useEffect(() => {
-    // When previousRound is updated (round just completed) or timer expires
     const roundJustCompleted = previousRound && previousRound.id.toString() !== lastShownRoundId;
     const shouldScroll = (roundJustCompleted || timerExpired) && userParticipated && !hasAutoScrolledRef.current;
     
@@ -224,14 +198,11 @@ export default function Home() {
       setLastShownRoundId(previousRound.id.toString());
     }
     
-    // Auto-scroll to results on mobile if user participated and round ended
     if (shouldScroll && roundResultsRef.current) {
-      // Check if mobile (iOS or Chrome mobile)
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
                       (typeof window !== 'undefined' && window.innerWidth < 768);
       
       if (isMobile) {
-        // Small delay to ensure DOM is updated
         setTimeout(() => {
           roundResultsRef.current?.scrollIntoView({ 
             behavior: 'smooth', 
@@ -256,6 +227,7 @@ export default function Home() {
   const [rounds, setRounds] = useState<number>(10);
   const [mode, setMode] = useState<'manual' | 'auto'>('manual');
   const [automationLoading, setAutomationLoading] = useState(false);
+  const [deploying, setDeploying] = useState(false);
   const switchContainerRef = useRef<HTMLDivElement>(null);
   const switchIndicatorRef = useRef<HTMLDivElement>(null);
   const previousModeRef = useRef<'manual' | 'auto' | null>(null);
@@ -264,6 +236,10 @@ export default function Home() {
   // Automation settings
   const executorFee = 0.001;
   const executorAddress = '3ukWjMXrQnNmuiJqCszcnftBhZuuYfmsxgYMmjeysn4x';
+
+  // State for RoundResults integration
+  const [resultsShown, setResultsShown] = useState(false);
+  const [displayedWinningSquare, setDisplayedWinningSquare] = useState<number | null>(null);
 
   const toggleSquare = (index: number) => {
     const newSelected = new Set(selectedSquares);
@@ -284,34 +260,17 @@ export default function Home() {
   };
 
   const randomSelection = () => {
-    // Default to 5 random squares if no count specified
     const numSquares = Math.floor(Math.random() * 25) + 1;
     const maxSquares = Math.min(numSquares, 25);
-
-    // Create array of all square indices [0-24]
     const allSquares = Array.from({ length: 25 }, (_, i) => i);
-
-    // Shuffle array using Fisher-Yates algorithm
     for (let i = allSquares.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [allSquares[i], allSquares[j]] = [allSquares[j], allSquares[i]];
     }
-
-    // Take first N squares from shuffled array
     const randomSquares = allSquares.slice(0, maxSquares);
     setSelectedSquares(new Set(randomSquares));
   }
 
-  // Commented out for now - may return to this later
-  // const incrementAmount = () => {
-  //   setAmount(prev => +(prev + 0.001).toFixed(3));
-  // };
-
-  // const decrementAmount = () => {
-  //   setAmount(prev => Math.max(0.001, +(prev - 0.001).toFixed(3)));
-  // };
-
-  // Increment/decrement rounds for auto play
   const incrementRounds = () => {
     setRounds(prev => prev + 1);
   };
@@ -346,8 +305,7 @@ export default function Home() {
     previousAutomationRef.current = !!automation;
   }, [automation]);
 
-
-  // Animate switch indicator sliding left to right (smooth ease, no bounce)
+  // Animate switch indicator sliding
   useEffect(() => {
     if (switchIndicatorRef.current && switchContainerRef.current) {
       const isManual = mode === 'manual';
@@ -355,7 +313,6 @@ export default function Home() {
       const indicatorWidth = containerWidth / 2;
       const targetX = isManual ? 0 : indicatorWidth;
 
-      // Animate the indicator sliding with smooth ease
       gsap.to(switchIndicatorRef.current, {
         x: targetX,
         duration: 0.3,
@@ -363,7 +320,6 @@ export default function Home() {
       });
     }
 
-    // Animate main button bounce when mode changes
     if (previousModeRef.current !== null && previousModeRef.current !== mode && mainButtonRef.current) {
       const button = mainButtonRef.current.querySelector('button') as HTMLElement;
       if (button) {
@@ -388,13 +344,10 @@ export default function Home() {
     try {
       setAutomationLoading(true);
 
-      // Calculate deposit based on rounds
-      // Cost per round = (amount per square × number of squares) + executor fee
       const squareCount = selectedSquares.size;
       const costPerRound = (amount * squareCount) + executorFee;
       const depositAmount = costPerRound * rounds;
 
-      // Enable automation - executor will handle deployments
       const signature = await setupAutomation(
         executorAddress,
         amount,
@@ -405,7 +358,7 @@ export default function Home() {
       );
 
       toast.success(`Automation enabled! ${signature.slice(0, 8)}...${signature.slice(-8)}`);
-      clearSelection(); // Clear selection after successful setup
+      clearSelection();
     } catch (error) {
       console.error('Setup automation failed:', error);
       toast.error(`Setup failed: ${error}`);
@@ -434,42 +387,54 @@ export default function Home() {
 
   const handleDeploy = async () => {
     if (selectedSquares.size === 0) {
-        toast.error('Please select at least one square');
-        return;
+      toast.error('Please select at least one square');
+      return;
+    }
+
+    // Validate amount
+    if (!amount || isNaN(amount) || amount <= 0) {
+      toast.error('Invalid amount: please enter a valid amount greater than 0');
+      return;
     }
 
     // Check if user has enough SOL balance
     const totalCost = amount * selectedSquares.size;
-    const estimatedFees = 0.01; // Estimate for transaction fees
+    const estimatedFees = 0.01;
     const requiredBalance = totalCost + estimatedFees;
 
     if (solBalance < requiredBalance) {
-        toast.error(`Insufficient balance! Need ${requiredBalance.toFixed(4)} SOL (including fees), but you have ${solBalance.toFixed(4)} SOL`);
-        return;
+      toast.error(`Insufficient balance! Need ${requiredBalance.toFixed(4)} SOL (including fees), but you have ${solBalance.toFixed(4)} SOL`);
+      return;
     }
 
     let needCheckpoint = false;
 
     // Checkpoint is needed if miner's round is behind the current round
-    if (miner && round && BigInt(miner.roundId) < BigInt(round.id)) {
-        needCheckpoint = true;
+    // Use bigIntToNumber for proper comparison (preserving working logic from MainControl)
+    if (miner && round && bigIntToNumber(miner.roundId) < bigIntToNumber(round.id)) {
+      needCheckpoint = true;
     }
 
     try {
-        const squaresArray = Array.from(selectedSquares);
-        const signature = await deploy(
-            amount,
-            squaresArray,
-            '9nmmN2Cj6Bj3ob8tteszatY87Jz2QYSpxstWiXg2v6iC',
-            needCheckpoint
-        );
-        toast.success(`Deploy successful! ${signature.slice(0, 8)}...${signature.slice(-8)}`);
-        // We no longer clear selection here so user can see which squares they've mined
+      setDeploying(true);
+      const squaresArray = Array.from(selectedSquares);
+      const signature = await deploy(
+        amount,
+        squaresArray,
+        '9nmmN2Cj6Bj3ob8tteszatY87Jz2QYSpxstWiXg2v6iC',
+        needCheckpoint
+      );
+      toast.success(`Deploy successful! ${signature.slice(0, 8)}...${signature.slice(-8)}`);
+      // Don't clear selection - let user see which squares they've mined
     } catch (error) {
-        console.error('Deploy failed:', error);
-        toast.error(`Deploy failed: ${error}`);
+      console.error('Deploy failed:', error);
+      toast.error(`Deploy failed: ${error}`);
+    } finally {
+      setDeploying(false);
     }
   };
+
+  const winnerKnown = displayedWinningSquare !== null;
 
   if (loading) {
     return (
@@ -516,16 +481,7 @@ export default function Home() {
     );
   }
 
-  // Format last update time
-  const formatUpdateTime = (date: Date) => {
-    const now = new Date();
-    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
-
-    if (diff < 5) return 'just now';
-    if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    return date.toLocaleTimeString();
-  };
+  const squareCount = selectedSquares.size;
 
   return (
     <main className="min-h-screen bg-cq-bg-0 text-white flex flex-col" style={{ overflowX: 'hidden' }}>
@@ -539,10 +495,10 @@ export default function Home() {
       {/* Slime walking animation */}
       <SlimeAnimation />
 
-      {/* Mining items gradient image at top - scrolls with page */}
+      {/* Mining items gradient image at top */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
         <div className="absolute flex items-start justify-between gap-1 sm:gap-2" style={{ top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, width: '100%', maxWidth: '100vw', paddingLeft: '8px', paddingRight: '8px' }}>
-          {/* Left: Wallet Button or Connected Wallet UI (same SOL pill as right but with big wallet image) */}
+          {/* Left: Wallet Button or Connected Wallet UI */}
           <div className="flex-1 flex items-center justify-start" style={{ marginTop: '2px', width: '100%' }}>
             {connected ? (
               <div className="relative w-full overflow-visible" style={{
@@ -552,7 +508,6 @@ export default function Home() {
                 boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
                 minHeight: '36px',
               }}>
-                {/* Inner Content Area with Neutral Gradient */}
                 <div className="relative w-full h-full overflow-visible flex items-center justify-center" style={{
                   background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
                   borderRadius: '11px',
@@ -560,7 +515,6 @@ export default function Home() {
                   minHeight: '32px',
                   padding: '6px 12px',
                 }}>
-                  {/* Glossy Overlay */}
                   <div 
                     className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none"
                     style={{ 
@@ -568,7 +522,6 @@ export default function Home() {
                       borderTopRightRadius: '10px'
                     }}
                   />
-                  {/* Wallet image (using unconnected wallet image) */}
                   <div className="absolute left-1 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ width: '34px', height: '40px', marginLeft: '1px' }}>
                     <img 
                       src="/img/wallet.png" 
@@ -580,7 +533,6 @@ export default function Home() {
                       }}
                     />
                   </div>
-                  {/* Content area - accounting for wallet logo width (34px + 1px margin + 4px left padding = ~39px) */}
                   <div className="absolute inset-0 flex items-center pointer-events-none z-10" style={{ 
                     left: '39px', 
                     right: '8px', 
@@ -599,13 +551,10 @@ export default function Home() {
                     }}>
                       {(() => {
                         const formatted = solBalance.toFixed(2);
-                        // For values >= 1, show up to 4 digits before decimal (e.g., 9999.99)
-                        // For values < 1, show "SOL 0.XX"
                         let amountText = '';
                         if (solBalance >= 1) {
                           const wholePart = Math.floor(solBalance).toString();
                           const decimalPart = formatted.split('.')[1];
-                          // Limit to 4 digits for whole part
                           const displayWhole = wholePart.length > 4 ? wholePart.slice(0, 4) : wholePart;
                           amountText = `${displayWhole}.${decimalPart}`;
                         } else {
@@ -619,7 +568,6 @@ export default function Home() {
                         );
                       })()}
                     </div>
-                    {/* Red bubble with black X */}
                     <div className="flex items-center justify-center" style={{
                       width: '12px',
                       height: '12px',
@@ -660,7 +608,7 @@ export default function Home() {
               flexShrink: 0
             }}
           />
-          {/* Right: SOL and QUEST Balances */}
+          {/* Right: SOL Balance */}
           <div className="flex-1 flex flex-col gap-2 items-end" style={{ marginTop: '2px', width: '100%' }}>
             <div className="relative w-full overflow-visible" style={{
               background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
@@ -669,7 +617,6 @@ export default function Home() {
               boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
               minHeight: '36px',
             }}>
-              {/* Inner Content Area with Neutral Gradient */}
               <div className="relative w-full h-full overflow-visible flex items-center justify-center" style={{
                 background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
                 borderRadius: '11px',
@@ -677,7 +624,6 @@ export default function Home() {
                 minHeight: '32px',
                 padding: '6px 12px',
               }}>
-                {/* Glossy Overlay */}
                 <div 
                   className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none"
                   style={{ 
@@ -685,7 +631,6 @@ export default function Home() {
                     borderTopRightRadius: '10px'
                   }}
                 />
-                {/* SOL icon image */}
                 <div className="absolute left-1 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ width: '25px', height: '40px', marginLeft: '1px' }}>
                   <img 
                     src="/img/sol.png" 
@@ -704,53 +649,10 @@ export default function Home() {
                 </div>
               </div>
             </div>
-            
-            {/* QUEST Balance */}
-            {/* <div className="relative">
-              <img 
-                src="/img/quest_amount.png" 
-                alt="QUEST Balance Background" 
-                style={{
-                  width: '100%',
-                  height: 'auto',
-                  display: 'block',
-                }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1" style={{ paddingLeft: '21px' }}>
-                <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none mt-[3px]">
-                  <AnimatedNumber value={(tokenBalance || 1.34).toFixed(2).padStart(7, '0')} />
-                </div>
-              </div>
-            </div> */}
           </div>
         </div>
         {board?.endSlot && currentSlot && (
           <div className="absolute top-[90px]" style={{ left: '50%', transform: 'translateX(-50%)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-            {/* Square with pill border style - Left */}
-            {/* <div 
-              style={{
-                background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
-                padding: '2px',
-                borderRadius: '13px',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
-                width: '113px',
-                height: '113px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <div 
-                style={{
-                  background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
-                  borderRadius: '11px',
-                  boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
-                  width: '100%',
-                  height: '100%',
-                }}
-              />
-            </div> */}
-            {/* GIF - Centered */}
             <img 
               src="/img/open_treasure_hirez.gif" 
               alt="Treasure Chest Open" 
@@ -760,30 +662,6 @@ export default function Home() {
                 marginTop: '-65px'
               }}
             />
-            {/* Square with pill border style - Right */}
-            {/* <div 
-              style={{
-                background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
-                padding: '2px',
-                borderRadius: '13px',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
-                width: '113px',
-                height: '113px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <div 
-                style={{
-                  background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
-                  borderRadius: '11px',
-                  boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
-                  width: '100%',
-                  height: '100%',
-                }}
-              />
-            </div> */}
           </div>
         )}
         <img 
@@ -809,15 +687,10 @@ export default function Home() {
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
-            {/* Left: Title */}
             <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
               <h1 className="text-sm sm:text-base md:text-lg font-bold bg-gradient-to-r from-cq-primary-blue to-cq-primary-yellow bg-clip-text text-transparent">
                 QUEST MINER
               </h1>
-            </div>
-
-            {/* Right: Balances + Wallet - REMOVED small redundant wallet */}
-            <div className="flex-1 flex items-center justify-end gap-2" style={{ background: 'transparent' }}>
             </div>
           </div>
         </div>
@@ -857,16 +730,12 @@ export default function Home() {
 
         <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mx-auto relative z-30 mb-0" style={{ overflow: 'visible', marginTop: '-2px' }}>
           <div className="mt-0" style={{ overflow: 'visible' }}>
-            <Motherlode
-              endSlot={board.endSlot}
-              currentSlot={currentSlot}
-              startSlot={board.startSlot}
-            />
+            <Motherlode />
           </div>
         </div>
 
         <div className="w-full max-w-[min(92vw,520px)] mx-auto relative z-30" style={{ overflow: 'visible' }}>
-          {/* Timer and Selection Controls placed below Motherlode and on top of the Mining Grid */}
+          {/* Timer and Selection Controls */}
           {board?.endSlot && currentSlot && (
             <div className="w-full flex items-center justify-center gap-2 mb-2">
               <div className="flex-1 min-w-0" style={{ marginLeft: '-5px' }}>
@@ -936,29 +805,28 @@ export default function Home() {
           <div className="mt-0" style={{ overflow: 'visible' }}>
               <Grid
                 round={round}
-                miner={miner}
-                currentSlot={currentSlot}
                 selectedSquares={selectedSquares}
                 toggleSquare={toggleSquare}
-                deployAmount={amount}
-                timerExpired={timerExpired}
+                enableWinnerEffects={winnerKnown && resultsShown}
+                randomAnimationEnabled={false}
+                winnerSquareOverride={displayedWinningSquare}
               />
           </div>
           
-          {/* Round Results Section - Below Mining Section */}
+          {/* Round Results Section */}
           <div ref={roundResultsRef} className="mt-6">
             <RoundResults
-              round={previousRound || round}
-              miner={miner}
+              onShownChange={setResultsShown}
+              onWinningSquareChange={setDisplayedWinningSquare}
             />
           </div>
 
-          {/* Round Rewards History - Scrollable cards */}
+          {/* Round Rewards History */}
           <div className="mt-6">
             <RoundRewardsHistory />
           </div>
 
-          {/* Staking Panel - Below Round Results */}
+          {/* Staking Panel */}
           {connected && (
             <div className="mt-6">
               <StakingPanel />
@@ -970,13 +838,12 @@ export default function Home() {
       </div>
 
       {/* BOTTOM CONTROL BAR - Sticky */}
-      {/* MINE/Increment UI - Always at bottom when squares selected */}
       <div 
         className="fixed bottom-0 left-0 right-0 z-40 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out"
         style={{ 
           backgroundColor: '#FFB84A',
           boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          height: selectedSquares.size > 0 ? '128px' : '68px', // 48px handle + 60px MINE bar + 20px padding
+          height: selectedSquares.size > 0 ? '128px' : '68px',
           paddingBottom: '20px',
           bottom: 0,
         }}
@@ -986,7 +853,7 @@ export default function Home() {
           className="w-full h-[48px] grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 border-b border-black/10 flex-none"
           style={{ paddingInline: 'calc(var(--spacing) * 4)' }}
         >
-          {/* Left: Selected Info - Value on top, label on bottom */}
+          {/* Left: Selected Info */}
           <div className="flex flex-col items-start justify-center min-w-0">
             <span className="text-sm font-black text-black leading-none">
               <span className="text-[8px]">x</span>
@@ -994,7 +861,7 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Center: Manual/Auto Switch - Inset tab style with sliding indicator */}
+          {/* Center: Manual/Auto Switch */}
           <div 
             ref={switchContainerRef}
             className="relative flex items-center bg-black/20 rounded-full p-1"
@@ -1003,7 +870,6 @@ export default function Home() {
               height: '32px',
             }}
           >
-            {/* Sliding indicator - Black for both manual and auto */}
             <div
               ref={switchIndicatorRef}
               className="absolute top-1 left-1 rounded-full"
@@ -1017,7 +883,6 @@ export default function Home() {
                 transform: mode === 'manual' ? 'translateX(0)' : 'translateX(100%)',
               }}
             >
-              {/* Glossy overlay */}
               <div 
                 className="absolute top-1 left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
                 style={{ filter: 'blur(1px)' }}
@@ -1028,7 +893,6 @@ export default function Home() {
               />
             </div>
 
-            {/* Text labels */}
             <button
               onClick={() => {
                 if (!automation) {
@@ -1056,7 +920,7 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Right: Round Info - Value on top, label on bottom */}
+          {/* Right: Round Info */}
           <div className="flex flex-col items-end justify-center min-w-0">
             <span className="text-sm font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
             <span className="text-sm font-black text-black uppercase leading-none">Round</span>
@@ -1083,7 +947,6 @@ export default function Home() {
                   value={amount}
                   onChange={(e) => {
                     const inputValue = e.target.value;
-                    // Allow empty string for editing
                     if (inputValue === '') {
                       setAmount(0);
                       return;
@@ -1094,7 +957,6 @@ export default function Home() {
                     }
                   }}
                   onBlur={(e) => {
-                    // Validate and set minimum on blur
                     const value = parseFloat(e.target.value);
                     if (isNaN(value) || value < 0.001) {
                       setAmount(0.001);
@@ -1115,7 +977,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Center: MINE/AUTO MINE/CANCEL Button - Dynamic based on mode */}
+            {/* Center: MINE/AUTO MINE/CANCEL Button */}
             <div className="flex justify-center" ref={mainButtonRef}>
               {mode === 'manual' ? (
                 <GlossyButton
@@ -1123,9 +985,9 @@ export default function Home() {
                   size="md"
                   variant="success"
                   className="!w-[73px] !py-1 !text-lg !min-h-[40px]"
-                  disabled={selectedSquares.size === 0 || automationLoading}
+                  disabled={selectedSquares.size === 0 || deploying || automationLoading}
                 >
-                  MINE
+                  {deploying ? 'MINING...' : 'MINE'}
                 </GlossyButton>
               ) : automation ? (
                 <GlossyButton
@@ -1152,7 +1014,6 @@ export default function Home() {
 
             {/* Right Side: ROUNDS Display and Increment Controls */}
             <div className={`absolute right-4 flex items-center justify-end gap-2 ${mode === 'manual' ? 'pointer-events-none' : ''}`}>
-              {/* ROUNDS Display - Closer to increment buttons */}
               <div className="flex flex-col items-end justify-center mr-1">
                 <span className="text-[8px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">RND#</span>
                 <span className={`text-[8px] font-black leading-none ${mode === 'auto' ? 'text-[rgb(120,63,4)]' : 'text-[rgb(120,63,4)]/30'}`}>
@@ -1185,7 +1046,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
 
     </main>
   );

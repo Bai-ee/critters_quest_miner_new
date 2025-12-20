@@ -27,6 +27,10 @@ function initSound(
     loop: options.loop ?? false,
     preload: true,
     html5: false, // Use Web Audio API for better performance
+    onloaderror: () => {
+      // Silently fail if sound file doesn't exist
+      console.warn(`Sound file not found: ${SOUND_PATHS[key]}`);
+    },
   });
 
   soundCache.set(key, sound);
@@ -101,7 +105,7 @@ class SoundManager {
 
       return soundId ?? null;
     } catch (error) {
-      console.warn(`Failed to play sound: ${key}`, error);
+      // Silently fail if sound can't be played
       return null;
     }
   }

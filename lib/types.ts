@@ -87,6 +87,7 @@ export interface Stake {
 export interface Treasury {
   /** The amount of SOL collected for buy-bury operations */
   balance: bigint;
+  bufferA: bigint;
   /** The amount of ORE in the MINOR motherlode (20% of lottery motherlode, 1/125 odds) */
   motherlodeOreMinor: bigint;
   /** The amount of ORE in the MAJOR motherlode (50% of lottery motherlode, 1/625 odds) */
@@ -103,6 +104,7 @@ export interface Treasury {
   minerRewardsFactor: Uint8Array;
   /** The cumulative ORE distributed to stakers */
   stakeRewardsFactor: Uint8Array;
+  bufferB: bigint;
   /** The current total amount of refined ORE mining rewards */
   totalRefined: bigint;
   /** The current total amount of ORE staking deposits */

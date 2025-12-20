@@ -36,7 +36,6 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "critters_quest_miner-main"
+    "node_modules"
   ]
 }

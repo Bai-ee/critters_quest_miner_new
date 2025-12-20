@@ -20,6 +20,16 @@ export interface IRound {
   timestamp: Date; // DateTime<Utc> in Rust
   created_at: Date; // DateTime<Utc> in Rust
   round_winner?: string; // Option<Pubkey> serialized as string
+  // SOL Distribution breakdown
+  admin_fee: number; // 0.5% of total_deployed
+  buyback_amount: number; // 6% of total_deployed
+  staker_amount: number; // 2% of total_deployed
+  master_edition_amount: number; // 1% of total_deployed
+  sol_motherlode_amount: number; // 2% of total_deployed
+  // ORE Distribution breakdown
+  total_ore_reward: number; // Total ORE available
+  ore_guaranteed_pool: number; // ORE guaranteed pool based on lottery outcome
+  ore_lottery_pool: number; // ORE lottery pool based on lottery outcome
 }
 
 const RoundSchema = new Schema<IRound>({
@@ -40,6 +50,14 @@ const RoundSchema = new Schema<IRound>({
   timestamp: { type: Date, required: true },
   created_at: { type: Date, required: true },
   round_winner: { type: String, required: false },
+  admin_fee: { type: Number, required: true },
+  buyback_amount: { type: Number, required: true },
+  staker_amount: { type: Number, required: true },
+  master_edition_amount: { type: Number, required: true },
+  sol_motherlode_amount: { type: Number, required: true },
+  total_ore_reward: { type: Number, required: true },
+  ore_guaranteed_pool: { type: Number, required: true },
+  ore_lottery_pool: { type: Number, required: true },
 });
 
 const Round: Model<IRound> = mongoose.models.Round || mongoose.model<IRound>('Round', RoundSchema, 'rounds');

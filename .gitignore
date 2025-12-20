@@ -33,10 +33,3 @@ yarn-error.log*
 next-env.d.ts
 scripts/automation-keypair.json
 .env
-
-# cursor
-.cursor/
-
-# temporary/unused directories
-critters_quest_miner-main/
-critters_quest_miner-main-updated-logic.zip
