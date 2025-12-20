@@ -9,6 +9,7 @@ import { RoundResults } from '@/components/RoundResults';
 import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { HowTo } from '@/components/HowTo';
 import { StakingPanel } from '@/components/StakingPanel';
+import { RoundRewardsHistory } from '@/components/RoundRewardsHistory';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
@@ -950,6 +951,11 @@ export default function Home() {
               round={previousRound || round}
               miner={miner}
             />
+          </div>
+
+          {/* Round Rewards History - Scrollable cards */}
+          <div className="mt-6">
+            <RoundRewardsHistory />
           </div>
 
           {/* Staking Panel - Below Round Results */}

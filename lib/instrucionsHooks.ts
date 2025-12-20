@@ -74,12 +74,6 @@ export function useDeployToSquares() {
 
     // Create and send transaction
     transaction.add(instruction1);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
 
     // Wait for confirmation
@@ -116,12 +110,6 @@ export function useCheckpoint() {
 
     // Create and send transaction
     const transaction = new Transaction().add(instruction);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
 
     // Wait for confirmation
@@ -151,12 +139,6 @@ export function useClaimSol() {
 
     // Create and send transaction
     const transaction = new Transaction().add(instruction);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
 
     // Wait for confirmation
@@ -186,12 +168,6 @@ export function useClaimOre() {
 
     // Create and send transaction
     const transaction = new Transaction().add(instruction);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
 
     // Wait for confirmation
@@ -225,11 +201,6 @@ export function useClaimAll() {
     // Create the instruction
     const instruction1 = createClaimOreInstruction(publicKey);
     transaction.add(instruction1);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
 
     const signature = await sendTransaction(transaction, connection);
 
@@ -316,12 +287,6 @@ export function useAutomation() {
 
     // Create and send transaction
     const transaction = new Transaction().add(instruction);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
 
     // Wait for confirmation
@@ -356,12 +321,6 @@ export function useAutomation() {
 
     // Create and send transaction
     const transaction = new Transaction().add(instruction);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
 
     // Wait for confirmation
@@ -389,12 +348,6 @@ export function useStakeDeposit() {
     const amountGrams = BigInt(Math.floor(amount * 1e9));
     const instruction = createStakeDepositInstruction(publicKey, amountGrams, publicKey);
     const transaction = new Transaction().add(instruction);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
     await connection.confirmTransaction(signature, 'confirmed');
     return signature;
@@ -418,12 +371,6 @@ export function useStakeWithdraw() {
     const amountGrams = BigInt(Math.floor(amount * 1e9));
     const instruction = createStakeWithdrawInstruction(publicKey, amountGrams);
     const transaction = new Transaction().add(instruction);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
     await connection.confirmTransaction(signature, 'confirmed');
     return signature;
@@ -447,12 +394,6 @@ export function useStakeClaimYield() {
     const amountLamports = BigInt(Math.floor(amount * 1e9));
     const instruction = createStakeClaimYieldInstruction(publicKey, amountLamports);
     const transaction = new Transaction().add(instruction);
-
-    // Set recent blockhash and fee payer
-    const { blockhash } = await connection.getLatestBlockhash();
-    transaction.recentBlockhash = blockhash;
-    transaction.feePayer = publicKey;
-
     const signature = await sendTransaction(transaction, connection);
     await connection.confirmTransaction(signature, 'confirmed');
     return signature;
