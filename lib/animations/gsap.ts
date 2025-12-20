@@ -334,3 +334,4 @@ export function getAnimationDuration(baseDuration: number): number {
   return prefersReducedMotion() ? 0 : baseDuration;
 }
 
+

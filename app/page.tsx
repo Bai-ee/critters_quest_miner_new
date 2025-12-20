@@ -409,8 +409,6 @@ export default function Home() {
 
     let needCheckpoint = false;
 
-    // Checkpoint is needed if miner's round is behind the current round
-    // Use bigIntToNumber for proper comparison (preserving working logic from MainControl)
     if (miner && round && bigIntToNumber(miner.roundId) < bigIntToNumber(round.id)) {
       needCheckpoint = true;
     }

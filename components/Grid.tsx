@@ -39,103 +39,25 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
   const [animationPhase, setAnimationPhase] = useState<'initial' | 'animating' | 'completed'>('initial');
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  // Determine if the round is currently in the "mining" phase (timer running)
-  const isMining = useMemo(() => {
-    if (!round.id || !currentSlot) return false;
-    // Round is active if current slot is between start and end slots
-    return currentSlot >= round.id && currentSlot < (round.id + BigInt(150 * 5)); // Approximate end slot if not available
-  }, [round.id, currentSlot]);
-
-  // Better way to check if timer is running: use board data from parent or just check if round is not expired
   const isTimerRunning = useMemo(() => {
-    // If we have a slot hash, the round is finalized/expired
     const isExpired = round.slotHash && round.slotHash.some(b => b !== 0);
     return !isExpired;
   }, [round.slotHash]);
 
-  // Generate a stable set of random images for the back of each card
-  const backImages = useMemo(() => {
-    return Array.from({ length: 25 }, () => 
-      MINING_ITEMS[Math.floor(Math.random() * MINING_ITEMS.length)]
-    );
-  }, []);
-
-  // Generate a stable set of random background colors for each card
-  // Colors that complement the gold/orange/earth tone design
-  const cardColors = useMemo(() => {
-    const colorPalette = [
-      '#ffb84a', // Original orange/gold
-      '#d4a574', // Warm beige
-      '#c9a961', // Golden tan
-      '#e8c547', // Bright gold
-      '#f4a460', // Sandy brown
-      '#daa520', // Goldenrod
-      '#cd853f', // Peru
-      '#deb887', // Burlywood
-      '#d2b48c', // Tan
-      '#bc8f8f', // Rosy brown
-      '#b8860b', // Dark goldenrod
-      '#ffd700', // Gold
-      '#ff8c00', // Dark orange
-      '#ffa500', // Orange
-      '#ff7f50', // Coral
-      '#f0e68c', // Khaki
-      '#eee8aa', // Pale goldenrod
-      '#daa520', // Goldenrod
-      '#bdb76b', // Dark khaki
-      '#dda0dd', // Plum (softer accent)
-      '#98d8c8', // Mint (soft accent)
-      '#f7dc6f', // Light yellow
-      '#f39c12', // Orange
-      '#e67e22', // Carrot
-      '#d35400', // Dark orange
-    ];
-    
-    // Use card index as seed for consistent colors per card
-    return Array.from({ length: 25 }, (_, index) => {
-      const seed = index * 7919; // Prime number for better distribution
-      return colorPalette[seed % colorPalette.length];
-    });
-  }, []);
-
-  // Generate a stable set of random fluorescent colors for selected tiles
   const fluorescentColors = useMemo(() => {
     const fluorescentPalette = [
-      '#00cc33', // Neon green (toned down)
-      '#2dcc14', // Electric green (toned down)
-      '#00cc66', // Bright cyan-green (toned down)
-      '#00cccc', // Cyan (toned down)
-      '#00b3cc', // Electric blue (toned down)
-      '#0066cc', // Bright blue (toned down)
-      '#6600cc', // Electric purple (toned down)
-      '#9900cc', // Magenta (toned down)
-      '#cc00cc', // Hot pink (toned down)
-      '#cc0066', // Bright pink (toned down)
-      '#cc0033', // Hot red-pink (toned down)
-      '#cc3300', // Electric orange (toned down)
-      '#cc8800', // Bright yellow-orange (toned down)
-      '#cccc00', // Electric yellow (toned down)
-      '#88cc00', // Lime green (toned down)
-      '#66cc00', // Bright lime (toned down)
-      '#00cc88', // Aqua (toned down)
-      '#0088cc', // Sky blue (toned down)
-      '#6600cc', // Electric violet (toned down)
-      '#cc0066', // Hot magenta (toned down)
-      '#cc3300', // Bright red-orange (toned down)
-      '#cc6600', // Electric orange (toned down)
-      '#00cc99', // Turquoise (toned down)
-      '#0066cc', // Bright blue (toned down)
-      '#8800cc', // Purple (toned down)
+      '#00cc33', '#2dcc14', '#00cc66', '#00cccc', '#00b3cc',
+      '#0066cc', '#6600cc', '#9900cc', '#cc00cc', '#cc0066',
+      '#cc0033', '#cc3300', '#cc8800', '#cccc00', '#88cc00',
+      '#66cc00', '#00cc88', '#0088cc', '#6600cc', '#cc0066',
+      '#cc3300', '#cc6600', '#00cc99', '#0066cc', '#8800cc',
     ];
     
-    // Use card index as seed for consistent colors per card
     return Array.from({ length: 25 }, (_, index) => {
-      const seed = index * 7919; // Prime number for better distribution
+      const seed = index * 7919;
       return fluorescentPalette[seed % fluorescentPalette.length];
     });
   }, []);
-
-  // Rebuilt staggered 3D flip animation timeline
   useEffect(() => {
     if (gridRef.current && !hasAnimatedRef.current) {
       const cardInners = gridRef.current.querySelectorAll('.cq-card-inner');
@@ -144,7 +66,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
         hasAnimatedRef.current = true;
         setAnimationPhase('animating');
         
-        // Initial state: Flipped to show the back (-180 deg) and visible
         gsap.set(cardInners, { 
           opacity: 1, 
           rotationY: -180,
@@ -156,8 +77,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
             setAnimationPhase('completed');
           }
         });
-
-        // Flip to reveal the front
         tl.to(cardInners, {
           opacity: 1,
           rotationY: 0,
@@ -174,35 +93,29 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
     }
   }, [round.deployed]);
 
-  // Calculate winning square if round is finalized
   const winningSquare = getWinningSquare(round.slotHash);
 
-  // Persist the winner when it's first detected, and keep showing it even if round changes
   useEffect(() => {
     if (winningSquare !== null && persistedWinner === null) {
       setPersistedWinner(winningSquare);
       setShowWinner(true);
       setWinnerSquareIndex(winningSquare);
 
-      // Clear any existing timer
       if (hideTimerRef.current) {
         clearTimeout(hideTimerRef.current);
       }
 
-      // Hide the winner animation after 15 seconds
       hideTimerRef.current = setTimeout(() => {
         setShowWinner(false);
         setWinnerSquareIndex(null);
         setPersistedWinner(null);
         hideTimerRef.current = null;
-      }, 15000); // 15 seconds
+      }, 15000);
     }
   }, [winningSquare, persistedWinner]);
 
-  // Auto-scroll to winning card when timer expires
   useEffect(() => {
     if (timerExpired && winnerSquareIndex !== null && cardRefs.current[winnerSquareIndex]) {
-      // Small delay to ensure DOM is updated
       setTimeout(() => {
         cardRefs.current[winnerSquareIndex]?.scrollIntoView({ 
           behavior: 'smooth', 
@@ -212,8 +125,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
       }, 300);
     }
   }, [timerExpired, winnerSquareIndex]);
-
-  // Cleanup on unmount only
   useEffect(() => {
     return () => {
       if (hideTimerRef.current) {
@@ -222,9 +133,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
       }
     };
   }, []);
-
-  // Find max deployed to scale colors
-  const maxDeployed = Math.max(...round.deployed.map(d => Number(d)));
 
   return (
     <div ref={gridRef} className="grid grid-cols-5 gap-1 sm:gap-2" style={{ perspective: '1200px' }}>
@@ -241,30 +149,25 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
         }
       `}</style>
       {round.deployed.map((lamports, index) => {
-        // Total SOL deployed on this square (from all users)
         const sol = lamportsToSol(lamports);
         const miners = round.count[index];
         const isSelected = selectedSquares.has(index);
         
-        // Check if user has already deployed to this square in the current round
         const hasMined = miner && 
                         miner.roundId.toString() === round.id.toString() && 
                         miner.deployed && 
                         miner.deployed[index] > BigInt(0);
         
-        // User's SOL deployed on this square
         const userSol = miner && 
                        miner.roundId.toString() === round.id.toString() && 
                        miner.deployed ? 
                        lamportsToSol(miner.deployed[index]) : 0;
         
-        // Final chosen state is either selected in UI or already mined on-chain
         const isChosen = isSelected || hasMined;
         const isWinner = index === winnerSquareIndex && showWinner;
 
         const handleCardClick = () => {
           toggleSquare(index);
-          // Spring bounce animation on click
           const cardElement = cardRefs.current[index];
           springBounceAnimation(cardElement);
         };
@@ -277,25 +180,22 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
             style={{ 
               transformStyle: 'preserve-3d',
               perspective: '1000px',
-              containerType: 'inline-size', // Enable container queries for scaling
-              overflow: isWinner ? 'visible' : 'visible',
+              containerType: 'inline-size',
+              overflow: 'visible',
               zIndex: isWinner ? 50 : 'auto'
             }}
             onClick={handleCardClick}
           >
-            {/* Inner Wrapper for GSAP Flip Animation */}
             <div 
               className="cq-card-inner w-full h-full relative"
               style={{ 
                 transformStyle: 'preserve-3d',
                 width: '100%',
                 height: '100%',
-                // Cards are visible on load, showing their back face
                 opacity: 1,
                 transform: animationPhase === 'completed' ? 'rotateY(0deg)' : 'rotateY(-180deg)'
               }}
             >
-              {/* FRONT FACE (Data) */}
               <div 
                 className={`
                   absolute inset-0 w-full h-full flex flex-col
@@ -303,7 +203,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                   ${isChosen && isTimerRunning ? 'animate-shake' : ''}
                 `}
                 style={{
-                  // Golden gradient border (matching GRAND label style)
                   background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
                   padding: '2px',
                   borderRadius: '13px',
@@ -318,7 +217,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                   overflow: 'visible'
                 }}
               >
-                {/* Inner content area with card background */}
                 <div 
                   className="w-full h-full relative"
                   style={{
@@ -326,14 +224,11 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                     borderRadius: '11px'
                   }}
                 >
-                  {/* Card number badge (Top Left - tucked inside bezel) */}
                   <div className="absolute text-[10cqw] font-mono font-bold text-white z-30 opacity-70" style={{ top: '3px', left: '7px' }}>
                     #{index + 1}
                   </div>
 
-                  {/* Center Item Image Container */}
                   <div className="relative w-full h-full flex items-center justify-center overflow-visible" style={{ transform: 'translateY(-5px)' }}>
-                    {/* Chest Image - show open when winner, closed otherwise */}
                     {(!isChosen || isWinner) && (
                       <img 
                         src={(winningSquare !== null && index === winningSquare) || isWinner ? "/img/open_treasure_hirez.gif" : "/img/treasure_chest_closed.gif"}
@@ -342,7 +237,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                       />
                     )}
                     
-                    {/* Miner count circle (Top Right of chest icon) */}
                     <div 
                       className={`absolute rounded-full border flex items-center justify-center z-30 shadow-sm px-1 overflow-hidden transition-all duration-200`}
                       style={{
@@ -368,9 +262,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                     </div>
                   </div>
 
-                  {/* Bottom Info Row (SOL values - centered at bottom) */}
                   <div className="absolute bottom-0 left-0 right-0 w-full flex flex-col justify-center items-center px-1 gap-[1cqw]" style={{ left: 0 }}>
-                    {/* User's SOL value (on top) - only show if tile is selected, with preview of deploy amount - green bg like circle */}
                     {isChosen && (
                       <div 
                         className="text-[22cqw] font-bold text-white whitespace-nowrap px-[2cqw] rounded-full border flex items-center justify-center shadow-sm overflow-hidden relative"
@@ -389,7 +281,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                         </span>
                       </div>
                     )}
-                    {/* Total SOL value (below) - centered at bottom, styled like participant count circle */}
                     <div 
                       className="text-[15cqw] font-bold text-white whitespace-nowrap px-[2cqw] rounded-full border flex items-center justify-center shadow-sm overflow-hidden relative"
                       style={{
@@ -413,11 +304,9 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                 </div>
               </div>
 
-              {/* BACK FACE (Mining Item) */}
               <div 
                 className="absolute inset-0 w-full h-full flex items-center justify-center"
                 style={{
-                  // Golden gradient border (matching GRAND label style)
                   background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
                   padding: '2px',
                   borderRadius: '13px',
@@ -430,7 +319,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                   overflow: 'hidden'
                 }}
               >
-                {/* Inner content area with card background */}
                 <div 
                   className="w-full h-full relative flex items-center justify-center"
                   style={{
