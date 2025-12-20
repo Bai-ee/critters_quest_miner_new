@@ -4,6 +4,7 @@ import { Round, Miner } from '@/lib/types';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import gsap from 'gsap';
+import { springBounceAnimation } from '@/lib/animations/springBounce';
 
 interface GridProps {
   round: Round;
@@ -35,6 +36,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
   const gridRef = useRef<HTMLDivElement>(null);
   const hasAnimatedRef = useRef(false);
   const [animationPhase, setAnimationPhase] = useState<'initial' | 'animating' | 'completed'>('initial');
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   // Determine if the round is currently in the "mining" phase (timer running)
   const isMining = useMemo(() => {
@@ -57,6 +59,81 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
     return Array.from({ length: 25 }, () => 
       MINING_ITEMS[Math.floor(Math.random() * MINING_ITEMS.length)]
     );
+  }, []);
+
+  // Generate a stable set of random background colors for each card
+  // Colors that complement the gold/orange/earth tone design
+  const cardColors = useMemo(() => {
+    const colorPalette = [
+      '#ffb84a', // Original orange/gold
+      '#d4a574', // Warm beige
+      '#c9a961', // Golden tan
+      '#e8c547', // Bright gold
+      '#f4a460', // Sandy brown
+      '#daa520', // Goldenrod
+      '#cd853f', // Peru
+      '#deb887', // Burlywood
+      '#d2b48c', // Tan
+      '#bc8f8f', // Rosy brown
+      '#b8860b', // Dark goldenrod
+      '#ffd700', // Gold
+      '#ff8c00', // Dark orange
+      '#ffa500', // Orange
+      '#ff7f50', // Coral
+      '#f0e68c', // Khaki
+      '#eee8aa', // Pale goldenrod
+      '#daa520', // Goldenrod
+      '#bdb76b', // Dark khaki
+      '#dda0dd', // Plum (softer accent)
+      '#98d8c8', // Mint (soft accent)
+      '#f7dc6f', // Light yellow
+      '#f39c12', // Orange
+      '#e67e22', // Carrot
+      '#d35400', // Dark orange
+    ];
+    
+    // Use card index as seed for consistent colors per card
+    return Array.from({ length: 25 }, (_, index) => {
+      const seed = index * 7919; // Prime number for better distribution
+      return colorPalette[seed % colorPalette.length];
+    });
+  }, []);
+
+  // Generate a stable set of random fluorescent colors for selected tiles
+  const fluorescentColors = useMemo(() => {
+    const fluorescentPalette = [
+      '#00cc33', // Neon green (toned down)
+      '#2dcc14', // Electric green (toned down)
+      '#00cc66', // Bright cyan-green (toned down)
+      '#00cccc', // Cyan (toned down)
+      '#00b3cc', // Electric blue (toned down)
+      '#0066cc', // Bright blue (toned down)
+      '#6600cc', // Electric purple (toned down)
+      '#9900cc', // Magenta (toned down)
+      '#cc00cc', // Hot pink (toned down)
+      '#cc0066', // Bright pink (toned down)
+      '#cc0033', // Hot red-pink (toned down)
+      '#cc3300', // Electric orange (toned down)
+      '#cc8800', // Bright yellow-orange (toned down)
+      '#cccc00', // Electric yellow (toned down)
+      '#88cc00', // Lime green (toned down)
+      '#66cc00', // Bright lime (toned down)
+      '#00cc88', // Aqua (toned down)
+      '#0088cc', // Sky blue (toned down)
+      '#6600cc', // Electric violet (toned down)
+      '#cc0066', // Hot magenta (toned down)
+      '#cc3300', // Bright red-orange (toned down)
+      '#cc6600', // Electric orange (toned down)
+      '#00cc99', // Turquoise (toned down)
+      '#0066cc', // Bright blue (toned down)
+      '#8800cc', // Purple (toned down)
+    ];
+    
+    // Use card index as seed for consistent colors per card
+    return Array.from({ length: 25 }, (_, index) => {
+      const seed = index * 7919; // Prime number for better distribution
+      return fluorescentPalette[seed % fluorescentPalette.length];
+    });
   }, []);
 
   // Rebuilt staggered 3D flip animation timeline
@@ -187,16 +264,24 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
         const isChosen = isSelected || hasMined;
         const isWinner = index === winnerSquareIndex && showWinner;
 
+        const handleCardClick = () => {
+          toggleSquare(index);
+          // Spring bounce animation on click
+          const cardElement = cardRefs.current[index];
+          springBounceAnimation(cardElement);
+        };
+
         return (
           <div
             key={index}
+            ref={(el) => { cardRefs.current[index] = el; }}
             className="relative aspect-square cursor-pointer"
             style={{ 
               transformStyle: 'preserve-3d',
               perspective: '1000px',
               containerType: 'inline-size' // Enable container queries for scaling
             }}
-            onClick={() => toggleSquare(index)}
+            onClick={handleCardClick}
           >
             {/* Inner Wrapper for GSAP Flip Animation */}
             <div 
@@ -222,11 +307,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                   background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
                   padding: '2px',
                   borderRadius: '13px',
-                  boxShadow: isWinner 
-                    ? '0 10px 25px rgba(0,0,0,0.6), 0 0 25px rgba(255,215,0,0.6)' 
-                    : isChosen 
-                    ? '0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(255,255,255,0.5)' 
-                    : '0 10px 25px rgba(0,0,0,0.6)',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.6)',
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
                   zIndex: 2,
@@ -240,9 +321,8 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                 <div 
                   className="w-full h-full relative"
                   style={{
-                    backgroundColor: isChosen ? 'rgb(12, 12, 12)' : '#ffb84a',
-                    borderRadius: '11px',
-                    padding: '13cqw'
+                    backgroundColor: isChosen ? fluorescentColors[index] : '#000000',
+                    borderRadius: '11px'
                   }}
                 >
                   {/* Glossy Overlay - Top Highlight */}
@@ -270,7 +350,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                     }}
                   />
                   {/* Card number badge (Top Left - tucked inside bezel) */}
-                  <div className="absolute top-[14cqw] left-[15cqw] text-[10cqw] font-mono font-bold text-black z-30 opacity-70">
+                  <div className="absolute text-[10cqw] font-mono font-bold text-white z-30 opacity-70" style={{ top: '3px', left: '7px' }}>
                     #{index + 1}
                   </div>
 
@@ -281,34 +361,87 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                     </div>
                   )}
 
-                  {/* Center Item Image */}
-                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden" style={{ transform: 'translateY(-5px)' }}>
-                    <img 
-                      src="/img/treasure_chest_closed.gif"
-                      alt="Treasure Chest"
-                      className="w-[64%] h-[64%] object-contain opacity-80"
-                    />
+                  {/* Center Item Image Container */}
+                  <div className="relative w-full h-full flex items-center justify-center overflow-visible" style={{ transform: 'translateY(-5px)' }}>
+                    {/* Chest Image - hide when tile is selected */}
+                    {!isChosen && (
+                      <img 
+                        src="/img/treasure_chest_closed.gif"
+                        alt="Treasure Chest"
+                        className="w-[64%] h-[64%] object-contain opacity-80 relative"
+                      />
+                    )}
+                    
+                    {/* Miner count circle (Top Right of chest icon) */}
+                    <div 
+                      className={`absolute rounded-full border flex items-center justify-center z-30 shadow-sm px-1 overflow-hidden transition-all duration-200`}
+                      style={{
+                        width: '22cqw',
+                        height: '22cqw',
+                        aspectRatio: '1',
+                        background: isChosen 
+                          ? 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)' 
+                          : 'linear-gradient(180deg, #FFEFBA 0%, #f97316 20%, #ea580c 60%, #9a3412 100%)',
+                        borderColor: isChosen ? 'rgb(35,116,13)' : 'rgb(154,52,18)',
+                        minWidth: '22cqw',
+                        minHeight: '22cqw',
+                        maxWidth: '22cqw',
+                        maxHeight: '22cqw',
+                        top: 'calc(50% - 25cqw)',
+                        left: 'calc(50% + 34cqw)',
+                        transform: 'translate(-50%, -50%)',
+                      }}
+                    >
+                      {isChosen && (
+                        <>
+                          {/* Glossy Overlay - Top Highlight */}
+                          <div 
+                            className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
+                            style={{ filter: 'blur(0.5cqw)' }}
+                          />
+                          {/* Glossy Overlay - Bottom Subtle Highlight */}
+                          <div 
+                            className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
+                            style={{ filter: 'blur(1cqw)' }}
+                          />
+                        </>
+                      )}
+                      {!isChosen && (
+                        <>
+                          {/* Glossy Overlay - Top Highlight (for yellow/orange) */}
+                          <div 
+                            className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
+                            style={{ filter: 'blur(0.5cqw)' }}
+                          />
+                          {/* Glossy Overlay - Bottom Subtle Highlight (for yellow/orange) */}
+                          <div 
+                            className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
+                            style={{ filter: 'blur(1cqw)' }}
+                          />
+                        </>
+                      )}
+                      <span className={`text-[11cqw] font-bold leading-none z-10 ${isChosen ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]' : 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]'}`}>
+                        {miners.toString()}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Miner count circle (Top Right - aligned with card number) */}
-                  <div 
-                    className={`absolute top-[14cqw] right-[15cqw] rounded-full border flex items-center justify-center z-30 shadow-sm px-1 overflow-hidden transition-all duration-200`}
-                    style={{
-                      width: '22cqw',
-                      height: '22cqw',
-                      aspectRatio: '1',
-                      background: isChosen 
-                        ? 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)' 
-                        : 'linear-gradient(180deg, #FFEFBA 0%, #f97316 20%, #ea580c 60%, #9a3412 100%)',
-                      borderColor: isChosen ? 'rgb(35,116,13)' : 'rgb(154,52,18)',
-                      minWidth: '22cqw',
-                      minHeight: '22cqw',
-                      maxWidth: '22cqw',
-                      maxHeight: '22cqw',
-                    }}
-                  >
+                  {/* Bottom Info Row (SOL values - centered at bottom) */}
+                  <div className="absolute bottom-0 left-0 right-0 w-full flex flex-col justify-center items-center px-1 gap-[1cqw]" style={{ left: 0 }}>
+                    {/* User's SOL value (on top) - only show if tile is selected, with preview of deploy amount - green bg like circle */}
                     {isChosen && (
-                      <>
+                      <div 
+                        className="text-[22cqw] font-bold text-white whitespace-nowrap px-[2cqw] rounded-full border flex items-center justify-center shadow-sm overflow-hidden relative"
+                        style={{ 
+                          textAlign: 'center',
+                          background: 'linear-gradient(180deg, #D4FFBA 0%, #52D43B 20%, #3BA622 60%, #23740D 100%)',
+                          borderColor: 'rgb(35,116,13)',
+                          minWidth: 'fit-content',
+                          width: 'auto',
+                          paddingLeft: '8px',
+                          paddingRight: '8px',
+                        }}
+                      >
                         {/* Glossy Overlay - Top Highlight */}
                         <div 
                           className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
@@ -319,38 +452,40 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                           className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
                           style={{ filter: 'blur(1cqw)' }}
                         />
-                      </>
-                    )}
-                    {!isChosen && (
-                      <>
-                        {/* Glossy Overlay - Top Highlight (for yellow/orange) */}
-                        <div 
-                          className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
-                          style={{ filter: 'blur(0.5cqw)' }}
-                        />
-                        {/* Glossy Overlay - Bottom Subtle Highlight (for yellow/orange) */}
-                        <div 
-                          className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
-                          style={{ filter: 'blur(1cqw)' }}
-                        />
-                      </>
-                    )}
-                    <span className={`text-[11cqw] font-bold leading-none z-10 ${isChosen ? 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]' : 'text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]'}`}>
-                      {miners.toString()}
-                    </span>
-                  </div>
-
-                  {/* Bottom Info Row (SOL values - moved up inside bezel) */}
-                  <div className="absolute bottom-[13cqw] left-0 right-0 w-full flex flex-col justify-start items-start px-1 gap-[1cqw]">
-                    {/* User's SOL value (on top) - only show if tile is selected, with preview of deploy amount */}
-                    {isChosen && (
-                      <div className="text-[22cqw] font-bold text-white whitespace-nowrap bg-white/50 px-[2cqw] rounded" style={{ textAlign: 'left' }}>
-                        {(userSol + (isSelected ? deployAmount : 0)).toString()}
+                        <span className="relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]">
+                          {(userSol + (isSelected ? deployAmount : 0)).toString()}
+                        </span>
                       </div>
                     )}
-                    {/* Total SOL value (below) */}
-                    <div className="text-[15cqw] font-bold text-black whitespace-nowrap bg-white/40 px-[2cqw] rounded">
-                      {sol.toFixed(4)} SOL
+                    {/* Total SOL value (below) - centered at bottom, styled like participant count circle */}
+                    <div 
+                      className="text-[15cqw] font-bold text-white whitespace-nowrap px-[2cqw] rounded-full border flex items-center justify-center shadow-sm overflow-hidden relative"
+                      style={{
+                        background: 'linear-gradient(180deg, #FFEFBA 0%, #f97316 20%, #ea580c 60%, #9a3412 100%)',
+                        borderColor: 'rgb(154,52,18)',
+                        minHeight: 'fit-content',
+                        marginTop: '5px',
+                        marginBottom: '2px',
+                      }}
+                    >
+                      {/* Glossy Overlay - Top Highlight */}
+                      <div 
+                        className="absolute top-[5%] left-[10%] right-[10%] h-[40%] bg-white/40 rounded-full pointer-events-none"
+                        style={{ filter: 'blur(0.5cqw)' }}
+                      />
+                      {/* Glossy Overlay - Bottom Subtle Highlight */}
+                      <div 
+                        className="absolute bottom-[5%] left-[20%] right-[20%] h-[15%] bg-white/20 rounded-full pointer-events-none"
+                        style={{ filter: 'blur(1cqw)' }}
+                      />
+                      <div className="relative z-10 drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] flex items-center gap-1">
+                        <img 
+                          src="/img/solana_logo.png" 
+                          alt="SOL" 
+                          className="h-[1em] w-auto opacity-90"
+                        />
+                        <span>{sol.toFixed(4)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -377,9 +512,8 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                 <div 
                   className="w-full h-full relative flex items-center justify-center"
                   style={{
-                    background: 'linear-gradient(180deg, #FFEFBA 0%, #FFD966 15%, #F4B400 50%, #E69138 85%, #D68910 100%)',
-                    borderRadius: '11px',
-                    padding: '3px'
+                    backgroundColor: '#000000',
+                    borderRadius: '11px'
                   }}
                 >
                   {/* Glossy Overlay - Top Highlight */}

@@ -19,6 +19,7 @@ import { useState, useEffect, useRef } from 'react';
 import { CALCULATIONS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 import gsap from 'gsap';
+import { springBounceAnimation } from '@/lib/animations/springBounce';
 
 // Monster Animation Component
 function SlimeAnimation() {
@@ -332,6 +333,19 @@ export default function Home() {
     }
   }, [automation]);
 
+  // Animate button on automation state changes
+  const previousAutomationRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (previousAutomationRef.current !== !!automation && mainButtonRef.current) {
+      const button = mainButtonRef.current.querySelector('button') as HTMLElement;
+      if (button) {
+        springBounceAnimation(button);
+      }
+    }
+    previousAutomationRef.current = !!automation;
+  }, [automation]);
+
+
   // Animate switch indicator sliding left to right (smooth ease, no bounce)
   useEffect(() => {
     if (switchIndicatorRef.current && switchContainerRef.current) {
@@ -350,21 +364,9 @@ export default function Home() {
 
     // Animate main button bounce when mode changes
     if (previousModeRef.current !== null && previousModeRef.current !== mode && mainButtonRef.current) {
-      const button = mainButtonRef.current.querySelector('button');
+      const button = mainButtonRef.current.querySelector('button') as HTMLElement;
       if (button) {
-        // Bounce effect: scale down then up with bounce
-        gsap.to(button, {
-          scale: 0.9,
-          duration: 0.15,
-          ease: 'power2.in',
-          onComplete: () => {
-            gsap.to(button, {
-              scale: 1,
-              duration: 0.3,
-              ease: 'back.out(1.7)',
-            });
-          }
-        });
+        springBounceAnimation(button);
       }
     }
 
@@ -712,7 +714,7 @@ export default function Home() {
             </div>
             
             {/* QUEST Balance */}
-            <div className="relative">
+            {/* <div className="relative">
               <img 
                 src="/img/quest_amount.png" 
                 alt="QUEST Balance Background" 
@@ -727,7 +729,7 @@ export default function Home() {
                   <AnimatedNumber value={(tokenBalance || 1.34).toFixed(2).padStart(7, '0')} />
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
         {board?.endSlot && currentSlot && (
@@ -939,12 +941,13 @@ export default function Home() {
         {/* Info Bar - Always visible at top */}
         <div 
           className="w-full h-[48px] grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 border-b border-black/10 flex-none"
+          style={{ paddingInline: 'calc(var(--spacing) * 4)' }}
         >
           {/* Left: Selected Info - Value on top, label on bottom */}
           <div className="flex flex-col items-start justify-center min-w-0">
-            <span className="text-xs font-black text-black/60 leading-none">
+            <span className="text-sm font-black text-black leading-none">
               <span className="text-[8px]">x</span>
-              {selectedSquares.size} TILES SELECTED
+              {selectedSquares.size} {selectedSquares.size === 1 ? 'TILE' : 'TILES'} SELECTED
             </span>
           </div>
 
@@ -1012,8 +1015,8 @@ export default function Home() {
 
           {/* Right: Round Info - Value on top, label on bottom */}
           <div className="flex flex-col items-end justify-center min-w-0">
-            <span className="text-xs font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
-            <span className="text-[10px] font-black text-black/40 uppercase leading-none">Round</span>
+            <span className="text-sm font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
+            <span className="text-sm font-black text-black uppercase leading-none">Round</span>
           </div>
         </div>
 
@@ -1108,8 +1111,8 @@ export default function Home() {
             <div className={`absolute right-4 flex items-center justify-end gap-2 ${mode === 'manual' ? 'pointer-events-none' : ''}`}>
               {/* ROUNDS Display - Closer to increment buttons */}
               <div className="flex flex-col items-end justify-center mr-1">
-                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">RND#</span>
-                <span className={`text-sm font-black leading-none ${mode === 'auto' ? 'text-[rgb(120,63,4)]' : 'text-[rgb(120,63,4)]/30'}`}>
+                <span className="text-[8px] font-black text-[rgb(120,63,4)]/60 uppercase whitespace-nowrap leading-none mb-0.5">RND#</span>
+                <span className={`text-[8px] font-black leading-none ${mode === 'auto' ? 'text-[rgb(120,63,4)]' : 'text-[rgb(120,63,4)]/30'}`}>
                   {mode === 'auto' ? rounds.toString().padStart(2, '0') : '--'}
                 </span>
               </div>
