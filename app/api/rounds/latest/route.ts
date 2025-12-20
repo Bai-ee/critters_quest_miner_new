@@ -1,14 +1,33 @@
 import { NextResponse } from 'next/server';
-import dbConnect from '@/lib/mongodb';
 import mongoose from 'mongoose';
-import Round from '@/lib/models/Round';
-import Winner from '@/lib/models/Winner';
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Lazy import to avoid build-time evaluation
+async function getDbConnect() {
+    const { default: dbConnect } = await import('@/lib/mongodb');
+    return dbConnect;
+}
+
+async function getModels() {
+    const Round = (await import('@/lib/models/Round')).default;
+    const Winner = (await import('@/lib/models/Winner')).default;
+    return { Round, Winner };
+}
+
 export async function GET() {
     try {
+        // Check if MongoDB URI is available at runtime
+        if (!process.env.MONGODB_URI) {
+            return NextResponse.json(
+                { success: false, error: 'MongoDB not configured' },
+                { status: 503 }
+            );
+        }
+
+        const dbConnect = await getDbConnect();
         await dbConnect();
+        const { Round, Winner } = await getModels();
 
         // Fetch the latest finalized round (most recent round_id)
         const latestRound = await Round.findOne()
