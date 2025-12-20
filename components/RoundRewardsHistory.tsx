@@ -86,7 +86,7 @@ export function RoundRewardsHistory() {
     if (!userWinner) return null;
 
     const totalSol = lamportsToSol(
-      userWinner.sol_reward + userWinner.motherlode_sol_reward
+      BigInt(userWinner.sol_reward) + BigInt(userWinner.motherlode_sol_reward)
     );
     const totalOre = gramsToOre(
       BigInt(userWinner.ore_reward_guaranteed) +
