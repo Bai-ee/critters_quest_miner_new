@@ -643,7 +643,7 @@ export default function Home() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1 z-10" style={{ paddingLeft: '21px', top: 'calc(50% + 2px)', transform: 'translateY(-50%)' }}>
                   <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none">
                     <AnimatedNumber value={solBalance.toFixed(2).padStart(7, '0')} />
-                  </div>
+            </div>
                 </div>
               </div>
             </div>
@@ -728,9 +728,9 @@ export default function Home() {
 
         <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mx-auto relative z-30 mb-0" style={{ overflow: 'visible', marginTop: '-2px' }}>
           <div className="mt-0" style={{ overflow: 'visible' }}>
-            <Motherlode />
-          </div>
-        </div>
+        <Motherlode />
+                </div>
+                </div>
 
         <div className="w-full max-w-[min(92vw,520px)] mx-auto relative z-30" style={{ overflow: 'visible' }}>
           {/* Timer and Selection Controls */}
@@ -745,7 +745,7 @@ export default function Home() {
                   selectedCount={selectedSquares.size}
                 />
               </div>
-              
+
               <div className="flex-1 flex gap-1 justify-between items-center min-w-0">
                 <GlossyButton
                   onClick={selectAll}
@@ -811,7 +811,7 @@ export default function Home() {
                 timerExpired={timerExpired}
               />
           </div>
-          
+
           {/* Round Results Section */}
           <div ref={roundResultsRef} className="mt-6">
             <RoundResults
@@ -836,6 +836,15 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Arch Image - Full Width */}
+      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] mt-6">
+        <img 
+          src="/img/arch.png" 
+          alt="Arch" 
+          className="w-full h-auto"
+        />
+      </div>
+
       {/* BOTTOM CONTROL BAR - Sticky */}
       <div 
         className="fixed bottom-0 left-0 right-0 z-40 border-t-4 border-[rgb(120,63,4)] transition-all duration-500 ease-in-out"
@@ -858,7 +867,7 @@ export default function Home() {
               <span className="text-[8px]">x</span>
               {selectedSquares.size} {selectedSquares.size === 1 ? 'TILE' : 'TILES'} SELECTED
             </span>
-          </div>
+            </div>
 
           {/* Center: Manual/Auto Switch */}
           <div 
