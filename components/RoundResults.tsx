@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useRoundData } from '@/hooks/useRoundData';
+import { WinLossHistory } from './WinLossHistory';
 
 interface RoundResultsProps {
   onShownChange?: (shown: boolean) => void;
@@ -181,9 +182,16 @@ export function RoundResults({ onShownChange, onWinningSquareChange }: RoundResu
   }, [visible]);
 
 
-  // Hide if not visible or no data
+  // Show WinLossHistory when no round data is available
   if (!roundData || !visible) {
-    return null;
+    return (
+      <div className="space-y-4">
+        <div className="text-center py-4 text-black/60 text-sm font-black uppercase">
+          <p>Deploy to squares to participate</p>
+        </div>
+        <WinLossHistory />
+      </div>
+    );
   }
 
   // Convert lamports to SOL

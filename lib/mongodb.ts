@@ -1,5 +1,11 @@
 import mongoose from 'mongoose';
 
+if (!process.env.MONGODB_URI) {
+  throw new Error('Please add your MongoDB URI to .env.local');
+}
+
+const MONGODB_URI = process.env.MONGODB_URI;
+
 let cached = global as typeof globalThis & {
   mongoose?: {
     conn: typeof mongoose | null;
@@ -12,13 +18,6 @@ if (!cached.mongoose) {
 }
 
 async function dbConnect() {
-  // Check for MongoDB URI only when actually connecting (lazy check)
-  if (!process.env.MONGODB_URI) {
-    throw new Error('Please add your MongoDB URI to .env.local');
-  }
-
-  const MONGODB_URI = process.env.MONGODB_URI;
-
   if (cached.mongoose!.conn) {
     return cached.mongoose!.conn;
   }

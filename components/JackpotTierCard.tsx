@@ -168,3 +168,4 @@ export function JackpotTierCard({ tier, ore, sol, odds, bgImage, labelImage, sca
     </div>
   );
 }
+
