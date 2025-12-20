@@ -205,7 +205,7 @@ export default function Home() {
   ) && miner.deployed.some(deploy => deploy > 0n);
 
   // Check if timer has expired (round ended)
-  const timerExpired = board && currentSlot && board.endSlot && currentSlot >= board.endSlot;
+  const timerExpired = !!(board && currentSlot && board.endSlot && currentSlot >= board.endSlot);
 
   // Reset auto-scroll flag when a new round starts
   useEffect(() => {
