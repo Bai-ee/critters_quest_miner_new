@@ -44,6 +44,12 @@ const formatNumber = (num: number, decimals: number = 4) => {
   return (num / Math.pow(10, decimals)).toFixed(decimals);
 };
 
+// Remove "1" and "0" digits from SOL values
+const formatSolValue = (num: number, decimals: number = 9) => {
+  const formatted = formatNumber(num, decimals);
+  return formatted.replace(/[10]/g, '');
+};
+
 const formatAddress = (address: string) => {
   if (!address || address === 'Split' || address === 'Motherlode') return address;
   return `${address.slice(0, 4)}...${address.slice(-4)}`;
@@ -360,7 +366,7 @@ export default function RoundsTable() {
                     <td className="py-4">
                       <div className="flex items-center gap-1">
                         <span className="text-purple-400">≡</span>
-                        <span className="text-white">{formatNumber(winner.sol_reward, 9)}</span>
+                        <span className="text-white">{formatSolValue(winner.sol_reward, 9)}</span>
                       </div>
                     </td>
                     <td className="py-4">
@@ -377,7 +383,7 @@ export default function RoundsTable() {
                       {winner.motherlode_sol_reward > 0 ? (
                         <div className="flex items-center gap-1">
                           <span className="text-purple-400">≡</span>
-                          <span className="text-yellow-400">{formatNumber(winner.motherlode_sol_reward, 9)}</span>
+                          <span className="text-yellow-400">{formatSolValue(winner.motherlode_sol_reward, 9)}</span>
                         </div>
                       ) : (
                         <span className="text-gray-500">–</span>
