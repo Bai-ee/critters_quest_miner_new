@@ -1,30 +1,11 @@
 import { NextResponse } from 'next/server';
-
-// Lazy import to avoid build-time evaluation
-async function getDbConnect() {
-    const { default: dbConnect } = await import('@/lib/mongodb');
-    return dbConnect;
-}
-
-async function getModels() {
-    const Round = (await import('@/lib/models/Round')).default;
-    const Winner = (await import('@/lib/models/Winner')).default;
-    return { Round, Winner };
-}
+import dbConnect from '@/lib/mongodb';
+import Round from '@/lib/models/Round';
+import Winner from '@/lib/models/Winner';
 
 export async function GET(request: Request) {
   try {
-    // Check if MongoDB URI is available at runtime
-    if (!process.env.MONGODB_URI) {
-      return NextResponse.json(
-        { success: false, error: 'MongoDB not configured' },
-        { status: 503 }
-      );
-    }
-
-    const dbConnect = await getDbConnect();
     await dbConnect();
-    const { Round, Winner } = await getModels();
 
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20');
