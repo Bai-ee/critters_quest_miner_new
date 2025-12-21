@@ -21,7 +21,10 @@ import { useState, useEffect, useRef } from 'react';
 import { CALCULATIONS } from '@/lib/constants';
 import toast from 'react-hot-toast';
 import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { springBounceAnimation } from '@/lib/animations/springBounce';
+
+gsap.registerPlugin(ScrollTrigger);
 
 // Monster Animation Component
 function SlimeAnimation() {
@@ -233,6 +236,13 @@ export default function Home() {
   const previousModeRef = useRef<'manual' | 'auto' | null>(null);
   const mainButtonRef = useRef<HTMLDivElement>(null);
   
+  // ScrollTrigger refs
+  const archRef = useRef<HTMLDivElement>(null);
+  const rocksRef = useRef<HTMLDivElement>(null);
+  const yellowSectionRef = useRef<HTMLDivElement>(null);
+  const centerStageRef = useRef<HTMLDivElement>(null);
+  const stakingPanelRef = useRef<HTMLDivElement>(null);
+  
   // Automation settings
   const executorFee = 0.001;
   const executorAddress = '3ukWjMXrQnNmuiJqCszcnftBhZuuYfmsxgYMmjeysn4x';
@@ -329,6 +339,144 @@ export default function Home() {
 
     previousModeRef.current = mode;
   }, [mode]);
+
+  // ScrollTrigger parallax effect - yellow section scrolls faster than section above
+  useEffect(() => {
+    let yellowTween: gsap.core.Tween | null = null;
+    let archTween: gsap.core.Tween | null = null;
+    let rocksTween: gsap.core.Tween | null = null;
+    let stakingPanelTween: gsap.core.Tween | null = null;
+    let isInitialized = false;
+    let timer1: NodeJS.Timeout | null = null;
+    let timer2: NodeJS.Timeout | null = null;
+
+    const initScrollTrigger = () => {
+      // Check if refs are ready
+      if (!yellowSectionRef.current || !archRef.current) {
+        return false; // Not ready yet
+      }
+
+      if (isInitialized) return true;
+      isInitialized = true;
+
+      // Clean up any existing ScrollTriggers
+      ScrollTrigger.getAll().forEach(trigger => {
+        try {
+          const triggerElement = trigger.vars?.trigger;
+          if (triggerElement === yellowSectionRef.current || 
+              triggerElement === archRef.current ||
+              (rocksRef.current && triggerElement === rocksRef.current) ||
+              (stakingPanelRef.current && triggerElement === stakingPanelRef.current)) {
+            trigger.kill();
+          }
+        } catch (err) {
+          // Ignore errors during cleanup
+        }
+      });
+
+      // Yellow section scrolls up faster than the section above it
+      if (yellowSectionRef.current) {
+        yellowTween = gsap.to(yellowSectionRef.current, {
+          y: -400,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: yellowSectionRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1,
+            markers: false,
+            invalidateOnRefresh: true,
+          },
+        });
+      }
+
+      // Arch scrolls up faster than other elements
+      if (archRef.current) {
+        archTween = gsap.to(archRef.current, {
+          y: -200,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: yellowSectionRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1,
+            markers: false,
+            invalidateOnRefresh: true,
+          },
+        });
+      }
+
+      // Rocks scroll faster than arch (if exists)
+      if (rocksRef.current) {
+        rocksTween = gsap.to(rocksRef.current, {
+          y: -300,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: yellowSectionRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1,
+            markers: false,
+            invalidateOnRefresh: true,
+          },
+        });
+      }
+
+      // Staking panel scrolls faster than arch
+      if (stakingPanelRef.current) {
+        stakingPanelTween = gsap.to(stakingPanelRef.current, {
+          y: -900,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: yellowSectionRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1,
+            markers: false,
+            invalidateOnRefresh: true,
+          },
+        });
+      }
+
+      ScrollTrigger.refresh();
+      return true;
+    };
+
+    // Try to initialize immediately
+    if (!initScrollTrigger()) {
+      // If not ready, wait a bit and try again
+      timer1 = setTimeout(() => {
+        if (!initScrollTrigger()) {
+          // If still not ready, wait longer
+          timer2 = setTimeout(() => {
+            initScrollTrigger();
+          }, 1000);
+        }
+      }, 100);
+    }
+
+    return () => {
+      if (timer1) clearTimeout(timer1);
+      if (timer2) clearTimeout(timer2);
+      yellowTween?.kill();
+      archTween?.kill();
+      rocksTween?.kill();
+      stakingPanelTween?.kill();
+      ScrollTrigger.getAll().forEach(trigger => {
+        try {
+          const triggerElement = trigger.vars?.trigger;
+          if (triggerElement === yellowSectionRef.current || 
+              triggerElement === archRef.current ||
+              (rocksRef.current && triggerElement === rocksRef.current) ||
+              (stakingPanelRef.current && triggerElement === stakingPanelRef.current)) {
+            trigger.kill();
+          }
+        } catch (err) {
+          // Ignore cleanup errors
+        }
+      });
+    };
+  }, []);
 
   const handleSetupAutomation = async () => {
     if (!publicKey) {
@@ -730,8 +878,9 @@ export default function Home() {
 
       {/* CENTER STAGE - Grid always centered */}
       <div 
+        ref={centerStageRef}
         className="flex-1 flex flex-col items-center justify-start px-3 sm:px-4 relative"
-        style={{ minHeight: 'calc(100svh - 80px - 120px)', overflow: 'visible', marginTop: '0px' }}
+        style={{ overflow: 'visible', marginTop: '0px', paddingBottom: '120px' }}
       >
         <div 
           className="absolute inset-0 w-full"
@@ -873,6 +1022,29 @@ export default function Home() {
                 timerExpired={timerExpired}
               />
           </div>
+        </div>
+      </div>
+
+      {/* Yellow Background Section - Everything below tiles */}
+      <div ref={yellowSectionRef} className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]" style={{ backgroundColor: '#C68152', zIndex: 39 }}>
+        {/* Arch Image - Full Width */}
+        <div ref={archRef} className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]" style={{ zIndex: 50, marginTop: '-30px' }}>
+          <img 
+            src="/img/arch.png" 
+            alt="Arch" 
+            className="w-full h-auto"
+          />
+        </div>
+
+        {/* Miner Tiger GIF - Under Arch */}
+        <div className="w-full flex justify-center" style={{ marginTop: '20px' }}>
+          <img 
+            src="/img/pickaxe_front.gif" 
+            alt="Miner Tiger" 
+            style={{ width: '130px', height: 'auto', zIndex:60, marginTop:'-220px'}}
+          />
+        </div>
+        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mt-[0px] mx-auto relative z-30 px-3 sm:px-4 z-70">
 
           {/* Round Results Section */}
           <div ref={roundResultsRef} className="mt-6">
@@ -888,23 +1060,14 @@ export default function Home() {
           </div>
 
           {/* Staking Panel */}
-          {connected && (
-            <div className="mt-6">
-              <StakingPanel />
-            </div>
-          )}
+          <div ref={stakingPanelRef} className="mt-6">
+            <StakingPanel />
+          </div>
 
-          <HowTo />
+          <div style={{ marginTop: '-140px' }}>
+            <HowTo />
+          </div>
         </div>
-      </div>
-
-      {/* Arch Image - Full Width */}
-      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] mt-6">
-        <img 
-          src="/img/arch.png" 
-          alt="Arch" 
-          className="w-full h-auto"
-        />
       </div>
 
       {/* BOTTOM CONTROL BAR - Sticky */}
