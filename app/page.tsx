@@ -175,7 +175,6 @@ export default function Home() {
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [lastShownRoundId, setLastShownRoundId] = useState<string | null>(null);
   const roundResultsRef = useRef<HTMLDivElement>(null);
-  const hasAutoScrolledRef = useRef(false);
   
   // ScrollTrigger refs
   const archRef = useRef<HTMLDivElement>(null);
@@ -183,6 +182,7 @@ export default function Home() {
   const yellowSectionRef = useRef<HTMLDivElement>(null);
   const centerStageRef = useRef<HTMLDivElement>(null);
   const stakingPanelRef = useRef<HTMLDivElement>(null);
+  const winLossHistoryRef = useRef<HTMLDivElement>(null);
 
   // Check if user participated in the round
   const userParticipated = miner && (
@@ -193,36 +193,12 @@ export default function Home() {
   // Check if timer has expired (round ended)
   const timerExpired = !!(board && currentSlot && board.endSlot && currentSlot >= board.endSlot);
 
-  // Reset auto-scroll flag when a new round starts
+  // Update last shown round ID when round completes
   useEffect(() => {
-    if (round && round.id.toString() !== lastShownRoundId && !timerExpired) {
-      hasAutoScrolledRef.current = false;
-    }
-  }, [round, lastShownRoundId, timerExpired]);
-
-  useEffect(() => {
-    const roundJustCompleted = previousRound && previousRound.id.toString() !== lastShownRoundId;
-    const shouldScroll = (roundJustCompleted || timerExpired) && userParticipated && !hasAutoScrolledRef.current;
-    
-    if (roundJustCompleted) {
+    if (previousRound && previousRound.id.toString() !== lastShownRoundId) {
       setLastShownRoundId(previousRound.id.toString());
     }
-    
-    if (shouldScroll && roundResultsRef.current) {
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || 
-                      (typeof window !== 'undefined' && window.innerWidth < 768);
-      
-      if (isMobile) {
-        setTimeout(() => {
-          roundResultsRef.current?.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start' 
-          });
-          hasAutoScrolledRef.current = true;
-        }, 500);
-      }
-    }
-  }, [previousRound, lastShownRoundId, userParticipated, timerExpired]);
+  }, [previousRound, lastShownRoundId]);
 
   // Get token balance
   const { balance: tokenBalance } = useTokenBalance({
@@ -346,6 +322,7 @@ export default function Home() {
     let archTween: gsap.core.Tween | null = null;
     let rocksTween: gsap.core.Tween | null = null;
     let stakingPanelTween: gsap.core.Tween | null = null;
+    let winLossHistoryTween: gsap.core.Tween | null = null;
     let isInitialized = false;
     let timer1: NodeJS.Timeout | null = null;
     let timer2: NodeJS.Timeout | null = null;
@@ -355,6 +332,8 @@ export default function Home() {
       if (!yellowSectionRef.current || !archRef.current) {
         return false; // Not ready yet
       }
+      
+      // Win/Loss section is optional, so we don't require it
 
       if (isInitialized) return true;
       isInitialized = true;
@@ -438,6 +417,22 @@ export default function Home() {
         });
       }
 
+      // Round Information Card scrolls at different speed than staking panel
+      if (winLossHistoryRef.current) {
+        winLossHistoryTween = gsap.to(winLossHistoryRef.current, {
+          y: -700,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: yellowSectionRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1,
+            markers: false,
+            invalidateOnRefresh: true,
+          },
+        });
+      }
+
       ScrollTrigger.refresh();
       return true;
     };
@@ -462,13 +457,15 @@ export default function Home() {
       archTween?.kill();
       rocksTween?.kill();
       stakingPanelTween?.kill();
+      winLossHistoryTween?.kill();
       ScrollTrigger.getAll().forEach(trigger => {
         try {
           const triggerElement = trigger.vars?.trigger;
           if (triggerElement === yellowSectionRef.current || 
               triggerElement === archRef.current ||
               (rocksRef.current && triggerElement === rocksRef.current) ||
-              (stakingPanelRef.current && triggerElement === stakingPanelRef.current)) {
+              (stakingPanelRef.current && triggerElement === stakingPanelRef.current) ||
+              (winLossHistoryRef.current && triggerElement === winLossHistoryRef.current)) {
             trigger.kill();
           }
         } catch (err) {
@@ -584,8 +581,8 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-cq-bg-0 text-white flex items-center justify-center">
-        <div className="text-center cq-panel p-8">
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center p-8">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-cq-neon mx-auto mb-4"></div>
           <p className="text-lg font-bold text-cq-neon">Loading QUEST data...</p>
           <p className="text-sm text-gray-400 mt-2">Connecting to Solana...</p>
@@ -682,18 +679,16 @@ export default function Home() {
                   <div className="absolute inset-0 flex items-center pointer-events-none z-10" style={{ 
                     left: '39px', 
                     right: '8px', 
-                    paddingBottom: '2px',
                     top: 'calc(50% + 2px)',
                     transform: 'translateY(-50%)',
                     display: 'flex',
                     alignContent: 'center',
                   }}>
-                    <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none whitespace-nowrap" style={{ 
+                    <div className="flex flex-col items-center justify-center" style={{ 
                       flex: '1 1 auto', 
                       minWidth: '0px',
-                      display: 'flex',
-                      alignContent: 'center',
-                      justifyContent: 'center',
+                      lineHeight: '1',
+                      gap: '0px',
                     }}>
                       {(() => {
                         const formatted = solBalance.toFixed(2);
@@ -708,8 +703,8 @@ export default function Home() {
                         }
                         return (
                           <>
-                            <span style={{ opacity: 0.3 }}>SOL </span>
-                            <span>{amountText}</span>
+                            <span className="text-[10px] sm:text-[12px] font-bold text-white" style={{ opacity: 0.3, lineHeight: '1' }}>SOL</span>
+                            <span className="text-[10px] sm:text-[12px] font-bold text-white" style={{ lineHeight: '1' }}>{amountText}</span>
                           </>
                         );
                       })()}
@@ -987,28 +982,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Total Deployed Placeholder - Above miner tiles */}
-        <div className="w-full max-w-[min(92vw,520px)] mx-auto relative z-30 mb-2" style={{ overflow: 'visible', marginTop: '-13px' }}>
-          <div className="px-4 py-2 flex items-center justify-start w-full text-center">
-            <div className="flex flex-col flex-1">
-              <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">This Round</span>
-              <span className="text-sm font-black leading-none" style={{ 
-                color: '#00ff00',
-                textShadow: '0 0 10px #00ff00, 0 0 20px #00ff00, 0 0 30px #00ff00'
-              }}>
-                {round?.totalDeployed ? lamportsToSol(round.totalDeployed).toFixed(4) : '0.0000'} SOL
-              </span>
-            </div>
-            <div className="flex flex-col items-center justify-start flex-1">
-              <span className="text-[10px] font-black text-black/60 uppercase leading-none mb-0.5">Next Round</span>
-              <span className="text-sm font-black leading-none" style={{ 
-                color: 'rgba(79, 52, 33, 1)'
-              }}>
-                {round?.totalWinnings ? Math.floor(lamportsToSol(round.totalWinnings)).toString().padStart(5, '0') : '00000'} QUEST
-              </span>
-            </div>
-          </div>
-        </div>
 
         <div className="w-full max-w-[min(92vw,520px)] relative z-30" style={{ overflow: 'visible' }}>
           <div className="mt-0" style={{ overflow: 'visible' }}>
@@ -1052,18 +1025,74 @@ export default function Home() {
               onWinningSquareChange={setDisplayedWinningSquare}
             />
           </div>
-
+          
           {/* Round Rewards History */}
           <div className="mt-6">
             <RoundRewardsHistory />
           </div>
 
+          {/* Round Information Card - Replaces Win/Loss History */}
+          <div ref={winLossHistoryRef} style={{ marginTop: '60px', width: '100%', position: 'relative', zIndex: 10 }}>
+            <div 
+              className="rounded-xl border-2 border-black overflow-hidden"
+              style={{ 
+                backgroundColor: '#ffb84a',
+                width: '100%',
+                aspectRatio: '1 / 1',
+              }}
+            >
+              <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-3 md:p-4 rounded-lg h-full flex flex-col justify-center items-center space-y-3 m-2">
+                <div className="text-center space-y-2">
+                  <div className="text-xs sm:text-sm font-black text-white/70 uppercase">
+                    Current Round
+                  </div>
+                  <div className="text-2xl sm:text-3xl font-black text-white">
+                    #{board?.roundId?.toString() || '0'}
+                  </div>
+                </div>
+                {round && (
+                  <div className="grid grid-cols-2 gap-4 w-full text-center">
+                    <div>
+                      <div className="text-[10px] sm:text-xs font-black text-white/70 uppercase mb-1">
+                        Total Deployed
+                      </div>
+                      <div className="text-sm sm:text-base font-black text-white">
+                        {lamportsToSol(round.totalDeployed).toFixed(4)} SOL
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] sm:text-xs font-black text-white/70 uppercase mb-1">
+                        Total Miners
+                      </div>
+                      <div className="text-sm sm:text-base font-black text-white">
+                        {round.totalMiners.toString()}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {board?.endSlot && currentSlot && (
+                  <div className="text-center">
+                    <div className="text-[10px] sm:text-xs font-black text-white/70 uppercase mb-1">
+                      Time Remaining
+                    </div>
+                    <div className="text-sm sm:text-base font-black text-white">
+                      {currentSlot < board.endSlot 
+                        ? `${Math.floor((Number(board.endSlot) - Number(currentSlot)) * 0.4)}s`
+                        : 'Ended'
+                      }
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Staking Panel */}
-          <div ref={stakingPanelRef} style={{ marginTop: '-140px' }}>
+          <div ref={stakingPanelRef} style={{ marginTop: '60px', position: 'relative', zIndex: 20 }}>
             <StakingPanel />
           </div>
 
-          <div style={{ marginTop: '-140px' }}>
+          <div style={{ marginTop: '140px' }}>
             <HowTo />
           </div>
         </div>
@@ -1075,42 +1104,69 @@ export default function Home() {
         style={{ 
           backgroundColor: '#FFB84A',
           boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          height: selectedSquares.size > 0 ? '128px' : (connected ? '68px' : '88px'),
+          height: (selectedSquares.size > 0 || !!automation) ? '180px' : (connected ? '120px' : '128px'),
           paddingBottom: '20px',
           bottom: 0,
         }}
       >
+        {/* Connect to Play / Pick a Lucky Square Message with Round Info - Compact */}
+        {!connected ? (
+          <div className="w-full text-center py-1 border-b border-black/10">
+            <span className="text-xs font-black text-black uppercase leading-none">
+              CONNECT TO PLAY
+            </span>
+          </div>
+        ) : (
+          <div className="w-full border-b border-black/10" style={{ paddingTop: '6px', paddingBottom: '6px' }}>
+            <div className="w-full grid grid-cols-[1fr_auto_1fr] gap-2 items-center px-4">
+              {/* Left: WIN THIS ROUND - SOL */}
+              <div className="flex flex-col items-start">
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase leading-none mb-0.5">Win This Round</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
+                  {round?.totalWinnings ? lamportsToSol(round.totalWinnings).toFixed(4) : '0.0000'} SOL
+                </span>
+              </div>
+              
+              {/* Center: MINE A SQUARE */}
+              <div className="text-center flex flex-col">
+                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
+                  MINE A SQUARE
+                </span>
+              </div>
+              
+              {/* Right: WIN THIS ROUND - QUEST */}
+              <div className="flex flex-col items-end">
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase leading-none mb-0.5">Win This Round</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
+                  {previousRound?.totalVaulted ? Math.floor(lamportsToSol(previousRound.totalVaulted)).toString().padStart(5, '0') : '00000'} QUEST
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Info Bar - Always visible at top */}
         <div 
           className="w-full grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 border-b border-black/10 flex-none"
           style={{ 
             paddingInline: 'calc(var(--spacing) * 4)',
-            minHeight: connected ? '48px' : '68px',
-            paddingTop: connected ? '0' : '10px',
-            paddingBottom: connected ? '0' : '10px',
+            minHeight: '48px',
+            paddingTop: '0',
+            paddingBottom: '0',
           }}
         >
-          {/* Connect to Play / Pick a Lucky Square Message */}
-          {!connected ? (
-            <div className="col-span-3 w-full text-center mb-2">
-              <span className="text-sm font-black text-black uppercase leading-none">
-                CONNECT TO PLAY
-              </span>
-            </div>
-          ) : (
-            <div className="col-span-3 w-full text-center mb-2">
-              <span className="text-sm font-black text-black uppercase leading-none">
-                PICK A LUCKY SQUARE
-              </span>
-            </div>
-          )}
-          
           {/* Left: Selected Info */}
-          <div className="flex flex-col items-start justify-center min-w-0" style={{ gridColumn: connected ? '1' : '1', gridRow: connected ? '1' : '2' }}>
-            <span className="text-sm font-black text-black leading-none">
-              <span className="text-[8px]">x</span>
-              {selectedSquares.size} {selectedSquares.size === 1 ? 'TILE' : 'TILES'} SELECTED
-            </span>
+          <div className="flex flex-col items-start justify-center min-w-0">
+            <div className="flex flex-col">
+              <div className="text-center leading-none">
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase">x</span>
+                <span className="text-sm font-black text-[rgb(120,63,4)]">{selectedSquares.size}</span>
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase"> {selectedSquares.size === 1 ? 'TILE' : 'TILES'}</span>
+              </div>
+              <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase leading-none text-center">
+                SELECTED
+              </span>
+            </div>
           </div>
 
           {/* Center: Manual/Auto Switch */}
@@ -1120,8 +1176,6 @@ export default function Home() {
             style={{
               minWidth: '140px',
               height: '32px',
-              gridColumn: connected ? '2' : '2',
-              gridRow: connected ? '1' : '2',
             }}
           >
             <div
@@ -1174,17 +1228,26 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Right: Round Info */}
-          <div className="flex flex-col items-end justify-center min-w-0" style={{ gridColumn: connected ? '3' : '3', gridRow: connected ? '1' : '2' }}>
-            <span className="text-sm font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
-            <span className="text-sm font-black text-black uppercase leading-none">Round</span>
+          {/* Right: Next Round QUEST */}
+          <div className="flex flex-col items-end justify-center" style={{ minWidth: '0' }}>
+            <div className="flex flex-col items-end">
+              <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase leading-none text-center">
+                NEXT ROUND
+              </span>
+              <div className="text-center leading-none">
+                <span className="text-sm font-black text-[rgb(120,63,4)]">
+                  {round?.totalVaulted ? Math.floor(lamportsToSol(round.totalVaulted)).toString().padStart(5, '0') : '00000'}
+                </span>
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase"> QUEST</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* MINE Action Bar - Fixed at bottom when squares selected */}
+        {/* MINE Action Bar - Fixed at bottom when squares selected or auto mining */}
         <div 
           className={`w-full border-b border-black/5 flex-none transition-all duration-500 ease-in-out ${
-            selectedSquares.size > 0 ? 'h-[60px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
+            (selectedSquares.size > 0 || !!automation) ? 'h-[60px] opacity-100' : 'h-0 opacity-0 pointer-events-none'
           }`}
         >
           <div className="max-w-xl mx-auto relative flex items-center justify-center px-4 h-full">

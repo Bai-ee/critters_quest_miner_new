@@ -182,16 +182,9 @@ export function RoundResults({ onShownChange, onWinningSquareChange }: RoundResu
   }, [visible]);
 
 
-  // Show WinLossHistory when no round data is available
+  // Show nothing when no round data is available (WinLossHistory is shown separately)
   if (!roundData || !visible) {
-    return (
-      <div className="space-y-4">
-        <div className="text-center py-4 text-black/60 text-sm font-black uppercase">
-          <p>Deploy to squares to participate</p>
-        </div>
-        <WinLossHistory />
-      </div>
-    );
+    return null;
   }
 
   // Convert lamports to SOL
