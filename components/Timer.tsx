@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { calculateTimeRemaining } from '@/lib/accounts';
+import gsap from 'gsap';
 
 interface TimerProps {
   endSlot: bigint;
@@ -41,15 +42,25 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
     setNotStarted(false);
     setTimeLeft(seconds);
     setIsExpired(seconds <= 0);
+    console.log('[Timer] Initial time calculation (second effect):', {
+      seconds,
+      notStarted: false,
+      isExpired: seconds <= 0,
+      currentSlot: currentSlot.toString(),
+      endSlot: endSlot.toString(),
+      startSlot: startSlot?.toString(),
+    });
   }, [currentSlot, endSlot, startSlot]);
 
   useEffect(() => {
     onExpiredChange?.(isExpired);
   }, [onExpiredChange, isExpired]);
 
+
   const [progress, setProgress] = useState(0); // Start at 0 for intro animation
   const [targetProgress, setTargetProgress] = useState(100);
   const [hasAnimated, setHasAnimated] = useState(false);
+  const progressRef = useRef<HTMLDivElement>(null);
 
   // Calculate initial time and target progress
   useEffect(() => {
@@ -89,24 +100,54 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
     }
   }, [currentSlot, endSlot, startSlot]);
 
-  // Intro animation on load
+  // Animate progress with GSAP
   useEffect(() => {
-    if (!hasAnimated && targetProgress > 0) {
-      // Start intro animation immediately on mount
-      setProgress(targetProgress);
-      setHasAnimated(true);
-    } else if (hasAnimated) {
-      setProgress(targetProgress);
+    if (!progressRef.current) return;
+    
+    if (targetProgress > 0) {
+      gsap.to(progressRef.current, {
+        width: `${targetProgress}%`,
+        duration: 1,
+        ease: 'linear'
+      });
+      
+      if (!hasAnimated) {
+        setHasAnimated(true);
+      }
     }
   }, [targetProgress, hasAnimated]);
+  
 
   // Countdown every second and update progress
   useEffect(() => {
-    if (notStarted) return;
+    if (notStarted || isExpired) {
+      console.log('[Timer] Countdown interval not started:', { notStarted, isExpired });
+      return;
+    }
 
+    // Calculate current time from slots to ensure we have the latest value
+    const currentSeconds = calculateTimeRemaining(currentSlot, endSlot);
+    console.log('[Timer] Countdown effect - currentSeconds from slots:', currentSeconds, 'timeLeft state:', timeLeft);
+    
+    // If timeLeft is 0 but we have time remaining, update it
+    if (timeLeft <= 0 && currentSeconds > 0) {
+      console.log('[Timer] timeLeft is 0 but currentSeconds > 0, updating timeLeft to:', currentSeconds);
+      setTimeLeft(currentSeconds);
+      return; // Will re-run after state update
+    }
+
+    // Only start countdown if timeLeft > 0
+    if (timeLeft <= 0) {
+      console.log('[Timer] Countdown interval not started - timeLeft is 0 or negative:', timeLeft);
+      return;
+    }
+
+    console.log('[Timer] Starting countdown interval with timeLeft:', timeLeft);
+    
     const interval = setInterval(() => {
       setTimeLeft((prev) => {
         const newTime = Math.max(0, prev - 1);
+        console.log('[Timer] Countdown tick:', { prev, newTime, isExpired: newTime === 0 });
         if (newTime === 0) {
           setIsExpired(true);
           setTargetProgress(17); // 0% time = 17% width (left edge of visible portion)
@@ -124,8 +165,11 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
       });
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [notStarted, startSlot, endSlot]);
+    return () => {
+      console.log('[Timer] Cleaning up countdown interval');
+      clearInterval(interval);
+    };
+  }, [notStarted, isExpired, timeLeft, startSlot, endSlot, currentSlot]);
 
   // Format time as MM:SS or HH:MM:SS
   const formatTime = (seconds: number): string => {
@@ -206,7 +250,8 @@ export function Timer({ endSlot, currentSlot, startSlot, roundId, selectedCount 
       >
         {/* Progress Fill (Dynamic Color) */}
         <div 
-          className="h-full transition-all duration-1000 ease-linear"
+          ref={progressRef}
+          className="h-full"
           style={{ 
             width: `${progress}%`,
             background: getProgressBackground(),

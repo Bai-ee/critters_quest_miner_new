@@ -13,7 +13,9 @@ import { RoundRewardsHistory } from '@/components/RoundRewardsHistory';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
+import { useAudio } from '@/hooks/useAudio';
 import { useDeployToSquares, useAutomation } from '@/lib/instrucionsHooks';
+import { SOUND_VOLUMES } from '@/lib/audioVolumes';
 import { lamportsToSol, gramsToOre } from '@/lib/accounts';
 import { bigIntToNumber } from '@/lib/formatters';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -27,9 +29,11 @@ import { springBounceAnimation } from '@/lib/animations/springBounce';
 gsap.registerPlugin(ScrollTrigger);
 
 // Monster Animation Component
-function SlimeAnimation() {
+function SlimeAnimation({ playSound, isMuted }: { playSound: (name: string, config?: { volume?: number; loop?: boolean }, forcePlay?: boolean) => void; isMuted: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<gsap.core.Tween | null>(null);
+  const audioDurationRef = useRef<number | null>(null);
+  const preloadedAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Available monster gifs in the monsters folder
   const availableMonsters = [
@@ -57,6 +61,18 @@ function SlimeAnimation() {
     let timeoutId: NodeJS.Timeout | null = null;
     let currentDirection: 'right-to-left' | 'left-to-right' = 'right-to-left';
 
+    // Preload audio on mount for instant playback
+    if (!preloadedAudioRef.current) {
+      preloadedAudioRef.current = new Audio('/audio/monster_walking.wav');
+      preloadedAudioRef.current.volume = SOUND_VOLUMES.monsterWalking;
+      preloadedAudioRef.current.preload = 'auto';
+      preloadedAudioRef.current.addEventListener('canplaythrough', () => {
+        audioDurationRef.current = preloadedAudioRef.current!.duration * 1000; // Convert to ms
+        console.log('[Monster Audio] Audio preloaded and ready, duration:', audioDurationRef.current);
+      }, { once: true });
+      preloadedAudioRef.current.load();
+    }
+
     const animateNextMonster = () => {
       if (isAnimating) {
         return;
@@ -70,6 +86,28 @@ function SlimeAnimation() {
       currentDirection = currentDirection === 'right-to-left' ? 'left-to-right' : 'right-to-left';
       
       isAnimating = true;
+
+      // Play monster walking sound IMMEDIATELY at the very start, before any DOM work
+      // Always use playSound which is already loaded and ready in the audio system
+      if (!isMuted) {
+        console.log('[Monster Audio] Triggering footsteps, isMuted:', isMuted);
+        // Play first time immediately
+        playSound('monsterWalking');
+        
+        // Play second time after first finishes
+        if (audioDurationRef.current !== null) {
+          setTimeout(() => {
+            playSound('monsterWalking');
+          }, audioDurationRef.current);
+        } else {
+          // If duration not known yet, use a reasonable delay (e.g., 1 second)
+          setTimeout(() => {
+            playSound('monsterWalking');
+          }, 1000);
+        }
+      } else {
+        console.log('[Monster Audio] Skipped - audio is muted');
+      }
 
       const monsterDiv = document.createElement('div');
       monsterDiv.className = 'absolute';
@@ -169,6 +207,7 @@ export default function Home() {
   const { board, round, previousRound, currentSlot, loading, error, lastUpdate, miner, automation } = useRoundData();
   const { connected, publicKey } = useWallet();
   const { balance: solBalance } = useSolBalance();
+  const { isMuted, toggleMute, playSound } = useAudio();
   const { deploy } = useDeployToSquares();
   const { setupAutomation, disableAutomation } = useAutomation();
 
@@ -183,6 +222,13 @@ export default function Home() {
   const centerStageRef = useRef<HTMLDivElement>(null);
   const stakingPanelRef = useRef<HTMLDivElement>(null);
   const winLossHistoryRef = useRef<HTMLDivElement>(null);
+  
+  // Mining audio ref for scroll-triggered playback
+  const miningAudioRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Claim success audio ref for scroll-based fade
+  const claimSuccessAudioRef = useRef<HTMLAudioElement | null>(null);
+  const lastScrollYRef = useRef<number>(0);
 
   // Check if user participated in the round
   const userParticipated = miner && (
@@ -231,8 +277,10 @@ export default function Home() {
     const newSelected = new Set(selectedSquares);
     if (newSelected.has(index)) {
       newSelected.delete(index);
+      playSound('deselectTile', { volume: SOUND_VOLUMES.deselectTile });
     } else {
       newSelected.add(index);
+      playSound('selectTile', { volume: SOUND_VOLUMES.selectTile });
     }
     setSelectedSquares(newSelected);
   };
@@ -475,6 +523,162 @@ export default function Home() {
     };
   }, []);
 
+  // Intersection Observer for mining audio - play when round info card is in view
+  useEffect(() => {
+    if (!winLossHistoryRef.current) return;
+
+    // Initialize mining audio
+    if (!miningAudioRef.current) {
+      miningAudioRef.current = new Audio('/audio/mining.wav');
+      miningAudioRef.current.loop = true;
+      miningAudioRef.current.volume = SOUND_VOLUMES.mining;
+      miningAudioRef.current.preload = 'auto';
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Round info card is in view - play mining audio (if not muted)
+            if (!isMuted && miningAudioRef.current) {
+              console.log('[Mining Audio] Round info in view - starting mining audio');
+              miningAudioRef.current.play().catch(err => {
+                console.error('[Mining Audio] Play failed:', err);
+              });
+            }
+          } else {
+            // Round info card is out of view - stop mining audio
+            if (miningAudioRef.current && !miningAudioRef.current.paused) {
+              console.log('[Mining Audio] Round info out of view - stopping mining audio');
+              miningAudioRef.current.pause();
+              miningAudioRef.current.currentTime = 0;
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.1, // Trigger when 10% of the element is visible
+        rootMargin: '0px',
+      }
+    );
+
+    observer.observe(winLossHistoryRef.current);
+
+    // Handle mute state changes - if section is in view, play/pause accordingly
+    const checkVisibility = () => {
+      if (!winLossHistoryRef.current || !miningAudioRef.current) return;
+      
+      const rect = winLossHistoryRef.current.getBoundingClientRect();
+      const isInView = rect.top < window.innerHeight && rect.bottom > 0;
+      
+      if (isInView && !isMuted) {
+        // Section is in view and not muted - play
+        if (miningAudioRef.current.paused) {
+          console.log('[Mining Audio] Section in view and unmuted - resuming mining audio');
+          miningAudioRef.current.play().catch(err => {
+            console.error('[Mining Audio] Resume failed:', err);
+          });
+        }
+      } else {
+        // Section not in view OR muted - stop
+        if (!miningAudioRef.current.paused) {
+          console.log('[Mining Audio] Stopping - muted or out of view');
+          miningAudioRef.current.pause();
+          miningAudioRef.current.currentTime = 0;
+        }
+      }
+    };
+
+    // Check immediately and on mute state changes
+    checkVisibility();
+
+    return () => {
+      observer.disconnect();
+      // Stop audio on cleanup
+      if (miningAudioRef.current) {
+        miningAudioRef.current.pause();
+        miningAudioRef.current.currentTime = 0;
+      }
+    };
+  }, [isMuted]);
+
+  // Claim success audio - play on load at 1/2 volume, fade based on scroll
+  useEffect(() => {
+    if (!claimSuccessAudioRef.current && !isMuted) {
+      claimSuccessAudioRef.current = new Audio('/audio/CLAIM_onSuccess.wav');
+      claimSuccessAudioRef.current.loop = true;
+      // Play at 1/2 volume (0.5 * SOUND_VOLUMES.claimSuccess)
+      claimSuccessAudioRef.current.volume = SOUND_VOLUMES.claimSuccess * 0.5;
+      claimSuccessAudioRef.current.preload = 'auto';
+      
+      claimSuccessAudioRef.current.addEventListener('canplaythrough', () => {
+        if (claimSuccessAudioRef.current && !isMuted) {
+          claimSuccessAudioRef.current.play().catch(err => {
+            console.warn('[Claim Audio] Failed to play on load:', err);
+          });
+        }
+      }, { once: true });
+      
+      claimSuccessAudioRef.current.load();
+    }
+
+    // Handle mute state changes
+    if (claimSuccessAudioRef.current) {
+      if (isMuted) {
+        claimSuccessAudioRef.current.pause();
+      } else if (claimSuccessAudioRef.current.paused) {
+        claimSuccessAudioRef.current.play().catch(err => {
+          console.warn('[Claim Audio] Failed to resume:', err);
+        });
+      }
+    }
+
+    return () => {
+      if (claimSuccessAudioRef.current) {
+        claimSuccessAudioRef.current.pause();
+        claimSuccessAudioRef.current.currentTime = 0;
+      }
+    };
+  }, [isMuted]);
+
+  // Scroll-based fade for claim success audio
+  useEffect(() => {
+    if (!claimSuccessAudioRef.current) return;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollYRef.current;
+      lastScrollYRef.current = currentScrollY;
+
+      if (!claimSuccessAudioRef.current || isMuted) return;
+
+      const baseVolume = SOUND_VOLUMES.claimSuccess * 0.5; // 1/2 volume
+      const maxScroll = 500; // Max scroll distance for full fade
+      const scrollProgress = Math.min(currentScrollY / maxScroll, 1); // 0 to 1
+      
+      // Fade out as user scrolls down, fade in as they scroll up
+      const targetVolume = baseVolume * (1 - scrollProgress);
+      
+      // Smoothly animate volume change
+      if (claimSuccessAudioRef.current.volume !== targetVolume) {
+        gsap.to(claimSuccessAudioRef.current, {
+          volume: targetVolume,
+          duration: 0.3,
+          ease: 'power2.out',
+        });
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Initialize volume based on initial scroll position
+    handleScroll();
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [isMuted]);
+
   const handleSetupAutomation = async () => {
     if (!publicKey) {
       toast.error('Please connect your wallet');
@@ -560,6 +764,8 @@ export default function Home() {
 
     try {
       setDeploying(true);
+      // Play sound when wallet opens for signing
+      playSound('mineSignWallet', { volume: SOUND_VOLUMES.mineSignWallet });
       const squaresArray = Array.from(selectedSquares);
       const signature = await deploy(
         amount,
@@ -636,7 +842,7 @@ export default function Home() {
       </div>
 
       {/* Slime walking animation */}
-      <SlimeAnimation />
+      <SlimeAnimation playSound={playSound} isMuted={isMuted} />
 
       {/* Mining items gradient image at top */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
@@ -791,14 +997,26 @@ export default function Home() {
 
               {/* Circle Button 2 - Sound */}
               <button
+                onClick={() => {
+                  toggleMute();
+                  if (!isMuted) {
+                    playSound('click', { volume: SOUND_VOLUMES.click });
+                  }
+                }}
                 className="relative overflow-visible cursor-pointer transition-transform hover:scale-110 active:scale-95"
                 style={{
-                  background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+                  background: isMuted 
+                    ? 'linear-gradient(180deg, #666666 0%, #333333 100%)' 
+                    : 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
                   padding: '2px',
                   borderRadius: '50%',
-                  boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                  boxShadow: isMuted 
+                    ? '0 2px 5px rgba(0,0,0,0.2)' 
+                    : '0 4px 10px rgba(0,0,0,0.4)',
                   width: '36px',
                   height: '36px',
+                  opacity: isMuted ? 0.6 : 1,
+                  transition: 'opacity 0.2s ease-in-out, background 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
                 }}
               >
                 <div className="relative w-full h-full overflow-visible flex items-center justify-center" style={{
@@ -811,16 +1029,29 @@ export default function Home() {
                   <div 
                     className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-full"
                   />
-                  <svg 
-                    className="w-[20px] h-[20px] z-10"
-                    fill="#FFD700"
-                    viewBox="0 0 24 24"
-                    style={{
-                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
-                    }}
-                  >
-                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                  </svg>
+                  {isMuted ? (
+                    <svg 
+                      className="w-[20px] h-[20px] z-10"
+                      fill="#FFD700"
+                      viewBox="0 0 24 24"
+                      style={{
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
+                      }}
+                    >
+                      <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38.31 2.63.95 3.69 1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                    </svg>
+                  ) : (
+                    <svg 
+                      className="w-[20px] h-[20px] z-10"
+                      fill="#FFD700"
+                      viewBox="0 0 24 24"
+                      style={{
+                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
+                      }}
+                    >
+                      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                    </svg>
+                  )}
                 </div>
               </button>
             </div>
