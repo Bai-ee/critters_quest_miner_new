@@ -33,3 +33,6 @@ yarn-error.log*
 next-env.d.ts
 scripts/automation-keypair.json
 .env
+
+# merge workspace - used for merging specific elements on request
+critters_quest_miner_copy_NEWUI
