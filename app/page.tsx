@@ -1127,8 +1127,11 @@ export default function Home() {
                 </span>
               </div>
               
-              {/* Center: MINE A SQUARE */}
+              {/* Center: Round Number + MINE A SQUARE */}
               <div className="text-center flex flex-col">
+                <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase leading-none">
+                  ROUND #{board?.roundId?.toString() || '0'}
+                </span>
                 <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
                   MINE A SQUARE
                 </span>
