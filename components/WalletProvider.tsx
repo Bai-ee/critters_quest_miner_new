@@ -17,10 +17,14 @@ export const WalletContextProvider: FC<Props> = ({ children }) => {
   // Use devnet for testing, or mainnet-beta for production
   // Can be overridden with NEXT_PUBLIC_RPC_URL environment variable
   const endpoint = useMemo(() => {
-    if (process.env.NEXT_PUBLIC_RPC_URL) {
-      return process.env.NEXT_PUBLIC_RPC_URL;
+    const rpcUrl = process.env.NEXT_PUBLIC_RPC_URL;
+    console.log('[WalletProvider] RPC URL from env:', rpcUrl ? 'SET (Helius)' : 'NOT SET (using default devnet)');
+    if (rpcUrl) {
+      console.log('[WalletProvider] Using RPC endpoint:', rpcUrl.replace(/api-key=[^&]+/, 'api-key=***'));
+      return rpcUrl;
     }
     // Default to devnet for testing (can be changed to mainnet-beta for production)
+    console.warn('[WalletProvider] NEXT_PUBLIC_RPC_URL not set, using default devnet endpoint');
     return clusterApiUrl('devnet');
   }, []);
 

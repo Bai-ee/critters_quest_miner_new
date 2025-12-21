@@ -35,8 +35,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
   const [persistedWinner, setPersistedWinner] = useState<number | null>(null);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
-  const hasAnimatedRef = useRef(false);
-  const [animationPhase, setAnimationPhase] = useState<'initial' | 'animating' | 'completed'>('initial');
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const isTimerRunning = useMemo(() => {
@@ -58,40 +56,6 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
       return fluorescentPalette[seed % fluorescentPalette.length];
     });
   }, []);
-  useEffect(() => {
-    if (gridRef.current && !hasAnimatedRef.current) {
-      const cardInners = gridRef.current.querySelectorAll('.cq-card-inner');
-      
-      if (cardInners.length > 0) {
-        hasAnimatedRef.current = true;
-        setAnimationPhase('animating');
-        
-        gsap.set(cardInners, { 
-          opacity: 1, 
-          rotationY: -180,
-          transformOrigin: "center center"
-        });
-
-        const tl = gsap.timeline({
-          onComplete: () => {
-            setAnimationPhase('completed');
-          }
-        });
-        tl.to(cardInners, {
-          opacity: 1,
-          rotationY: 0,
-          duration: .5,
-          stagger: {
-            each: 0.1,
-            from: "start",
-            grid: [5, 5]
-          },
-          ease: "power2.out",
-          delay: 1
-        });
-      }
-    }
-  }, [round.deployed]);
 
   const winningSquare = getWinningSquare(round.slotHash);
 
@@ -193,7 +157,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                 width: '100%',
                 height: '100%',
                 opacity: 1,
-                transform: animationPhase === 'completed' ? 'rotateY(0deg)' : 'rotateY(-180deg)'
+                transform: 'rotateY(0deg)'
               }}
             >
               <div 
@@ -211,7 +175,7 @@ export function Grid({ round, miner, currentSlot, selectedSquares, toggleSquare,
                   WebkitBackfaceVisibility: 'hidden',
                   zIndex: 2,
                   transform: isWinner ? 'scale(2)' : undefined,
-                  transition: animationPhase === 'completed' ? 'transform 0.2s ease, box-shadow 0.2s ease' : 'none',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                   color: 'black',
                   position: 'relative',
                   overflow: 'visible'

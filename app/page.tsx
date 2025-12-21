@@ -873,6 +873,35 @@ export default function Home() {
                 timerExpired={timerExpired}
               />
           </div>
+        </div>
+      </div>
+
+      {/* Yellow Background Section - Everything below tiles */}
+      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]" style={{ backgroundColor: '#C68152', zIndex: 39 }}>
+        {/* Arch Image - Full Width */}
+        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]" style={{ zIndex: 50, marginTop: '-30px' }}>
+          <img 
+            src="/img/arch.png" 
+            alt="Arch" 
+            className="w-full h-auto"
+          />
+        </div>
+
+        {/* Miner Tiger GIF - Under Arch */}
+        <div className="w-full flex justify-center" style={{ marginTop: '20px' }}>
+          <img 
+            src="/img/pickaxe_front.gif" 
+            alt="Miner Tiger" 
+            style={{ width: '130px', height: 'auto', zIndex:60, marginTop:'-220px'}}
+          />
+        </div>
+        
+        {/* Content Container */}
+        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mt-[0px] mx-auto relative z-30 px-3 sm:px-4" style={{ zIndex: 70 }}>
+          {/* Staking Panel */}
+          <div className="mt-6">
+            <StakingPanel />
+          </div>
 
           {/* Round Results Section */}
           <div ref={roundResultsRef} className="mt-6">
@@ -887,24 +916,10 @@ export default function Home() {
             <RoundRewardsHistory />
           </div>
 
-          {/* Staking Panel */}
-          {connected && (
-            <div className="mt-6">
-              <StakingPanel />
-            </div>
-          )}
-
-          <HowTo />
+          <div style={{ marginTop: '-140px' }}>
+            <HowTo />
+          </div>
         </div>
-      </div>
-
-      {/* Arch Image - Full Width */}
-      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] mt-6">
-        <img 
-          src="/img/arch.png" 
-          alt="Arch" 
-          className="w-full h-auto"
-        />
       </div>
 
       {/* BOTTOM CONTROL BAR - Sticky */}
@@ -913,23 +928,37 @@ export default function Home() {
         style={{ 
           backgroundColor: '#FFB84A',
           boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          height: selectedSquares.size > 0 ? '128px' : '68px',
+          height: selectedSquares.size > 0 ? '128px' : (connected ? '68px' : '88px'),
           paddingBottom: '20px',
           bottom: 0,
         }}
       >
         {/* Info Bar - Always visible at top */}
         <div 
-          className="w-full h-[48px] grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 border-b border-black/10 flex-none"
-          style={{ paddingInline: 'calc(var(--spacing) * 4)' }}
+          className="w-full grid grid-cols-[1fr_auto_1fr] gap-0 items-center px-6 border-b border-black/10 flex-none"
+          style={{ 
+            paddingInline: 'calc(var(--spacing) * 4)',
+            minHeight: connected ? '48px' : '68px',
+            paddingTop: connected ? '0' : '10px',
+            paddingBottom: connected ? '0' : '10px',
+          }}
         >
+          {/* Connect to Play Message - Only when not connected */}
+          {!connected && (
+            <div className="col-span-3 w-full text-center mb-2">
+              <span className="text-sm font-black text-black uppercase leading-none">
+                CONNECT TO PLAY
+              </span>
+            </div>
+          )}
+          
           {/* Left: Selected Info */}
-          <div className="flex flex-col items-start justify-center min-w-0">
+          <div className="flex flex-col items-start justify-center min-w-0" style={{ gridColumn: connected ? '1' : '1', gridRow: connected ? '1' : '2' }}>
             <span className="text-sm font-black text-black leading-none">
               <span className="text-[8px]">x</span>
               {selectedSquares.size} {selectedSquares.size === 1 ? 'TILE' : 'TILES'} SELECTED
             </span>
-            </div>
+          </div>
 
           {/* Center: Manual/Auto Switch */}
           <div 
@@ -938,6 +967,8 @@ export default function Home() {
             style={{
               minWidth: '140px',
               height: '32px',
+              gridColumn: connected ? '2' : '2',
+              gridRow: connected ? '1' : '2',
             }}
           >
             <div
@@ -991,7 +1022,7 @@ export default function Home() {
           </div>
 
           {/* Right: Round Info */}
-          <div className="flex flex-col items-end justify-center min-w-0">
+          <div className="flex flex-col items-end justify-center min-w-0" style={{ gridColumn: connected ? '3' : '3', gridRow: connected ? '1' : '2' }}>
             <span className="text-sm font-black text-black/60 leading-none">#{board?.roundId?.toString() || '0'}</span>
             <span className="text-sm font-black text-black uppercase leading-none">Round</span>
           </div>

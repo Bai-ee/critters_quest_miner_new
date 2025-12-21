@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { WalletContextProvider } from "@/components/WalletProvider";
 import { Toaster } from "react-hot-toast";
-import { SplashScreen } from "@/components/SplashScreen";
 
 export const metadata: Metadata = {
   title: "QUEST Mining Dashboard",
@@ -17,7 +16,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <SplashScreen />
         <WalletContextProvider>
           <Toaster
             position="top-right"
