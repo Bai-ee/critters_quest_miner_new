@@ -731,7 +731,7 @@ export default function Home() {
       {/* CENTER STAGE - Grid always centered */}
       <div 
         className="flex-1 flex flex-col items-center justify-start px-3 sm:px-4 relative"
-        style={{ overflow: 'visible', marginTop: '0px', paddingBottom: '120px' }}
+        style={{ minHeight: 'calc(100svh - 80px - 120px)', overflow: 'visible', marginTop: '0px' }}
       >
         <div 
           className="absolute inset-0 w-full"
@@ -873,29 +873,6 @@ export default function Home() {
                 timerExpired={timerExpired}
               />
           </div>
-        </div>
-      </div>
-
-      {/* Yellow Background Section - Everything below tiles */}
-      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]" style={{ backgroundColor: '#C68152', zIndex: 39 }}>
-        {/* Arch Image - Full Width */}
-        <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]" style={{ zIndex: 50, marginTop: '-30px' }}>
-          <img 
-            src="/img/arch.png" 
-            alt="Arch" 
-            className="w-full h-auto"
-          />
-        </div>
-
-        {/* Miner Tiger GIF - Under Arch */}
-        <div className="w-full flex justify-center" style={{ marginTop: '20px' }}>
-          <img 
-            src="/img/pickaxe_front.gif" 
-            alt="Miner Tiger" 
-            style={{ width: '130px', height: 'auto', zIndex:60, marginTop:'-220px'}}
-          />
-        </div>
-        <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mt-[0px] mx-auto relative z-30 px-3 sm:px-4 z-70">
 
           {/* Round Results Section */}
           <div ref={roundResultsRef} className="mt-6">
@@ -911,14 +888,23 @@ export default function Home() {
           </div>
 
           {/* Staking Panel */}
-          <div className="mt-6">
-            <StakingPanel />
-          </div>
+          {connected && (
+            <div className="mt-6">
+              <StakingPanel />
+            </div>
+          )}
 
-          <div style={{ marginTop: '-140px' }}>
-            <HowTo />
-          </div>
+          <HowTo />
         </div>
+      </div>
+
+      {/* Arch Image - Full Width */}
+      <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] mt-6">
+        <img 
+          src="/img/arch.png" 
+          alt="Arch" 
+          className="w-full h-auto"
+        />
       </div>
 
       {/* BOTTOM CONTROL BAR - Sticky */}
