@@ -606,8 +606,81 @@ export default function Home() {
               flexShrink: 0
             }}
           />
-          {/* Right: SOL Balance */}
+          {/* Right: SOL Balance and Action Buttons */}
           <div className="flex-1 flex flex-col gap-2 items-end" style={{ marginTop: '2px', width: '100%' }}>
+            <div className="flex items-center gap-2" style={{ gap: '8px' }}>
+              {/* Circle Button 1 - Help/Info */}
+              <button
+                className="relative overflow-visible cursor-pointer transition-transform hover:scale-110 active:scale-95"
+                style={{
+                  background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+                  padding: '2px',
+                  borderRadius: '50%',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                  width: '36px',
+                  height: '36px',
+                }}
+              >
+                <div className="relative w-full h-full overflow-visible flex items-center justify-center" style={{
+                  background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
+                  borderRadius: '50%',
+                  boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
+                  width: '100%',
+                  height: '100%',
+                }}>
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-full"
+                  />
+                  <span 
+                    className="font-bold z-10"
+                    style={{
+                      fontFamily: 'Comic Sans MS, Comic Neue, cursive',
+                      fontSize: '20px',
+                      lineHeight: '1',
+                      color: '#FFD700',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                    }}
+                  >
+                    ?
+                  </span>
+                </div>
+              </button>
+
+              {/* Circle Button 2 - Sound */}
+              <button
+                className="relative overflow-visible cursor-pointer transition-transform hover:scale-110 active:scale-95"
+                style={{
+                  background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+                  padding: '2px',
+                  borderRadius: '50%',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                  width: '36px',
+                  height: '36px',
+                }}
+              >
+                <div className="relative w-full h-full overflow-visible flex items-center justify-center" style={{
+                  background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
+                  borderRadius: '50%',
+                  boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
+                  width: '100%',
+                  height: '100%',
+                }}>
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none rounded-full"
+                  />
+                  <svg 
+                    className="w-[20px] h-[20px] z-10"
+                    fill="#FFD700"
+                    viewBox="0 0 24 24"
+                    style={{
+                      filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))',
+                    }}
+                  >
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                  </svg>
+                </div>
+              </button>
+            </div>
             <div className="relative w-full overflow-visible" style={{
               background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
               padding: '2px',
