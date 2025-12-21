@@ -606,7 +606,7 @@ export default function Home() {
               flexShrink: 0
             }}
           />
-          {/* Right: SOL Balance and Action Buttons */}
+          {/* Right: Action Buttons */}
           <div className="flex-1 flex flex-col gap-2 items-end" style={{ marginTop: '2px', width: '100%' }}>
             <div className="flex items-center gap-2" style={{ gap: '8px' }}>
               {/* Circle Button 1 - Help/Info */}
@@ -680,45 +680,6 @@ export default function Home() {
                   </svg>
                 </div>
               </button>
-            </div>
-            <div className="relative w-full overflow-visible" style={{
-              background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
-              padding: '2px',
-              borderRadius: '13px',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
-              minHeight: '36px',
-            }}>
-              <div className="relative w-full h-full overflow-visible flex items-center justify-center" style={{
-                background: 'linear-gradient(180deg, #2A2A2A 0%, #1A1A1A 50%, #2A2A2A 100%)',
-                borderRadius: '11px',
-                boxShadow: 'inset 0 6px 15px rgba(0,0,0,0.7)',
-                minHeight: '32px',
-                padding: '6px 12px',
-              }}>
-                <div 
-                  className="absolute top-0 left-0 right-0 h-[45%] bg-gradient-to-b from-white/20 to-transparent pointer-events-none"
-                  style={{ 
-                    borderTopLeftRadius: '10px',
-                    borderTopRightRadius: '10px'
-                  }}
-                />
-                <div className="absolute left-1 top-1/2 -translate-y-1/2 pointer-events-none z-10" style={{ width: '25px', height: '40px', marginLeft: '1px' }}>
-                  <img 
-                    src="/img/sol.png" 
-                    alt="SOL" 
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                    }}
-                  />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-1 z-10" style={{ paddingLeft: '21px', top: 'calc(50% + 2px)', transform: 'translateY(-50%)' }}>
-                  <div className="text-[10px] sm:text-[12px] font-bold text-white leading-none">
-                    <AnimatedNumber value={solBalance.toFixed(2).padStart(7, '0')} />
-            </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -820,22 +781,50 @@ export default function Home() {
               </div>
 
               <div className="flex-1 flex gap-1 justify-between items-center min-w-0">
-                <GlossyButton
-                  onClick={selectAll}
-                  size="sm"
-                  variant="success"
-                  className="flex-1 min-w-0 !px-0 !py-2 !text-[11px] sm:!text-[13px]"
-                >
-                  ALL
-                </GlossyButton>
-                <GlossyButton
-                  onClick={randomSelection}
-                  size="sm"
-                  variant="success"
-                  className="flex-1 min-w-0 !px-0 !py-2 !text-[11px] sm:!text-[13px]"
-                >
-                  RANDOM
-                </GlossyButton>
+                <div className="flex-1 min-w-0" style={{
+                  background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+                  padding: '2px',
+                  borderRadius: '13px',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                }}>
+                  <GlossyButton
+                    onClick={selectAll}
+                    size="sm"
+                    variant="primary"
+                    className="!w-full !px-0 !py-2 !text-[11px] sm:!text-[13px] !rounded-[11px]"
+                    style={{
+                      background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 50%, #1a1a1a 100%)',
+                      borderColor: 'transparent',
+                      color: '#FFD700',
+                      boxShadow: 'none',
+                      border: 'none',
+                    }}
+                  >
+                    ALL
+                  </GlossyButton>
+                </div>
+                <div className="flex-1 min-w-0" style={{
+                  background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
+                  padding: '2px',
+                  borderRadius: '13px',
+                  boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                }}>
+                  <GlossyButton
+                    onClick={randomSelection}
+                    size="sm"
+                    variant="primary"
+                    className="!w-full !px-0 !py-2 !text-[11px] sm:!text-[13px] !rounded-[11px]"
+                    style={{
+                      background: 'linear-gradient(180deg, #1a1a1a 0%, #000000 50%, #1a1a1a 100%)',
+                      borderColor: 'transparent',
+                      color: '#FFD700',
+                      boxShadow: 'none',
+                      border: 'none',
+                    }}
+                  >
+                    RANDOM
+                  </GlossyButton>
+                </div>
                 <GlossyButton
                   onClick={clearSelection}
                   size="icon"
