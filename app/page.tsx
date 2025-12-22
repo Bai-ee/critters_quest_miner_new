@@ -1819,7 +1819,7 @@ export default function Home() {
 
           {/* Treasure Chest - On top of rocks */}
           <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex justify-center items-center" style={{ marginTop: '-180px', zIndex: 100 }}>
-            <div className="relative" style={{ width: '33.33%', maxWidth: '400px' }}>
+            <div className="relative" style={{ width: '33.33%', maxWidth: '400px', marginTop: '23px' }}>
               <img 
                 src="/img/treasure_chest_closed.gif" 
                 alt="Treasure Chest" 
@@ -1940,8 +1940,8 @@ export default function Home() {
               {/* Right: WIN THIS ROUND - QUEST */}
               <div className="flex flex-col items-end">
                 <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase leading-none mb-0.5">Win This Round</span>
-                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none">
-                  {previousRound?.totalVaulted ? Math.floor(lamportsToSol(previousRound.totalVaulted)).toString().padStart(5, '0') : '00000'} QUEST
+                <span className="text-sm font-black text-[rgb(120,63,4)] leading-none text-right">
+                  {previousRound?.totalVaulted ? Math.floor(lamportsToSol(previousRound.totalVaulted)).toString().padStart(3, '0') : '000'} QUEST
                 </span>
               </div>
             </div>
@@ -2041,9 +2041,9 @@ export default function Home() {
               <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase leading-none text-center">
                 NEXT ROUND
               </span>
-              <div className="text-center leading-none">
+              <div className="text-right leading-none">
                 <span className="text-sm font-black text-[rgb(120,63,4)]">
-                  {round?.totalVaulted ? Math.floor(lamportsToSol(round.totalVaulted)).toString().padStart(5, '0') : '00000'}
+                  {round?.totalVaulted ? Math.floor(lamportsToSol(round.totalVaulted)).toString().padStart(3, '0') : '000'}
                 </span>
                 <span className="text-[9px] font-black text-[rgb(120,63,4)]/60 uppercase"> QUEST</span>
               </div>
