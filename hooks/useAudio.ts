@@ -15,17 +15,16 @@ class AudioManager {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      // Preload all audio files
-      this.loadSound('click', '/audio/CLICK_onClick.wav');
-      this.loadSound('selectTile', '/audio/select_tile.wav');
-      this.loadSound('deselectTile', '/audio/deselect_tile.wav');
+      // Preload all audio files - use .mp3 where available
+      this.loadSound('click', '/audio/CLICK_onClick.mp3');
+      this.loadSound('selectTile', '/audio/select_tile.mp3');
+      this.loadSound('deselectTile', '/audio/deselect_tile.mp3');
       // revealWinner sound file doesn't exist, skip loading to avoid 404 errors
       // this.loadSound('revealWinner', '/audio/reveal_winner.wav');
-      this.loadSound('timerStarts', '/audio/timer_starts.wav');
-      this.loadSound('monsterWalking', '/audio/monster_walking.wav');
-      this.loadSound('claimSuccess', '/audio/CLAIM_onSuccess.wav');
-      this.loadSound('mineSignWallet', '/audio/mine_sign_wallet.wav');
-      this.loadSound('mining', '/audio/mining.wav');
+      this.loadSound('timerStarts', '/audio/timer_starts.wav'); // No .mp3 version available
+      this.loadSound('claimSuccess', '/audio/CLAIM_onSuccess.wav'); // No .mp3 version available
+      this.loadSound('mineSignWallet', '/audio/mine_sign_wallet.wav'); // No .mp3 version available
+      this.loadSound('mining', '/audio/mining.wav'); // No .mp3 version available
       
       // Load background music
       this.bgMusic = new Audio('/audio/bg.mp3');

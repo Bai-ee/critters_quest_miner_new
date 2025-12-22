@@ -10,6 +10,7 @@ import { AnimatedNumber } from '@/components/AnimatedNumber';
 import { HowTo } from '@/components/HowTo';
 import { StakingPanel } from '@/components/StakingPanel';
 import { RoundRewardsHistory } from '@/components/RoundRewardsHistory';
+import { Modal } from '@/components/Modal';
 import { useRoundData } from '@/hooks/useRoundData';
 import { useSolBalance } from '@/hooks/useSolBalance';
 import { useTokenBalance } from '@/hooks/useTokenBalance';
@@ -29,11 +30,9 @@ import { springBounceAnimation } from '@/lib/animations/springBounce';
 gsap.registerPlugin(ScrollTrigger);
 
 // Monster Animation Component
-function SlimeAnimation({ playSound, isMuted }: { playSound: (name: string, config?: { volume?: number; loop?: boolean }, forcePlay?: boolean) => void; isMuted: boolean }) {
+function SlimeAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<gsap.core.Tween | null>(null);
-  const audioDurationRef = useRef<number | null>(null);
-  const preloadedAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Available monster gifs in the monsters folder
   const availableMonsters = [
@@ -61,18 +60,6 @@ function SlimeAnimation({ playSound, isMuted }: { playSound: (name: string, conf
     let timeoutId: NodeJS.Timeout | null = null;
     let currentDirection: 'right-to-left' | 'left-to-right' = 'right-to-left';
 
-    // Preload audio on mount for instant playback
-    if (!preloadedAudioRef.current) {
-      preloadedAudioRef.current = new Audio('/audio/monster_walking.wav');
-      preloadedAudioRef.current.volume = SOUND_VOLUMES.monsterWalking;
-      preloadedAudioRef.current.preload = 'auto';
-      preloadedAudioRef.current.addEventListener('canplaythrough', () => {
-        audioDurationRef.current = preloadedAudioRef.current!.duration * 1000; // Convert to ms
-        console.log('[Monster Audio] Audio preloaded and ready, duration:', audioDurationRef.current);
-      }, { once: true });
-      preloadedAudioRef.current.load();
-    }
-
     const animateNextMonster = () => {
       if (isAnimating) {
         return;
@@ -86,28 +73,6 @@ function SlimeAnimation({ playSound, isMuted }: { playSound: (name: string, conf
       currentDirection = currentDirection === 'right-to-left' ? 'left-to-right' : 'right-to-left';
       
       isAnimating = true;
-
-      // Play monster walking sound IMMEDIATELY at the very start, before any DOM work
-      // Always use playSound which is already loaded and ready in the audio system
-      if (!isMuted) {
-        console.log('[Monster Audio] Triggering footsteps, isMuted:', isMuted);
-        // Play first time immediately
-        playSound('monsterWalking');
-        
-        // Play second time after first finishes
-        if (audioDurationRef.current !== null) {
-          setTimeout(() => {
-            playSound('monsterWalking');
-          }, audioDurationRef.current);
-        } else {
-          // If duration not known yet, use a reasonable delay (e.g., 1 second)
-          setTimeout(() => {
-            playSound('monsterWalking');
-          }, 1000);
-        }
-      } else {
-        console.log('[Monster Audio] Skipped - audio is muted');
-      }
 
       const monsterDiv = document.createElement('div');
       monsterDiv.className = 'absolute';
@@ -213,7 +178,16 @@ export default function Home() {
 
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false);
   const [lastShownRoundId, setLastShownRoundId] = useState<string | null>(null);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const roundResultsRef = useRef<HTMLDivElement>(null);
+
+  // Debug: Log when help modal state changes
+  useEffect(() => {
+    console.log('[Help Modal] State changed:', isHelpModalOpen);
+    if (isHelpModalOpen) {
+      console.log('[Help Modal] Modal should be visible now');
+    }
+  }, [isHelpModalOpen]);
   
   // ScrollTrigger refs
   const archRef = useRef<HTMLDivElement>(null);
@@ -287,10 +261,12 @@ export default function Home() {
 
   const selectAll = () => {
     setSelectedSquares(new Set(Array.from({ length: 25 }, (_, i) => i)));
+    playSound('selectTile', { volume: SOUND_VOLUMES.selectTile });
   };
 
   const clearSelection = () => {
     setSelectedSquares(new Set());
+    playSound('deselectTile', { volume: SOUND_VOLUMES.deselectTile });
   };
 
   const randomSelection = () => {
@@ -303,6 +279,7 @@ export default function Home() {
     }
     const randomSquares = allSquares.slice(0, maxSquares);
     setSelectedSquares(new Set(randomSquares));
+    playSound('selectTile', { volume: SOUND_VOLUMES.selectTile });
   }
 
   const incrementRounds = () => {
@@ -812,11 +789,104 @@ export default function Home() {
             >
               RETRY
             </button>
+        </div>
+      </div>
+
+      {/* Help Modal - Simple Direct Implementation */}
+      {isHelpModalOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            backgroundColor: 'rgba(0, 0, 0, 0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+          }}
+          onClick={() => {
+            setIsHelpModalOpen(false);
+            playSound('click', { volume: SOUND_VOLUMES.click });
+          }}
+        >
+          <div
+            className="rounded-xl border-2 border-black overflow-hidden"
+            style={{
+              backgroundColor: '#ffb84a',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-6 rounded-lg m-2">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-black text-white uppercase" style={{
+                  fontFamily: 'Comic Sans MS, Comic Neue, cursive',
+                }}>
+                  How to Play
+                </h2>
+                <button
+                  onClick={() => {
+                    setIsHelpModalOpen(false);
+                    playSound('click', { volume: SOUND_VOLUMES.click });
+                  }}
+                  className="text-white hover:text-gray-300 transition-colors"
+                  style={{
+                    fontFamily: 'Comic Sans MS, Comic Neue, cursive',
+                    fontSize: '24px',
+                    lineHeight: '1',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="space-y-4 text-white" style={{
+                fontFamily: 'Comic Sans MS, Comic Neue, cursive',
+              }}>
+                <div>
+                  <h3 className="font-bold text-lg mb-2">Select Squares</h3>
+                  <p className="text-sm opacity-90">
+                    Click on squares to select them. You can select multiple squares to mine.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-2">Deploy SOL</h3>
+                  <p className="text-sm opacity-90">
+                    Enter the amount of SOL you want to deploy per square and click MINE.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-2">Win Prizes</h3>
+                  <p className="text-sm opacity-90">
+                    When the round ends, the winning square is revealed. If you selected it, you win!
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg mb-2">Auto Mine</h3>
+                  <p className="text-sm opacity-90">
+                    Enable AUTO MINE to automatically mine selected squares for multiple rounds.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </main>
-    );
-  }
+      )}
+    </main>
+  );
+}
 
   if (!board || !round) {
     return (
@@ -842,7 +912,7 @@ export default function Home() {
       </div>
 
       {/* Slime walking animation */}
-      <SlimeAnimation playSound={playSound} isMuted={isMuted} />
+      <SlimeAnimation />
 
       {/* Mining items gradient image at top */}
       <div className="relative flex justify-center items-center mx-auto" style={{ zIndex: 1, marginTop: '0px', width: '4000px', overflow: 'visible', left: '50%', transform: 'translateX(-50%)' }}>
@@ -960,6 +1030,14 @@ export default function Home() {
             <div className="flex items-center gap-2" style={{ gap: '8px' }}>
               {/* Circle Button 1 - Help/Info */}
               <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('[Help Button] Clicked, opening modal, current state:', isHelpModalOpen);
+                  setIsHelpModalOpen(true);
+                  console.log('[Help Button] State set to true');
+                  playSound('click', { volume: SOUND_VOLUMES.click });
+                }}
                 className="relative overflow-visible cursor-pointer transition-transform hover:scale-110 active:scale-95"
                 style={{
                   background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
@@ -1245,7 +1323,15 @@ export default function Home() {
           <img 
             src="/img/pickaxe_front.gif" 
             alt="Miner Tiger" 
-            style={{ width: '130px', height: 'auto', zIndex:60, marginTop:'-220px'}}
+            style={{ 
+              width: '130px', 
+              height: 'auto', 
+              zIndex: 60, 
+              marginTop: '-220px',
+              objectFit: 'contain',
+              maxWidth: '130px',
+              aspectRatio: 'auto'
+            }}
           />
         </div>
         <div className="w-full max-w-[min(92vw,520px)] md:max-w-[1200px] mt-[0px] mx-auto relative z-30 px-3 sm:px-4 z-70">
@@ -1272,11 +1358,55 @@ export default function Home() {
                 aspectRatio: '1 / 1',
               }}
             >
-              <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-3 md:p-4 rounded-lg h-full flex flex-col justify-center items-center space-y-3 m-2">
+              {/* CURRENT ROUND Label */}
+              <div className="text-center py-2 px-3 relative">
+                {/* Decorative circle bolts in corners */}
+                <div 
+                  className="absolute left-1"
+                  style={{
+                    top: '7px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'black',
+                  }}
+                />
+                <div 
+                  className="absolute right-1"
+                  style={{
+                    top: '7px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'black',
+                  }}
+                />
+                <div 
+                  className="absolute left-1"
+                  style={{
+                    bottom: '2px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'black',
+                  }}
+                />
+                <div 
+                  className="absolute right-1"
+                  style={{
+                    bottom: '2px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'black',
+                  }}
+                />
+                <div className="text-lg sm:text-xl font-black text-black uppercase" style={{ marginTop: '0px', verticalAlign: 'bottom' }}>
+                  CURRENT ROUND
+                </div>
+              </div>
+              <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-3 md:p-4 rounded-lg flex flex-col justify-start items-center space-y-3 m-2" style={{ height: 'calc(100% - 60px)' }}>
                 <div className="text-center space-y-2">
-                  <div className="text-xs sm:text-sm font-black text-white/70 uppercase">
-                    Current Round
-                  </div>
                   <div className="text-2xl sm:text-3xl font-black text-white">
                     #{board?.roundId?.toString() || '0'}
                   </div>
@@ -1318,8 +1448,29 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Rocks Image - After Current Round Card */}
+          <div ref={rocksRef} className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw]" style={{ marginTop: '-130px', zIndex: 90 }}>
+            <img 
+              src="/img/rocks.png" 
+              alt="Rocks" 
+              className="w-full h-auto"
+              style={{ height: '113.95px', width: '100%', objectFit: 'cover' }}
+            />
+          </div>
+
+          {/* Treasure Chest - On top of rocks */}
+          <div className="w-screen relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] flex justify-center items-center" style={{ marginTop: '-180px', zIndex: 100 }}>
+            <div className="relative" style={{ width: '33.33%', maxWidth: '400px' }}>
+              <img 
+                src="/img/treasure_chest_closed.gif" 
+                alt="Treasure Chest" 
+                style={{ width: '100%', height: 'auto' }}
+              />
+            </div>
+          </div>
+
           {/* Staking Panel */}
-          <div ref={stakingPanelRef} style={{ marginTop: '60px', position: 'relative', zIndex: 20 }}>
+          <div ref={stakingPanelRef} style={{ marginTop: '170px', position: 'relative', zIndex: 110 }}>
             <StakingPanel />
           </div>
 
@@ -1439,6 +1590,7 @@ export default function Home() {
               onClick={() => {
                 if (!automation) {
                   setMode('manual');
+                  playSound('click', { volume: SOUND_VOLUMES.click });
                 }
               }}
               className="relative z-10 flex-1 h-full flex items-center justify-center text-[11px] sm:text-[13px] font-black uppercase transition-colors duration-300 rounded-full"
@@ -1451,7 +1603,10 @@ export default function Home() {
               MANUAL
             </button>
             <button
-              onClick={() => setMode('auto')}
+              onClick={() => {
+                setMode('auto');
+                playSound('click', { volume: SOUND_VOLUMES.click });
+              }}
               className="relative z-10 flex-1 h-full flex items-center justify-center text-[11px] sm:text-[13px] font-black uppercase transition-colors duration-300 rounded-full"
               style={{
                 color: mode === 'auto' ? '#ffffff' : 'rgba(0,0,0,0.4)',

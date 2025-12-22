@@ -53,17 +53,44 @@ export function Modal({
   }, [isOpen, closeOnEscape, onClose]);
 
   useEffect(() => {
-    if (!backdropRef.current || !modalRef.current) return;
+    if (!backdropRef.current || !modalRef.current) {
+      console.log('[Modal] Refs not ready yet');
+      return;
+    }
 
     if (isOpen) {
-      animateModalBackdrop(backdropRef.current, true);
-      animateModalEntrance(modalRef.current);
+      console.log('[Modal] Opening modal, setting up animations');
+      // Set initial visible state immediately
+      backdropRef.current.style.opacity = '1';
+      backdropRef.current.style.display = 'flex';
+      modalRef.current.style.opacity = '1';
+      modalRef.current.style.display = 'block';
+      
+      try {
+        animateModalBackdrop(backdropRef.current, true);
+        animateModalEntrance(modalRef.current);
+      } catch (err) {
+        console.warn('[Modal] Animation error, showing modal anyway:', err);
+        // Modal already visible from above
+      }
       document.body.style.overflow = 'hidden';
     } else {
-      animateModalBackdrop(backdropRef.current, false);
-      animateModalExit(modalRef.current, () => {
+      console.log('[Modal] Closing modal');
+      try {
+        animateModalBackdrop(backdropRef.current, false);
+        animateModalExit(modalRef.current, () => {
+          if (backdropRef.current) {
+            backdropRef.current.style.display = 'none';
+          }
+          document.body.style.overflow = '';
+        });
+      } catch (err) {
+        console.warn('[Modal] Animation error on close:', err);
+        if (backdropRef.current) {
+          backdropRef.current.style.display = 'none';
+        }
         document.body.style.overflow = '';
-      });
+      }
     }
 
     return () => {
@@ -71,7 +98,18 @@ export function Modal({
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  // Debug: Log modal render state
+  useEffect(() => {
+    console.log('[Modal Component] isOpen state:', isOpen, 'backdropRef:', !!backdropRef.current, 'modalRef:', !!modalRef.current);
+  }, [isOpen]);
+
+  console.log('[Modal Component] Render check - isOpen:', isOpen);
+  
+  if (!isOpen) {
+    return null;
+  }
+  
+  console.log('[Modal Component] Rendering modal content');
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (closeOnBackdropClick && e.target === e.currentTarget) {
@@ -88,7 +126,21 @@ export function Modal({
   return (
     <div
       ref={backdropRef}
-      className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed flex items-center justify-center p-4"
+      style={{ 
+        zIndex: 999999,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(4px)',
+        position: 'fixed',
+        display: 'flex',
+        opacity: 1,
+      }}
       onClick={handleBackdropClick}
       role="dialog"
       aria-modal="true"
@@ -104,6 +156,12 @@ export function Modal({
           max-h-[90vh] overflow-y-auto
           ${className}
         `}
+        style={{ 
+          zIndex: 999999,
+          position: 'relative',
+          opacity: 1,
+          display: 'block',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         {(title || showCloseButton) && (

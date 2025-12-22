@@ -19,7 +19,6 @@ export const SOUND_VOLUMES = {
   mineSignWallet: 0.67,
 
   // Animation sounds
-  monsterWalking: 0.16,
   mining: 0.5,
 } as const;
 

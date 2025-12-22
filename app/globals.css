@@ -430,3 +430,25 @@ body {
   animation: ticking-clock 1s ease-in-out infinite;
   transform-origin: center center;
 }
+
+/* Custom bullet point styling */
+ul {
+  list-style: none;
+  padding-left: 1em;
+}
+
+ul li {
+  position: relative;
+}
+
+ul li::before {
+  content: '';
+  position: absolute;
+  left: -1em;
+  top: 0.5em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: black;
+  transform: translateY(-50%);
+}
