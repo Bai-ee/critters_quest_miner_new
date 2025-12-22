@@ -1125,9 +1125,11 @@ export default function Home() {
                   e.preventDefault();
                   e.stopPropagation();
                   if (howToMineRef.current) {
-                    howToMineRef.current.scrollIntoView({ 
-                      behavior: 'smooth', 
-                      block: 'start' 
+                    const elementTop = howToMineRef.current.getBoundingClientRect().top + window.pageYOffset;
+                    const offset = 50; // Compensate for StakingPanel marginTop: '170px' + HOW TO MINE marginTop: '50px'
+                    window.scrollTo({
+                      top: elementTop - offset,
+                      behavior: 'smooth'
                     });
                     playSound('click', { volume: SOUND_VOLUMES.click });
                   }
@@ -1903,8 +1905,7 @@ export default function Home() {
         style={{ 
           backgroundColor: '#FFB84A',
           boxShadow: '0 -10px 30px rgba(0,0,0,0.3)',
-          height: (selectedSquares.size > 0 || !!automation) ? '180px' : (connected ? '120px' : '128px'),
-          paddingBottom: '20px',
+          paddingBottom: '0',
           bottom: 0,
         }}
       >
