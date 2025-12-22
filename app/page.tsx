@@ -196,6 +196,7 @@ export default function Home() {
   const centerStageRef = useRef<HTMLDivElement>(null);
   const stakingPanelRef = useRef<HTMLDivElement>(null);
   const winLossHistoryRef = useRef<HTMLDivElement>(null);
+  const howToMineRef = useRef<HTMLDivElement>(null);
   
   // Mining audio ref for scroll-triggered playback
   const miningAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -219,6 +220,71 @@ export default function Home() {
       setLastShownRoundId(previousRound.id.toString());
     }
   }, [previousRound, lastShownRoundId]);
+
+  // Fetch round results data - Always show latest finalized round
+  useEffect(() => {
+    const fetchRoundResults = async () => {
+      try {
+        setRoundResultsLoading(true);
+        
+        // Try latest endpoint first
+        let roundData = null;
+        try {
+          const latestResponse = await fetch('/api/rounds/latest', { cache: 'no-store' });
+          if (latestResponse.ok && latestResponse.status !== 503) {
+            const latestResult = await latestResponse.json();
+            if (latestResult.success && latestResult.data) {
+              roundData = latestResult.data;
+            }
+          }
+        } catch (e) {
+          // Continue to fallback
+        }
+        
+        // If latest didn't work, try rounds list
+        if (!roundData) {
+          try {
+            const roundsResponse = await fetch('/api/rounds?limit=10', { cache: 'no-store' });
+            if (roundsResponse.ok) {
+              const roundsResult = await roundsResponse.json();
+              if (roundsResult.success && roundsResult.data && roundsResult.data.length > 0) {
+                // Find the first round with complete data (has winning_square)
+                for (const round of roundsResult.data) {
+                  if (round.round_id && round.winning_square !== null && round.winning_square !== undefined) {
+                    roundData = round;
+                    break;
+                  }
+                }
+                // If no complete round, use first one anyway
+                if (!roundData && roundsResult.data.length > 0) {
+                  roundData = roundsResult.data[0];
+                }
+              }
+            }
+          } catch (e) {
+            console.error('Error fetching rounds:', e);
+          }
+        }
+        
+        if (roundData) {
+          setRoundResultsData(roundData);
+        } else {
+          setRoundResultsData(null);
+        }
+      } catch (error) {
+        console.error('Error fetching round results:', error);
+        setRoundResultsData(null);
+      } finally {
+        setRoundResultsLoading(false);
+      }
+    };
+
+    fetchRoundResults();
+    // Refetch every 5 seconds
+    const interval = setInterval(fetchRoundResults, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Get token balance
   const { balance: tokenBalance } = useTokenBalance({
@@ -246,6 +312,11 @@ export default function Home() {
   // State for RoundResults integration
   const [resultsShown, setResultsShown] = useState(false);
   const [displayedWinningSquare, setDisplayedWinningSquare] = useState<number | null>(null);
+  
+  // State for round results data
+  const [roundResultsData, setRoundResultsData] = useState<any>(null);
+  const [previousRoundResultsData, setPreviousRoundResultsData] = useState<any>(null);
+  const [roundResultsLoading, setRoundResultsLoading] = useState(false);
 
   const toggleSquare = (index: number) => {
     const newSelected = new Set(selectedSquares);
@@ -348,6 +419,7 @@ export default function Home() {
     let rocksTween: gsap.core.Tween | null = null;
     let stakingPanelTween: gsap.core.Tween | null = null;
     let winLossHistoryTween: gsap.core.Tween | null = null;
+    let howToMineTween: gsap.core.Tween | null = null;
     let isInitialized = false;
     let timer1: NodeJS.Timeout | null = null;
     let timer2: NodeJS.Timeout | null = null;
@@ -370,7 +442,8 @@ export default function Home() {
           if (triggerElement === yellowSectionRef.current || 
               triggerElement === archRef.current ||
               (rocksRef.current && triggerElement === rocksRef.current) ||
-              (stakingPanelRef.current && triggerElement === stakingPanelRef.current)) {
+              (stakingPanelRef.current && triggerElement === stakingPanelRef.current) ||
+              (howToMineRef.current && triggerElement === howToMineRef.current)) {
             trigger.kill();
           }
         } catch (err) {
@@ -458,6 +531,22 @@ export default function Home() {
         });
       }
 
+      // How to Mine section scrolls at same speed as staking panel
+      if (howToMineRef.current) {
+        howToMineTween = gsap.to(howToMineRef.current, {
+          y: -900,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: yellowSectionRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: 1,
+            markers: false,
+            invalidateOnRefresh: true,
+          },
+        });
+      }
+
       ScrollTrigger.refresh();
       return true;
     };
@@ -483,6 +572,7 @@ export default function Home() {
       rocksTween?.kill();
       stakingPanelTween?.kill();
       winLossHistoryTween?.kill();
+      howToMineTween?.kill();
       ScrollTrigger.getAll().forEach(trigger => {
         try {
           const triggerElement = trigger.vars?.trigger;
@@ -490,7 +580,8 @@ export default function Home() {
               triggerElement === archRef.current ||
               (rocksRef.current && triggerElement === rocksRef.current) ||
               (stakingPanelRef.current && triggerElement === stakingPanelRef.current) ||
-              (winLossHistoryRef.current && triggerElement === winLossHistoryRef.current)) {
+              (winLossHistoryRef.current && triggerElement === winLossHistoryRef.current) ||
+              (howToMineRef.current && triggerElement === howToMineRef.current)) {
             trigger.kill();
           }
         } catch (err) {
@@ -1033,10 +1124,13 @@ export default function Home() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('[Help Button] Clicked, opening modal, current state:', isHelpModalOpen);
-                  setIsHelpModalOpen(true);
-                  console.log('[Help Button] State set to true');
-                  playSound('click', { volume: SOUND_VOLUMES.click });
+                  if (howToMineRef.current) {
+                    howToMineRef.current.scrollIntoView({ 
+                      behavior: 'smooth', 
+                      block: 'start' 
+                    });
+                    playSound('click', { volume: SOUND_VOLUMES.click });
+                  }
                 }}
                 className="relative overflow-visible cursor-pointer transition-transform hover:scale-110 active:scale-95"
                 style={{
@@ -1066,6 +1160,7 @@ export default function Home() {
                       lineHeight: '1',
                       color: '#FFD700',
                       textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                      transform: 'rotate(-13deg)',
                     }}
                   >
                     ?
@@ -1233,7 +1328,7 @@ export default function Home() {
                 />
               </div>
 
-              <div className="flex-1 flex gap-1 justify-between items-center min-w-0">
+              <div className="flex-1 flex gap-1 justify-between items-center min-w-0" style={{ pointerEvents: (deploying || !!automation) ? 'none' : 'auto' }}>
                 <div className="flex-1 min-w-0" style={{
                   background: 'linear-gradient(180deg, #FFD700 0%, #B8860B 100%)',
                   padding: '2px',
@@ -1252,6 +1347,7 @@ export default function Home() {
                       boxShadow: 'none',
                       border: 'none',
                     }}
+                    disabled={deploying || !!automation}
                   >
                     ALL
                   </GlossyButton>
@@ -1274,6 +1370,7 @@ export default function Home() {
                       boxShadow: 'none',
                       border: 'none',
                     }}
+                    disabled={deploying || !!automation}
                   >
                     RANDOM
                   </GlossyButton>
@@ -1283,6 +1380,7 @@ export default function Home() {
                   size="icon"
                   variant="danger"
                   className="flex-none !w-8 !h-8 sm:!w-9 sm:!h-9"
+                  disabled={deploying || !!automation}
                 >
                   ✕
                 </GlossyButton>
@@ -1292,7 +1390,7 @@ export default function Home() {
         </div>
 
 
-        <div className="w-full max-w-[min(92vw,520px)] relative z-30" style={{ overflow: 'visible' }}>
+        <div className="w-full max-w-[min(92vw,520px)] relative z-30" style={{ overflow: 'visible', pointerEvents: (deploying || !!automation) ? 'none' : 'auto' }}>
           <div className="mt-0" style={{ overflow: 'visible' }}>
               <Grid
                 round={round}
@@ -1402,48 +1500,307 @@ export default function Home() {
                   }}
                 />
                 <div className="text-lg sm:text-xl font-black text-black uppercase" style={{ marginTop: '0px', verticalAlign: 'bottom' }}>
-                  CURRENT ROUND
+                  {roundResultsData ? 'CURRENT ROUND' : previousRoundResultsData ? 'LAST ROUND' : 'CURRENT ROUND'}
                 </div>
               </div>
-              <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-3 md:p-4 rounded-lg flex flex-col justify-start items-center space-y-3 m-2" style={{ height: 'calc(100% - 60px)' }}>
-                <div className="text-center space-y-2">
-                  <div className="text-2xl sm:text-3xl font-black text-white">
-                    #{board?.roundId?.toString() || '0'}
-                  </div>
-                </div>
-                {round && (
-                  <div className="grid grid-cols-2 gap-4 w-full text-center">
-                    <div>
-                      <div className="text-[10px] sm:text-xs font-black text-white/70 uppercase mb-1">
-                        Total Deployed
+              <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg m-2" style={{ height: 'calc(100% - 60px)' }}>
+                {(() => {
+                  const data = roundResultsData || previousRoundResultsData;
+                  
+                  // Debug: Log what we have
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('[CURRENT ROUND CARD] Data check:', {
+                      hasRoundResultsData: !!roundResultsData,
+                      hasPreviousRoundResultsData: !!previousRoundResultsData,
+                      data: data,
+                      round_id: data?.round_id,
+                      winning_square: data?.winning_square
+                    });
+                  }
+                  
+                  // ALWAYS show data if we have any round data - don't be too strict
+                  const hasAnyRoundData = data && (
+                    data.round_id || 
+                    data.roundId ||
+                    data.winning_square !== undefined || 
+                    data.total_deployed !== undefined ||
+                    data.total_winnings !== undefined ||
+                    data.lottery_outcome
+                  );
+                  
+                  if (!hasAnyRoundData) {
+                    if (roundResultsLoading) {
+                      return (
+                        <div className="text-center text-white/80 text-xs leading-none py-4">
+                          Loading round results...
+                        </div>
+                      );
+                    }
+                    // Show fallback round statistics if round exists
+                    if (!round) {
+                      return (
+                        <div className="text-xs text-white/80 text-center py-4 leading-none">
+                          No round data available.
+                        </div>
+                      );
+                    }
+                    // Show Round Statistics fallback
+                    return (
+                      <div className="space-y-2 h-full flex flex-col overflow-hidden">
+                        {/* Round Header */}
+                        <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg">
+                          <div className="text-center">
+                            <div className="text-base font-black text-[#ffb84a] uppercase mb-0.5 leading-none">
+                              ROUND #{board?.roundId?.toString() || round?.id?.toString() || '0'}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Round Statistics */}
+                        <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg">
+                          <div className="text-[10px] sm:text-xs font-black text-white/80 uppercase mb-1.5 pb-1 border-b border-[rgb(120,63,4)]/30 leading-none">
+                            Round Statistics
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between py-0.5">
+                              <span className="text-[10px] sm:text-xs font-black text-white/80 uppercase leading-none">
+                                Total Deployed
+                              </span>
+                              <span className="text-sm sm:text-base font-black text-[#ffb84a] leading-none">
+                                {lamportsToSol(round.totalDeployed).toFixed(4)} <span className="ml-1 text-xs leading-none">SOL</span>
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between py-0.5">
+                              <span className="text-[10px] sm:text-xs font-black text-white/80 uppercase leading-none">
+                                Total Winnings
+                              </span>
+                              <span className="text-sm sm:text-base font-black text-[#ffb84a] leading-none">
+                                {lamportsToSol(round.totalWinnings).toFixed(4)} <span className="ml-1 text-xs leading-none">SOL</span>
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between py-0.5">
+                              <span className="text-[10px] sm:text-xs font-black text-white/80 uppercase leading-none">
+                                Total Vaulted
+                              </span>
+                              <span className="text-sm sm:text-base font-black text-[#ffb84a] leading-none">
+                                {lamportsToSol(round.totalVaulted).toFixed(4)} <span className="ml-1 text-xs leading-none">SOL</span>
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between py-0.5">
+                              <span className="text-[10px] sm:text-xs font-black text-white/80 uppercase leading-none">
+                                Total Miners
+                              </span>
+                              <span className="text-sm sm:text-base font-black text-[#ffb84a] leading-none">
+                                {round.totalMiners.toString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-sm sm:text-base font-black text-white">
-                        {lamportsToSol(round.totalDeployed).toFixed(4)} SOL
+                    );
+                  }
+
+                  // Show comprehensive round results - show data even if incomplete
+                  const miners = data.miners || data.winners || [];
+                  const roundId = data.round_id || data.roundId || '—';
+                  const winningSquare = data.winning_square !== null && data.winning_square !== undefined ? data.winning_square : null;
+                  const lotteryOutcome = data.lottery_outcome || data.lotteryOutcome || '—';
+
+                  return (
+                    <div className="space-y-2 h-full flex flex-col overflow-hidden">
+                      {/* Round Header */}
+                      <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg">
+                        <div className="text-center">
+                          <div className="text-base font-black text-[#ffb84a] uppercase mb-0.5 leading-none">
+                            ROUND #{roundId}
+                          </div>
+                          <div className="text-[10px] font-black text-white/80 uppercase leading-none">
+                            Finalized
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Winner and Lottery - Compact */}
+                      <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <div className="text-[10px] font-black text-white/80 uppercase leading-none mb-0.5">
+                              Winner
+                            </div>
+                            <div className="text-sm font-black text-[#ffb84a] leading-none">
+                              #{winningSquare !== null ? winningSquare + 1 : '—'}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[10px] font-black text-white/80 uppercase leading-none mb-0.5">
+                              Lottery
+                            </div>
+                            <div className="text-sm font-black text-[#ffb84a] leading-none">
+                              {lotteryOutcome === 'Split' ? '🎲 Split' : 
+                               lotteryOutcome === 'Single Winner' ? '🎯 Single' : 
+                               lotteryOutcome === 'Motherlode' ? '💎 Motherlode' : 
+                               lotteryOutcome || '—'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Total Deployed */}
+                      <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg">
+                        <div className="flex items-center justify-between py-0.5">
+                          <span className="text-[10px] sm:text-xs font-black text-white/80 uppercase leading-none">
+                            Total Deployed
+                          </span>
+                          <span className="text-sm sm:text-base font-black text-[#ffb84a] leading-none">
+                            {(data.total_deployed / 1_000_000_000).toFixed(4)} <span className="ml-1 text-xs leading-none">SOL</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* SOL Distribution - Compact Grid */}
+                      <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg">
+                        <div className="text-[10px] sm:text-xs font-black text-white/80 uppercase mb-1.5 pb-1 border-b border-[rgb(120,63,4)]/30 leading-none">
+                          SOL Distribution
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Winners:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.total_winnings / 1_000_000_000).toFixed(5)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Buyback:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.buyback_amount / 1_000_000_000).toFixed(5)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Stakers:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.staker_amount / 1_000_000_000).toFixed(5)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Admin:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.admin_fee / 1_000_000_000).toFixed(5)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Editions:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.master_edition_amount / 1_000_000_000).toFixed(5)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Motherlode:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.sol_motherlode_amount / 1_000_000_000).toFixed(5)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* ORE Distribution - Compact Grid */}
+                      <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg">
+                        <div className="text-[10px] sm:text-xs font-black text-white/80 uppercase mb-1.5 pb-1 border-b border-[rgb(120,63,4)]/30 leading-none">
+                          ORE Distribution
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Total ORE:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.total_ore_reward / 1_000_000_000).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Guaranteed:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.ore_guaranteed_pool / 1_000_000_000).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Lottery:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(data.ore_lottery_pool / 1_000_000_000).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-[10px] text-white/80 leading-none">Winners:</span>
+                            <span className="text-[10px] font-black text-[#ffb84a] leading-none">{data.num_winners || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Motherlode Information */}
+                      {data.motherlode_tier && data.motherlode_tier !== 'None' && (
+                        <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg">
+                          <div className="text-[10px] sm:text-xs font-black text-white/80 uppercase mb-1.5 pb-1 border-b border-[rgb(120,63,4)]/30 leading-none">
+                            Motherlode
+                          </div>
+                          <div className="space-y-1">
+                            <div className="text-sm font-black text-[#ffb84a] leading-none">
+                              {data.motherlode_tier === 'Minor' ? 'MINOR 🥉' : 
+                               data.motherlode_tier === 'Major' ? 'MAJOR 🥈' : 
+                               data.motherlode_tier === 'Grand' ? 'GRAND 🥇' : 
+                               data.motherlode_tier}
+                            </div>
+                            {data.ore_motherlode_payout > 0 && (
+                              <div className="text-[10px] text-white/80 leading-none">
+                                ORE: {(data.ore_motherlode_payout / 1_000_000_000).toFixed(2)}
+                              </div>
+                            )}
+                            {data.sol_motherlode_payout > 0 && (
+                              <div className="text-[10px] text-white/80 leading-none">
+                                SOL: {(data.sol_motherlode_payout / 1_000_000_000).toFixed(4)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Miners - Compact */}
+                      <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg flex-1 min-h-0 flex flex-col">
+                        <div className="text-[10px] sm:text-xs font-black text-white/80 uppercase mb-1.5 pb-1 border-b border-[rgb(120,63,4)]/30 leading-none">
+                          Miners
+                        </div>
+                        <div className="flex justify-between items-center mb-1">
+                          <div className="text-[10px] text-white/80 leading-none">
+                            Total: {data.num_miners || miners.length || 0}
+                          </div>
+                        </div>
+                        {miners.length > 0 ? (
+                          <div className="space-y-1 overflow-y-auto flex-1">
+                            {(() => {
+                              // Always show at least the first miner, or user's miner if they participated
+                              const userMiner = publicKey ? miners.find((m: any) => m.miner === publicKey.toBase58()) : null;
+                              const minersToShow = userMiner ? [userMiner] : miners.slice(0, Math.min(1, miners.length));
+                              
+                              if (minersToShow.length === 0) {
+                                return <div className="text-[10px] text-white/80 leading-none">No miner data</div>;
+                              }
+                              
+                              return minersToShow.map((miner: any) => {
+                                const isMe = publicKey && miner.miner === publicKey.toBase58();
+                                const sol = (miner.total_sol_rewards || miner.total_sol_reward || 0) / 1_000_000_000;
+                                const ore = (miner.total_ore_rewards || miner.total_ore_reward || 0) / 1_000_000_000;
+                                const short = `${miner.miner.slice(0, 4)}…${miner.miner.slice(-4)}`;
+                                
+                                return (
+                                  <div key={miner.miner} className="bg-black/30 rounded p-1 border border-[rgb(120,63,4)]/20">
+                                    <div className="flex items-center justify-between mb-0.5">
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-[10px] font-black text-white/80 leading-none">#{miner.rank || '—'}</span>
+                                        <span className="text-[10px] text-[#ffb84a] leading-none">{isMe ? `You (${short})` : short}</span>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                      <div>
+                                        <span className="text-white/80 leading-none">SOL: </span>
+                                        <span className="text-[#ffb84a] font-black leading-none">{sol > 0 && sol < 0.000001 ? '<0.000001' : sol.toFixed(6)}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-white/80 leading-none">ORE: </span>
+                                        <span className="text-[#ffb84a] font-black leading-none">{ore > 0 && ore < 0.0001 ? '<0.0001' : ore.toFixed(4)}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              });
+                            })()}
+                          </div>
+                        ) : (
+                          <div className="text-[10px] text-white/80 leading-none">
+                            No miners
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] sm:text-xs font-black text-white/70 uppercase mb-1">
-                        Total Miners
-                      </div>
-                      <div className="text-sm sm:text-base font-black text-white">
-                        {round.totalMiners.toString()}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {board?.endSlot && currentSlot && (
-                  <div className="text-center">
-                    <div className="text-[10px] sm:text-xs font-black text-white/70 uppercase mb-1">
-                      Time Remaining
-                    </div>
-                    <div className="text-sm sm:text-base font-black text-white">
-                      {currentSlot < board.endSlot 
-                        ? `${Math.floor((Number(board.endSlot) - Number(currentSlot)) * 0.4)}s`
-                        : 'Ended'
-                      }
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </div>
@@ -1474,8 +1831,68 @@ export default function Home() {
             <StakingPanel />
           </div>
 
-          <div style={{ marginTop: '140px' }}>
-            <HowTo />
+          {/* HOW TO MINE Section */}
+          <div ref={howToMineRef} style={{ marginTop: '50px', width: '100%', position: 'relative', zIndex: 10, paddingBottom: '400px' }}>
+            <div 
+              className="rounded-xl border-2 border-black overflow-hidden"
+              style={{ 
+                backgroundColor: '#ffb84a',
+                width: '100%',
+              }}
+            >
+              {/* HOW TO MINE Label */}
+              <div className="text-center py-2 px-3 relative">
+                {/* Decorative circle bolts in corners */}
+                <div 
+                  className="absolute left-1"
+                  style={{
+                    top: '7px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'black',
+                  }}
+                />
+                <div 
+                  className="absolute right-1"
+                  style={{
+                    top: '7px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'black',
+                  }}
+                />
+                <div 
+                  className="absolute left-1"
+                  style={{
+                    bottom: '2px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'black',
+                  }}
+                />
+                <div 
+                  className="absolute right-1"
+                  style={{
+                    bottom: '2px',
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: 'black',
+                  }}
+                />
+                <div className="text-lg sm:text-xl font-black text-black uppercase" style={{ marginTop: '0px', verticalAlign: 'bottom' }}>
+                  HOW TO MINE
+                </div>
+              </div>
+              
+              {/* HowTo Content */}
+              <div className="bg-black border-2 border-[rgb(120,63,4)]/30 p-4 rounded-lg m-2">
+                <HowTo />
+              </div>
+            </div>
           </div>
         </div>
       </div>

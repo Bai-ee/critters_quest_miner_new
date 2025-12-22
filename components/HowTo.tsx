@@ -27,14 +27,7 @@ export const HowTo = () => {
   ];
 
   return (
-    <div className="w-full flex flex-col gap-4 mt-12 pb-12">
-      <div className="flex flex-col items-center justify-center mb-2">
-        <h2 className="text-2xl font-black text-white tracking-widest uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-          How to Mine
-        </h2>
-        <div className="w-24 h-1 bg-gradient-to-r from-transparent via-cq-primary-yellow to-transparent mt-1" />
-      </div>
-
+    <div className="w-full flex flex-col gap-4 pb-4">
       <div className="flex flex-col gap-3">
         {steps.map((step, index) => (
           <div 

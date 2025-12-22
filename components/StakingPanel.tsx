@@ -36,7 +36,7 @@ type TabId = 'stake' | 'rewards' | 'round';
 export function StakingPanel() {
   const { connection } = useConnection();
   const { publicKey } = useWallet();
-  const { miner, round, previousRound } = useRoundData();
+  const { miner, round, previousRound, board, currentSlot } = useRoundData();
   const { playSound } = useAudio();
 
   const { deposit } = useStakeDeposit();
@@ -49,6 +49,7 @@ export function StakingPanel() {
   const [stake, setStake] = useState<Stake | null>(null);
   const [treasury, setTreasury] = useState<Treasury | null>(null);
   const [stakeLoading, setStakeLoading] = useState(false);
+  const [roundResultsData, setRoundResultsData] = useState<any>(null);
 
   const [activeTab, setActiveTab] = useState<TabId>('stake');
   const [depositAmount, setDepositAmount] = useState<number>(0);
@@ -223,6 +224,59 @@ export function StakingPanel() {
     });
   }, [claimableYield]);
 
+  // Fetch round results data
+  useEffect(() => {
+    const fetchRoundResults = async () => {
+      if (!board?.roundId) return;
+      
+      try {
+        const roundId = Number(board.roundId);
+        
+        // Fetch latest round (current or previous)
+        const latestResponse = await fetch('/api/rounds/latest', { cache: 'no-store' });
+        
+        if (latestResponse.status === 503) {
+          setRoundResultsData(null);
+          return;
+        }
+
+        const latestResult = await latestResponse.json();
+        
+        if (latestResult.success && latestResult.data) {
+          const dataRoundId = latestResult.data.round_id;
+          
+          // If latest matches current round, set as current
+          if (dataRoundId === roundId) {
+            setRoundResultsData(latestResult.data);
+          } 
+          // If latest is previous round and current round hasn't ended yet, show previous
+          else if (dataRoundId === roundId - 1) {
+            // Check if current round has ended
+            const roundEnded = board?.endSlot && currentSlot && currentSlot >= board.endSlot;
+            if (!roundEnded) {
+              setRoundResultsData(latestResult.data);
+            } else {
+              setRoundResultsData(null);
+            }
+          } else {
+            setRoundResultsData(null);
+          }
+        } else {
+          setRoundResultsData(null);
+        }
+      } catch (error) {
+        console.error('Error fetching round results:', error);
+        setRoundResultsData(null);
+      }
+    };
+
+    fetchRoundResults();
+    // Refetch every 5 seconds
+    const interval = setInterval(fetchRoundResults, 5000);
+    
+    return () => clearInterval(interval);
+  }, [board?.roundId, board?.endSlot, currentSlot]);
+
   const lastDepositAt = useMemo(() => {
     const raw = stake?.lastDepositAt;
     if (!raw || raw === 0n) return null;
@@ -378,7 +432,7 @@ export function StakingPanel() {
   };
 
   // Data Display Component - Consistent styling
-  const DataRow = ({ label, value, valueColor = 'text-white', showUnit = false, unit = '' }: {
+  const DataRow = ({ label, value, valueColor = 'text-[#ffb84a]', showUnit = false, unit = '' }: {
     label: string;
     value: string | number;
     valueColor?: string;
@@ -390,13 +444,13 @@ export function StakingPanel() {
       : value;
     
     return (
-      <div className="flex items-center justify-between py-1.5">
-        <span className="text-[10px] sm:text-xs font-black text-white/70 uppercase leading-none">
+      <div className="flex items-center justify-between py-0.5">
+        <span className="text-[10px] sm:text-xs font-black text-white/80 uppercase leading-none">
           {label}
         </span>
         <span className={`text-sm sm:text-base font-black ${valueColor} leading-none`}>
           {formattedValue}
-          {showUnit && unit && <span className="ml-1 text-xs">{unit}</span>}
+          {showUnit && unit && <span className="ml-1 text-xs leading-none">{unit}</span>}
         </span>
       </div>
     );
@@ -407,9 +461,9 @@ export function StakingPanel() {
     children: React.ReactNode;
     className?: string;
   }) => (
-    <div className={`bg-black border-2 border-[rgb(120,63,4)]/30 p-3 md:p-4 rounded-lg ${className}`}>
+    <div className={`bg-black border-2 border-[rgb(120,63,4)]/30 p-2 rounded-lg ${className}`}>
       {title && (
-        <div className="text-xs sm:text-sm font-black text-white uppercase mb-3 pb-2 border-b border-[rgb(120,63,4)]/30">
+        <div className="text-[10px] sm:text-xs font-black text-white/80 uppercase mb-1.5 pb-1 border-b border-[rgb(120,63,4)]/30 leading-none">
           {title}
         </div>
       )}
@@ -421,6 +475,54 @@ export function StakingPanel() {
     <div className="space-y-4">
       {/* Main Container with Yellow Background */}
       <div className="rounded-xl border-2 border-black overflow-hidden" style={{ backgroundColor: '#ffb84a' }}>
+        {/* MANAGE REWARDS Label */}
+        <div className="text-center py-2 px-3 relative">
+          {/* Decorative circle bolts in corners */}
+          <div 
+            className="absolute left-1"
+            style={{
+              top: '7px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: 'black',
+            }}
+          />
+          <div 
+            className="absolute right-1"
+            style={{
+              top: '7px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: 'black',
+            }}
+          />
+          <div 
+            className="absolute left-1"
+            style={{
+              bottom: '2px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: 'black',
+            }}
+          />
+          <div 
+            className="absolute right-1"
+            style={{
+              bottom: '2px',
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: 'black',
+            }}
+          />
+          <div className="text-lg sm:text-xl font-black text-black uppercase" style={{ marginTop: '0px', verticalAlign: 'bottom' }}>
+            MANAGE REWARDS
+          </div>
+        </div>
+        
         {/* Tab Navigation */}
         <div className="flex w-full items-center justify-center px-4 py-3">
           <div 
@@ -478,24 +580,24 @@ export function StakingPanel() {
         </div>
 
         {/* Tab Content Area - Black Background */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6">
+        <div className="flex-1 p-3 md:p-4">
           {/* STAKE TAB */}
           {activeTab === 'stake' && (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {/* Balance Overview Section */}
               <DataSection title="Balance Overview">
                 <div className="space-y-2">
                   <DataRow 
                     label="Wallet $QUEST" 
                     value={walletOreBalance} 
-                    valueColor="text-[#FFD700]" 
+                    valueColor="text-[#ffb84a]" 
                     showUnit 
                     unit="QUEST"
                   />
                   <DataRow 
                     label="Staked $QUEST" 
                     value={stakeLoading ? 0 : stakedOre} 
-                    valueColor="text-[#FFD700]" 
+                    valueColor="text-[#ffb84a]" 
                     showUnit 
                     unit="QUEST"
                   />
@@ -504,7 +606,7 @@ export function StakingPanel() {
                       <DataRow 
                         label="Total Staked (All Users)" 
                         value={gramsToOre(treasury.totalStaked)} 
-                        valueColor="text-white/80" 
+                        valueColor="text-[#ffb84a]" 
                         showUnit 
                         unit="QUEST"
                       />
@@ -520,14 +622,14 @@ export function StakingPanel() {
                     <DataRow 
                       label="Claimable Yield" 
                       value={claimableYield} 
-                      valueColor="text-[#FFD700]" 
+                      valueColor="text-[#ffb84a]" 
                       showUnit 
                       unit="SOL"
                     />
                     <DataRow 
                       label="Lifetime Yield" 
                       value={lifetimeYield} 
-                      valueColor="text-white/80" 
+                      valueColor="text-[#ffb84a]" 
                       showUnit 
                       unit="SOL"
                     />
@@ -540,36 +642,36 @@ export function StakingPanel() {
                 <DataSection title="Account Information">
                   <div className="space-y-2">
                     <div className="py-1.5">
-                      <div className="text-[10px] sm:text-xs font-black text-white/70 uppercase leading-none mb-1">
+                      <div className="text-[10px] sm:text-xs font-black text-white/80 uppercase leading-none mb-1">
                         Stake PDA
                       </div>
-                      <div className="text-[10px] sm:text-xs font-mono text-white/80 break-all leading-tight">
+                      <div className="text-[10px] sm:text-xs font-mono text-[#ffb84a] break-all leading-tight">
                         {getStakePDA(publicKey).toBase58()}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-[rgb(120,63,4)]/30">
                       <div>
-                        <div className="text-[10px] font-black text-white/70 uppercase leading-none mb-1">
+                        <div className="text-[10px] font-black text-white/80 uppercase leading-none mb-1">
                           Last Deposit
                         </div>
-                        <div className="text-xs font-black text-white leading-none">
+                        <div className="text-xs font-black text-[#ffb84a] leading-none">
                           {lastDepositAt ? lastDepositAt.toLocaleString() : '—'}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[10px] font-black text-white/70 uppercase leading-none mb-1">
+                        <div className="text-[10px] font-black text-white/80 uppercase leading-none mb-1">
                           Last Withdraw
                         </div>
-                        <div className="text-xs font-black text-white leading-none">
+                        <div className="text-xs font-black text-[#ffb84a] leading-none">
                           {lastWithdrawAt ? lastWithdrawAt.toLocaleString() : '—'}
                         </div>
                       </div>
                       {lastClaimAt && (
                         <div>
-                          <div className="text-[10px] font-black text-white/70 uppercase leading-none mb-1">
+                          <div className="text-[10px] font-black text-white/80 uppercase leading-none mb-1">
                             Last Claim
                           </div>
-                          <div className="text-xs font-black text-white leading-none">
+                          <div className="text-xs font-black text-[#ffb84a] leading-none">
                             {lastClaimAt.toLocaleString()}
                           </div>
                         </div>
@@ -581,12 +683,12 @@ export function StakingPanel() {
 
               {/* Empty States */}
               {!publicKey && (
-                <div className="text-xs text-white/70 text-center py-4">
+                <div className="text-xs text-white/80 text-center py-4 leading-none">
                   Connect your wallet to stake.
                 </div>
               )}
               {publicKey && stake === null && !stakeLoading && (
-                <div className="text-xs text-white/70 text-center py-4">
+                <div className="text-xs text-white/80 text-center py-4 leading-none">
                   No stake account yet. Make a deposit to create one.
                 </div>
               )}
@@ -594,34 +696,46 @@ export function StakingPanel() {
               {/* Claim Yield Section */}
               {stake && treasury && claimableYield > 0 && (
                 <DataSection title="Claim Yield">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={claimAmount}
-                        onChange={(e) => setClaimAmount(e.target.value)}
-                        placeholder="0.0"
-                        step="0.0001"
-                        min="0"
-                        className="flex-1 px-3 py-2 bg-cq-bg-0 text-white border-2 border-cq-primary-yellow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cq-primary-yellow/50 focus:border-cq-primary-yellow"
-                      />
+                  <div className="space-y-0">
+                    <input
+                      type="number"
+                      value={claimAmount}
+                      onChange={(e) => setClaimAmount(e.target.value)}
+                      placeholder="0.0"
+                      step="0.0001"
+                      min="0"
+                      className="w-full px-3 py-2 bg-cq-bg-0 text-[#ffb84a] border border-[rgb(120,63,4)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[rgb(120,63,4)]/50 focus:border-[rgb(120,63,4)] leading-none"
+                    />
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <button
+                        onClick={() => setClaimAmount((claimableYield * 0.25).toFixed(9))}
+                        disabled={!publicKey || !stake || claimableYield <= 0}
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                      >
+                        25%
+                      </button>
+                      <button
+                        onClick={() => setClaimAmount((claimableYield * 0.5).toFixed(9))}
+                        disabled={!publicKey || !stake || claimableYield <= 0}
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                      >
+                        50%
+                      </button>
                       <button
                         onClick={() => setClaimAmount(claimableYield.toFixed(9))}
                         disabled={!publicKey || !stake || claimableYield <= 0}
-                        className="px-3 py-2 bg-cq-primary-yellow hover:opacity-90 text-black text-xs font-black uppercase rounded-lg transition-all duration-200 border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
                       >
-                        Max
+                        100%
                       </button>
                     </div>
-                    <GlossyButton
+                    <button
                       onClick={handleClaimYield}
                       disabled={!publicKey || !stake || claimableYield <= 0 || actionLoading !== null}
-                      size="sm"
-                      variant="success"
-                      className="w-full !min-h-[40px]"
+                      className="w-full px-4 py-2 bg-[#ffb84a] hover:bg-[#ffb84a]/90 text-black text-sm font-black uppercase rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80 min-h-[40px] mt-2"
                     >
                       {actionLoading === 'claim' ? 'Claiming...' : 'Claim Rewards'}
-                    </GlossyButton>
+                    </button>
                   </div>
                 </DataSection>
               )}
@@ -630,65 +744,91 @@ export function StakingPanel() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {/* Deposit */}
                 <DataSection title="Deposit">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={depositAmount}
-                        onChange={(e) => setDepositAmount(Number(e.target.value))}
-                        placeholder="0.0"
-                        step="0.0001"
-                        min="0"
-                        className="flex-1 px-3 py-2 bg-cq-bg-0 text-white border-2 border-cq-primary-yellow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cq-primary-yellow/50 focus:border-cq-primary-yellow"
-                      />
+                  <div className="space-y-0">
+                    <input
+                      type="number"
+                      value={depositAmount}
+                      onChange={(e) => setDepositAmount(Number(e.target.value))}
+                      placeholder="0.0"
+                      step="0.0001"
+                      min="0"
+                      className="w-full px-3 py-2 bg-cq-bg-0 text-[#ffb84a] border border-[rgb(120,63,4)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[rgb(120,63,4)]/50 focus:border-[rgb(120,63,4)] leading-none"
+                    />
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <button
+                        onClick={() => setDepositAmount(Number((walletOreBalance * 0.25).toFixed(9)))}
+                        disabled={!publicKey}
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                      >
+                        25%
+                      </button>
+                      <button
+                        onClick={() => setDepositAmount(Number((walletOreBalance * 0.5).toFixed(9)))}
+                        disabled={!publicKey}
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                      >
+                        50%
+                      </button>
                       <button
                         onClick={() => setDepositAmount(Number(walletOreBalance.toFixed(9)))}
                         disabled={!publicKey}
-                        className="px-3 py-2 bg-cq-primary-yellow hover:opacity-90 text-black text-xs font-black uppercase rounded-lg transition-all duration-200 border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
                       >
-                        Max
+                        100%
                       </button>
                     </div>
-                    <GlossyButton
+                    <button
                       onClick={handleDeposit}
                       disabled={!publicKey || actionLoading !== null}
-                      size="sm"
-                      className="w-full !min-h-[40px]"
+                      className="w-full px-4 py-2 bg-[#ffb84a] hover:bg-[#ffb84a]/90 text-black text-sm font-black uppercase rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80 min-h-[40px] mt-2"
                     >
                       {actionLoading === 'deposit' ? 'Depositing...' : 'Deposit'}
-                    </GlossyButton>
+                    </button>
                   </div>
                 </DataSection>
 
                 {/* Withdraw */}
                 <DataSection title="Withdraw">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        value={withdrawAmount}
-                        onChange={(e) => setWithdrawAmount(Number(e.target.value))}
-                        placeholder="0.0"
-                        step="0.0001"
-                        min="0"
-                        className="flex-1 px-3 py-2 bg-cq-bg-0 text-white border-2 border-cq-primary-yellow rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-cq-primary-yellow/50 focus:border-cq-primary-yellow"
-                      />
+                  <div className="space-y-0">
+                    <input
+                      type="number"
+                      value={withdrawAmount}
+                      onChange={(e) => setWithdrawAmount(Number(e.target.value))}
+                      placeholder="0.0"
+                      step="0.0001"
+                      min="0"
+                      className="w-full px-3 py-2 bg-cq-bg-0 text-[#ffb84a] border border-[rgb(120,63,4)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[rgb(120,63,4)]/50 focus:border-[rgb(120,63,4)] leading-none"
+                    />
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <button
+                        onClick={() => setWithdrawAmount(Number((stakedOre * 0.25).toFixed(9)))}
+                        disabled={!publicKey || !stake || stakedOre <= 0}
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                      >
+                        25%
+                      </button>
+                      <button
+                        onClick={() => setWithdrawAmount(Number((stakedOre * 0.5).toFixed(9)))}
+                        disabled={!publicKey || !stake || stakedOre <= 0}
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                      >
+                        50%
+                      </button>
                       <button
                         onClick={() => setWithdrawAmount(Number(stakedOre.toFixed(9)))}
                         disabled={!publicKey || !stake || stakedOre <= 0}
-                        className="px-3 py-2 bg-cq-primary-yellow hover:opacity-90 text-black text-xs font-black uppercase rounded-lg transition-all duration-200 border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
+                        className="px-2 py-1.5 bg-black/50 hover:bg-black/70 text-white/80 text-xs font-black uppercase rounded-lg transition-all duration-200 border border-[rgb(120,63,4)]/50 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80"
                       >
-                        Max
+                        100%
                       </button>
                     </div>
-                    <GlossyButton
+                    <button
                       onClick={handleWithdraw}
                       disabled={!publicKey || !stake || stakedOre <= 0 || actionLoading !== null}
-                      size="sm"
-                      className="w-full !min-h-[40px]"
+                      className="w-full px-4 py-2 bg-[#ffb84a] hover:bg-[#ffb84a]/90 text-black text-sm font-black uppercase rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80 min-h-[40px] mt-2"
                     >
                       {actionLoading === 'withdraw' ? 'Withdrawing...' : 'Withdraw'}
-                    </GlossyButton>
+                    </button>
                   </div>
                 </DataSection>
               </div>
@@ -697,28 +837,28 @@ export function StakingPanel() {
 
           {/* CLAIM TAB */}
           {activeTab === 'rewards' && (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {/* Current Round Rewards Section */}
               <DataSection title="Current Round Rewards">
                 <div className="space-y-2">
                   <DataRow 
                     label="SOL Rewards" 
                     value={roundRewardsSol} 
-                    valueColor="text-[#FFD700]" 
+                    valueColor="text-[#ffb84a]" 
                     showUnit 
                     unit="SOL"
                   />
                   <DataRow 
                     label="Unrefined $QUEST" 
                     value={roundRewardsOre} 
-                    valueColor="text-[#FFD700]" 
+                    valueColor="text-[#ffb84a]" 
                     showUnit 
                     unit="QUEST"
                   />
                   <DataRow 
                     label="Refined $QUEST" 
                     value={refinedOre} 
-                    valueColor="text-[#FFD700]" 
+                    valueColor="text-[#ffb84a]" 
                     showUnit 
                     unit="QUEST"
                   />
@@ -731,14 +871,14 @@ export function StakingPanel() {
                   <DataRow 
                     label="Lifetime SOL Rewards" 
                     value={lifetimeRewardsSol} 
-                    valueColor="text-white/80" 
+                    valueColor="text-[#ffb84a]" 
                     showUnit 
                     unit="SOL"
                   />
                   <DataRow 
                     label="Lifetime $QUEST Rewards" 
                     value={lifetimeRewardsOre} 
-                    valueColor="text-white/80" 
+                    valueColor="text-[#ffb84a]" 
                     showUnit 
                     unit="QUEST"
                   />
@@ -747,17 +887,17 @@ export function StakingPanel() {
 
               {/* Empty States */}
               {!publicKey && (
-                <div className="text-xs text-white/70 text-center py-4">
+                <div className="text-xs text-white/80 text-center py-4 leading-none">
                   Connect your wallet to view round rewards.
                 </div>
               )}
               {publicKey && !miner && (
-                <div className="text-xs text-white/70 text-center py-4">
+                <div className="text-xs text-white/80 text-center py-4 leading-none">
                   No miner account found. Deploy to squares to start earning rewards.
                 </div>
               )}
               {publicKey && miner && roundRewardsSol === 0 && roundRewardsOre === 0 && refinedOre === 0 && (
-                <div className="text-xs text-white/70 text-center py-4">
+                <div className="text-xs text-white/80 text-center py-4 leading-none">
                   No claimable rewards available at this time.
                 </div>
               )}
@@ -765,35 +905,29 @@ export function StakingPanel() {
               {/* Claim Actions */}
               {(roundRewardsSol > 0 || roundRewardsOre > 0 || refinedOre > 0) && (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <GlossyButton
+                  <button
                     onClick={handleClaimSol}
                     disabled={!publicKey || !miner || roundRewardsSol === 0 || actionLoading !== null}
-                    size="sm"
-                    variant="primary"
-                    className="w-full !min-h-[40px]"
+                    className="w-full px-4 py-2 bg-[#ffb84a] hover:bg-[#ffb84a]/90 text-black text-sm font-black uppercase rounded-lg transition-all duration-200 border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80 min-h-[40px]"
                   >
                     {actionLoading === 'claimSol' ? 'Claiming...' : 'Claim SOL'}
-                  </GlossyButton>
+                  </button>
 
-                  <GlossyButton
+                  <button
                     onClick={handleClaimOre}
                     disabled={!publicKey || !miner || roundRewardsOre === 0 || actionLoading !== null}
-                    size="sm"
-                    variant="primary"
-                    className="w-full !min-h-[40px]"
+                    className="w-full px-4 py-2 bg-[#ffb84a] hover:bg-[#ffb84a]/90 text-black text-sm font-black uppercase rounded-lg transition-all duration-200 border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80 min-h-[40px]"
                   >
                     {actionLoading === 'claimOre' ? 'Claiming...' : 'Claim QUEST'}
-                  </GlossyButton>
+                  </button>
 
-                  <GlossyButton
+                  <button
                     onClick={handleClaimAllRound}
                     disabled={!publicKey || !miner || (roundRewardsSol === 0 && roundRewardsOre === 0 && refinedOre === 0) || actionLoading !== null}
-                    size="sm"
-                    variant="success"
-                    className="w-full !min-h-[40px]"
+                    className="w-full px-4 py-2 bg-[#ffb84a] hover:bg-[#ffb84a]/90 text-black text-sm font-black uppercase rounded-lg transition-all duration-200 border-2 border-black disabled:opacity-50 disabled:cursor-not-allowed active:opacity-80 min-h-[40px]"
                   >
                     {actionLoading === 'claimAll' ? 'Claiming...' : 'Claim All'}
-                  </GlossyButton>
+                  </button>
                 </div>
               )}
             </div>
@@ -801,116 +935,233 @@ export function StakingPanel() {
 
           {/* ROUND TAB */}
           {activeTab === 'round' && (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {/* Round Header */}
-              {round && (
+              {(round || roundResultsData) && (
                 <DataSection>
                   <div className="text-center">
-                    <div className="text-lg md:text-xl font-black text-[#FFD700] uppercase mb-1">
-                      ROUND #{round.id.toString()}
+                    <div className="text-base font-black text-[#ffb84a] uppercase mb-0.5 leading-none">
+                      ROUND #{(roundResultsData?.round_id || round?.id?.toString() || '0')}
                     </div>
-                    {previousRound && (
-                      <div className="text-xs text-white/70">
-                        Previous: Round #{previousRound.id.toString()}
+                    {roundResultsData && (
+                      <div className="text-[10px] font-black text-white/80 uppercase leading-none">
+                        Finalized
                       </div>
                     )}
                   </div>
                 </DataSection>
               )}
 
-              {/* Round Statistics Section */}
-              {round && (
+              {/* Winner and Lottery - Compact */}
+              {roundResultsData && (
+                <DataSection>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <div className="text-[10px] font-black text-white/80 uppercase leading-none mb-0.5">
+                        Winner
+                      </div>
+                      <div className="text-sm font-black text-[#ffb84a] leading-none">
+                        #{roundResultsData.winning_square !== null && roundResultsData.winning_square !== undefined ? roundResultsData.winning_square + 1 : '—'}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-black text-white/80 uppercase leading-none mb-0.5">
+                        Lottery
+                      </div>
+                      <div className="text-sm font-black text-[#ffb84a] leading-none">
+                        {roundResultsData.lottery_outcome === 'Split' ? '🎲 Split' : 
+                         roundResultsData.lottery_outcome === 'Single Winner' ? '🎯 Single' : 
+                         roundResultsData.lottery_outcome === 'Motherlode' ? '💎 Motherlode' : 
+                         roundResultsData.lottery_outcome}
+                      </div>
+                    </div>
+                  </div>
+                </DataSection>
+              )}
+
+              {/* Total Deployed */}
+              {(round || roundResultsData) && (
+                <DataSection>
+                  <DataRow 
+                    label="Total Deployed" 
+                    value={roundResultsData 
+                      ? (roundResultsData.total_deployed / 1_000_000_000)
+                      : lamportsToSol(round?.totalDeployed || 0n)} 
+                    valueColor="text-[#ffb84a]" 
+                    showUnit 
+                    unit="SOL"
+                  />
+                </DataSection>
+              )}
+
+              {/* SOL Distribution - Compact Grid */}
+              {roundResultsData && (
+                <DataSection title="SOL Distribution">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Winners:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.total_winnings / 1_000_000_000).toFixed(5)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Buyback:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.buyback_amount / 1_000_000_000).toFixed(5)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Stakers:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.staker_amount / 1_000_000_000).toFixed(5)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Admin:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.admin_fee / 1_000_000_000).toFixed(5)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Editions:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.master_edition_amount / 1_000_000_000).toFixed(5)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Motherlode:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.sol_motherlode_amount / 1_000_000_000).toFixed(5)}</span>
+                    </div>
+                  </div>
+                </DataSection>
+              )}
+
+              {/* ORE Distribution - Compact Grid */}
+              {roundResultsData && (
+                <DataSection title="ORE Distribution">
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Total ORE:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.total_ore_reward / 1_000_000_000).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Guaranteed:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.ore_guaranteed_pool / 1_000_000_000).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Lottery:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{(roundResultsData.ore_lottery_pool / 1_000_000_000).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-[10px] text-white/80 leading-none">Winners:</span>
+                      <span className="text-[10px] font-black text-[#ffb84a] leading-none">{roundResultsData.num_winners || 0}</span>
+                    </div>
+                  </div>
+                </DataSection>
+              )}
+
+              {/* Motherlode Information */}
+              {roundResultsData && roundResultsData.motherlode_tier && roundResultsData.motherlode_tier !== 'None' && (
+                <DataSection title="Motherlode">
+                  <div className="space-y-1">
+                    <div className="text-sm font-black text-[#ffb84a] leading-none">
+                      {roundResultsData.motherlode_tier === 'Minor' ? 'MINOR 🥉' : 
+                       roundResultsData.motherlode_tier === 'Major' ? 'MAJOR 🥈' : 
+                       roundResultsData.motherlode_tier === 'Grand' ? 'GRAND 🥇' : 
+                       roundResultsData.motherlode_tier}
+                    </div>
+                    {roundResultsData.ore_motherlode_payout > 0 && (
+                      <div className="text-[10px] text-white/80 leading-none">
+                        ORE: {(roundResultsData.ore_motherlode_payout / 1_000_000_000).toFixed(2)}
+                      </div>
+                    )}
+                    {roundResultsData.sol_motherlode_payout > 0 && (
+                      <div className="text-[10px] text-white/80 leading-none">
+                        SOL: {(roundResultsData.sol_motherlode_payout / 1_000_000_000).toFixed(4)}
+                      </div>
+                    )}
+                  </div>
+                </DataSection>
+              )}
+
+              {/* Miners Info - Compact */}
+              {roundResultsData && (
+                <DataSection title="Miners">
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="text-[10px] text-white/80 leading-none">
+                      Total: {roundResultsData.num_miners || (roundResultsData.miners?.length || roundResultsData.winners?.length || 0)}
+                    </div>
+                  </div>
+                  {(() => {
+                    const miners = roundResultsData.miners || roundResultsData.winners || [];
+                    if (miners.length > 0 && publicKey) {
+                      const userMiner = miners.find((m: any) => m.miner === publicKey.toBase58());
+                      const minersToShow = userMiner ? [userMiner] : miners.slice(0, 1);
+                      
+                      return (
+                        <div className="space-y-1">
+                          {minersToShow.map((miner: any) => {
+                            const isMe = miner.miner === publicKey.toBase58();
+                            const sol = miner.total_sol_rewards / 1_000_000_000;
+                            const ore = miner.total_ore_rewards / 1_000_000_000;
+                            const short = `${miner.miner.slice(0, 4)}…${miner.miner.slice(-4)}`;
+                            
+                            return (
+                              <div key={miner.miner} className="bg-black/30 rounded p-1 border border-[rgb(120,63,4)]/20">
+                                <div className="flex items-center justify-between mb-0.5">
+                                  <div className="flex items-center gap-1">
+                                    <span className="text-[10px] font-black text-white/80 leading-none">#{miner.rank}</span>
+                                    <span className="text-[10px] text-[#ffb84a] leading-none">{isMe ? `You (${short})` : short}</span>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                                  <div>
+                                    <span className="text-white/80 leading-none">SOL: </span>
+                                    <span className="text-[#ffb84a] font-black leading-none">{sol > 0 && sol < 0.000001 ? '<0.000001' : sol.toFixed(6)}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-white/80 leading-none">ORE: </span>
+                                    <span className="text-[#ffb84a] font-black leading-none">{ore > 0 && ore < 0.0001 ? '<0.0001' : ore.toFixed(4)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+                </DataSection>
+              )}
+
+              {/* Fallback: Show basic round info if no results data */}
+              {!roundResultsData && round && (
                 <DataSection title="Round Statistics">
                   <div className="space-y-2">
                     <DataRow 
                       label="Total Deployed" 
                       value={lamportsToSol(round.totalDeployed)} 
-                      valueColor="text-white" 
+                      valueColor="text-[#ffb84a]" 
                       showUnit 
                       unit="SOL"
                     />
                     <DataRow 
                       label="Total Winnings" 
                       value={lamportsToSol(round.totalWinnings)} 
-                      valueColor="text-white" 
+                      valueColor="text-[#ffb84a]" 
                       showUnit 
                       unit="SOL"
                     />
                     <DataRow 
                       label="Total Vaulted" 
                       value={lamportsToSol(round.totalVaulted)} 
-                      valueColor="text-white" 
+                      valueColor="text-[#ffb84a]" 
                       showUnit 
                       unit="SOL"
                     />
                     <DataRow 
                       label="Total Miners" 
                       value={round.totalMiners.toString()} 
-                      valueColor="text-white"
+                      valueColor="text-[#ffb84a]"
                     />
-                  </div>
-                </DataSection>
-              )}
-
-              {/* Round Outcome Section */}
-              {round && round.slotHash && round.slotHash.some(b => b !== 0) && (
-                <DataSection title="Round Outcome">
-                  <div className="space-y-2">
-                    <DataRow 
-                      label="Winning Square" 
-                      value={`#${getWinningSquare(round.slotHash) !== null ? (getWinningSquare(round.slotHash)! + 1) : '—'}`} 
-                      valueColor="text-[#FFD700]"
-                    />
-                    <DataRow 
-                      label="Top Miner Reward" 
-                      value={gramsToOre(round.topMinerReward)} 
-                      valueColor="text-white" 
-                      showUnit 
-                      unit="QUEST"
-                    />
-                    <DataRow 
-                      label="Lottery Outcome" 
-                      value={round.lotteryOutcome === 0 ? 'Split' : round.lotteryOutcome === 1 ? 'Single Winner' : 'Motherlode'} 
-                      valueColor="text-white"
-                    />
-                  </div>
-                </DataSection>
-              )}
-
-              {/* Motherlode Information Section */}
-              {round && round.motherlodeTier > 0 && (
-                <DataSection title="Motherlode Information">
-                  <div className="space-y-2">
-                    <DataRow 
-                      label="Motherlode Tier" 
-                      value={round.motherlodeTier === 1 ? 'Minor' : round.motherlodeTier === 2 ? 'Major' : 'Grand'} 
-                      valueColor="text-[#FFD700]"
-                    />
-                    {round.solMotherlodePayout > 0n && (
-                      <DataRow 
-                        label="Motherlode SOL Payout" 
-                        value={lamportsToSol(round.solMotherlodePayout)} 
-                        valueColor="text-white" 
-                        showUnit 
-                        unit="SOL"
-                      />
-                    )}
-                    {round.oreMotherlodePayout > 0n && (
-                      <DataRow 
-                        label="Motherlode QUEST Payout" 
-                        value={gramsToOre(round.oreMotherlodePayout)} 
-                        valueColor="text-white" 
-                        showUnit 
-                        unit="QUEST"
-                      />
-                    )}
                   </div>
                 </DataSection>
               )}
 
               {/* Empty State */}
-              {!round && (
-                <div className="text-xs text-white/70 text-center py-4">
+              {!round && !roundResultsData && (
+                <div className="text-xs text-white/80 text-center py-4 leading-none">
                   No round data available.
                 </div>
               )}

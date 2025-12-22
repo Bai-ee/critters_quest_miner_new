@@ -116,13 +116,7 @@ export function RoundRewardsHistory() {
   };
 
   if (loading) {
-    return (
-      <div className="w-full max-w-[min(92vw,520px)] mx-auto mt-6">
-        <div className="bg-black border-2 border-[rgb(120,63,4)]/30 rounded-xl p-4">
-          <div className="text-white/70 text-center">Loading round history...</div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (rounds.length === 0) {
